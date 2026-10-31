@@ -88,7 +88,7 @@ test('profile photos persist independently in character slots and active multipl
       const updated = await member.request(`${route}/portrait`, 'POST', { avatar: avatarB, userId: hostId });
       assert.equal(updated.status, 200); room = updated.data.room;
       const expectedPlayers = structuredClone(before.players);
-      expectedPlayers.find(p => p.userId === memberId).character.avatar = avatarB;
+      Object.assign(expectedPlayers.find(p => p.userId === memberId).character, { avatar: avatarB, avatarSource: null, avatarCrop: { x: 0.5, y: 0.5, zoom: 1 } });
       assert.deepEqual(room.players, expectedPlayers);
       assert.deepEqual(room.season, before.season);
       assert.deepEqual(room.submissions, before.submissions);
@@ -124,7 +124,7 @@ test('profile photos persist independently in character slots and active multipl
       assert.equal(changed.status, 200); room = changed.data.room;
       assert.equal(room.players.find(p => p.userId === hostId).character.avatar, null);
       const expectedPlayers = structuredClone(before.players);
-      expectedPlayers.find(p => p.userId === hostId).character.avatar = null;
+      Object.assign(expectedPlayers.find(p => p.userId === hostId).character, { avatar: null, avatarSource: null, avatarCrop: null });
       assert.deepEqual(room.players, expectedPlayers);
       assert.deepEqual(room.season, before.season);
       assert.deepEqual(room.submissions, before.submissions);

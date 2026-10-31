@@ -4,13 +4,17 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import { Store } from './lib/store.mjs';
-import { normalizeAvatar } from './lib/portrait.mjs';
+import { normalizePortrait } from './lib/portrait.mjs';
+import { applyWorldEffects } from './lib/world-events.mjs';
+import { beginLiveMatch, advanceLiveMatch, getLiveBroadcast } from './lib/live-match.mjs';
+import { hasNicknameCollision, ensureRosterNicknames, normalizeNickname } from './lib/nicknames.mjs';
+import { getTeamNpcPower, getBalanceReport, applyTeamNpcPreset } from './lib/balance.mjs';
 import { TEAM_PROFILES, TEAM_PROFILE_BASIS, defaultOpponentSettings } from './lib/team-profiles.mjs';
 import { ACTIONS, TEAMS, POSITIONS, RULES, RULES2026, createSeason, settleDay, getRoster } from './lib/season.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const store = new Store(process.env.DATA_FILE || path.join(root, '.data', 'game.sqlite'));
-const LIMIT = 128 * 1024;
+const LIMIT = 256 * 1024;
 const locations = ['연습실', '거실', '주방', '분석실', '헬스장', '매니저실', '경기장', 'PC방', '편의점', '식당', '카페', '클리닉'];
 const hash = value => createHash('sha256').update(value).digest('hex');
 const clone = value => structuredClone(value);
@@ -35,7 +39,7 @@ function identity(req, res) {
 function normalizeCharacter(input = {}) {
   if (!input || typeof input !== 'object') fail(400, '선수 설정이 필요합니다.');
   const nickname = clean(input.nickname, 24), name = clean(input.name, 24);
-  if (!nickname || !name) fail(400, '선수 이름과 닉네임을 입력하세요.');
+  if (!nickname || !name || !normalizeNickname(nickname)) fail(400, '선수 이름과 닉네임을 입력하세요. 보이지 않는 문자만 사용할 수 없습니다.');
   if (!POSITIONS.includes(input.position)) fail(400, '올바른 포지션을 선택하세요.');
   if (input.team != null && input.team !== '' && !TEAMS.includes(input.team)) fail(400, '리그 참가 팀을 확인하세요.');
   const age = Number(input.age);
@@ -46,7 +50,7 @@ function normalizeCharacter(input = {}) {
   pool = [...new Set([mainChampion, ...pool.map(x => clean(x, 32)).filter(Boolean)])].slice(0, 20);
   return {
     id: randomUUID(), name, nickname, age, team: input.team || null, position: input.position, tier: '1군',
-    appearance: clean(input.appearance, 1000), personality: clean(input.personality, 1000), memo: clean(input.memo, 2000), avatar: normalizeAvatar(input.avatar),
+    appearance: clean(input.appearance, 1000), personality: clean(input.personality, 1000), memo: clean(input.memo, 2000), ...normalizePortrait(input),
     mainChampion, pool, style: clean(input.style, 40) || '균형 운영',
     stats: { mechanics: 65, laning: 65, macro: 65, communication: 65, mental: 65, mastery: 65 },
     condition: 85, fatigue: 10, stress: 10
@@ -56,7 +60,7 @@ function normalizeCharacter(input = {}) {
 function sessionView(user) {
   return {
     user: { id: user.id, name: user.name }, slots: user.slots,
-    rooms: store.roomsFor(user.id).map(r => ({ code: r.code, name: r.name, team: r.season.team, date: r.season.date, turn: r.season.turn, memberCount: r.players.length, lobbyStatus: r.lobby?.status || 'started' }))
+    rooms: store.roomsFor(user.id).map(r => { progressRoom(r); return { code: r.code, name: r.name, team: r.season.team, date: r.season.date, turn: r.season.turn, memberCount: r.players.length, lobbyStatus: r.lobby?.status || 'started' }; })
   };
 }
 
@@ -64,15 +68,35 @@ function roomFor(code, userId) {
   const room = store.room(code.toUpperCase());
   if (!room) fail(404, '초대코드에 해당하는 방이 없습니다.');
   if (!room.players.some(p => p.userId === userId)) fail(403, '참가한 방만 조회하거나 진행할 수 있습니다.');
+  progressRoom(room);
   return room;
+}
+
+function progressRoom(room) {
+  const progress = advanceLiveMatch(room);
+  if (!progress.changed) return;
+  if (progress.completed) systemMessage(room, `${progress.date} 경기 중계와 일정 정산 완료. ${room.season.finished ? '시즌이 종료되었습니다.' : `다음 일정 ${room.season.date}.`}`);
+  store.saveRoom(room);
 }
 
 function roomView(room, userId) {
   const view = clone(room);
+  delete view.liveMatch;
+  view.broadcast = getLiveBroadcast(room);
   view.me = userId;
+  view.balance = getBalanceReport(room);
   view.messages = store.messages(room.code, userId);
   view.roster = getRoster(room.season.team ? room : { ...room, season: { ...room.season, team: '대기실' } });
-  for (const p of view.players) p.character.tier = '1군';
+  for (const profile of view.season.opponents || []) profile.players = applyWorldEffects(room, ensureRosterNicknames(room, profile.players || [], profile.name));
+  for (const p of view.players) {
+    p.character = applyWorldEffects(room, [p.character])[0];
+    p.character.tier = '1군';
+    if (p.userId !== userId) { delete p.character.avatarSource; delete p.character.avatarCrop; }
+  }
+  const ownCharacterId = view.players.find(p => p.userId === userId)?.character.id;
+  for (const character of view.roster) {
+    if (character.id !== ownCharacterId) { delete character.avatarSource; delete character.avatarCrop; }
+  }
   return view;
 }
 
@@ -82,6 +106,9 @@ function systemMessage(room, text, senderName = '매니저') {
 function ensureHost(room, user) { if (room.hostId !== user.id) fail(403, '방장만 정산하거나 방을 관리할 수 있습니다.'); }
 function ensureStarted(room) {
   if (room.lobby && room.lobby.status !== 'started') fail(409, '대기실에서 준비와 팀 선택을 완료한 뒤 방장이 시즌 시작을 눌러야 합니다.');
+}
+function ensureNoBroadcast(room) {
+  if (room.liveMatch) fail(409, '경기 중계가 진행 중입니다. 경기가 끝나면 다음 행동을 제출할 수 있습니다.');
 }
 function ensureWaiting(room) {
   if (room.lobby?.status !== 'waiting') fail(409, '이미 시작한 시즌입니다. 준비 상태를 변경하거나 다시 시작할 수 없습니다.');
@@ -139,6 +166,10 @@ async function api(req, res, url) {
     user.name = clean(body.name, 24) || '오너'; store.saveUser(user); return sessionView(user);
   }
   const slotMatch = route.match(/^\/api\/slots\/([0-4])$/);
+  if (slotMatch && method === 'DELETE') {
+    user.slots[Number(slotMatch[1])] = null;
+    store.saveUser(user); return { slots: user.slots };
+  }
   if (slotMatch && method === 'PUT') {
     user.slots[Number(slotMatch[1])] = normalizeCharacter(body.character);
     store.saveUser(user); return { slots: user.slots };
@@ -154,9 +185,11 @@ async function api(req, res, url) {
     if (body.difficulty && !['easy', 'normal', 'hard'].includes(body.difficulty)) fail(400, '난이도를 선택하세요.');
     const npcPower = Number(body.npcPower ?? 65);
     if (!Number.isFinite(npcPower) || npcPower < 35 || npcPower > 95) fail(400, 'NPC 능력치는 35~95입니다.');
+    const npcPowerMode = body.npcPowerMode ?? 'custom';
+    if (!['team', 'custom'].includes(npcPowerMode)) fail(400, 'NPC 전력 설정 방식을 확인하세요.');
     let code;
     do { code = randomBytes(5).toString('hex').slice(0, 8).toUpperCase(); } while (store.room(code));
-    const settings = { year, seed: clean(String(body.seed ?? year), 80), difficulty: body.difficulty || 'normal', npcPower, opponents: safeOpponents(body.opponents) ?? defaultOpponentSettings() };
+    const settings = { year, seed: clean(String(body.seed ?? year), 80), difficulty: body.difficulty || 'normal', npcPower: npcPowerMode === 'team' && character.team ? getTeamNpcPower(character.team) : npcPower, npcPowerMode, opponents: safeOpponents(body.opponents) ?? defaultOpponentSettings() };
     const season = createSeason({ ...settings, team: character.team || 'T1' });
     if (chooseTeam) { season.team = null; season.draft = true; }
     const room = {
@@ -173,7 +206,9 @@ async function api(req, res, url) {
     return store.transaction(() => {
       const code = clean(body.code, 20).toUpperCase(), room = store.room(code);
       if (!room) fail(404, '초대코드를 확인하세요.');
+      progressRoom(room);
       if (room.players.some(p => p.userId === user.id)) return { room: roomView(room, user.id) };
+      if (room.liveMatch) fail(409, '경기 중계가 진행 중입니다. 경기가 끝난 뒤 참가하세요.');
       if (room.lobby?.status === 'selecting') fail(409, '팀 선택이 진행 중입니다. 방장이 시즌을 시작한 뒤 다시 참가하세요.');
       if (room.players.length >= 5) fail(409, '이 방은 정원 5명이 모두 참가했습니다.');
       if (room.season.finished) fail(409, '종료된 시즌에는 새로 참가할 수 없습니다.');
@@ -182,6 +217,7 @@ async function api(req, res, url) {
       else if (!character.team) character.team = room.season.team;
       else if (character.team !== room.season.team) fail(409, `이 방은 ${room.season.team} 선수단입니다. 같은 팀 캐릭터로 참가하세요.`);
       if (room.players.some(p => p.character.position === character.position)) fail(409, '이미 참가자가 맡고 있는 포지션입니다. 다른 포지션 캐릭터를 선택하세요.');
+      if (hasNicknameCollision(room.players, character.nickname)) fail(409, '이미 같은 닉네임의 선수가 있습니다. 다른 닉네임으로 참가하세요.');
       room.players.push({ userId: user.id, ownerName: user.name, character, duoId: null, location: '연습실', joinedAt: new Date().toISOString() });
       if (!room.hostId) room.hostId = user.id;
       if (room.lobby?.status === 'waiting') room.lobby.ready[user.id] = false;
@@ -195,7 +231,11 @@ async function api(req, res, url) {
   if (method === 'GET') {
     const room = roomFor(code, user.id);
     if (operation === 'export') {
-      return { exportedAt: new Date().toISOString(), format: 'first-team-season-v1', room: { ...room, messages: undefined }, notice: '현재 서버의 시즌 기록 내보내기. 개인 메시지는 포함하지 않습니다. 초대코드는 서버에 종속됩니다.' };
+      const saved = clone(room);
+      delete saved.liveMatch;
+      saved.broadcast = getLiveBroadcast(room);
+      for (const player of saved.players) { delete player.character.avatarSource; delete player.character.avatarCrop; }
+      return { exportedAt: new Date().toISOString(), format: 'first-team-season-v1', room: { ...saved, messages: undefined }, notice: '현재 서버의 시즌 기록 내보내기. 개인 메시지와 편집용 원본 사진은 포함하지 않습니다. 초대코드는 서버에 종속됩니다.' };
     }
     if (operation) fail(404, '조회 경로를 찾을 수 없습니다.');
     if (url.searchParams.get('since') === String(room.revision)) { res.statusCode = 304; return null; }
@@ -226,6 +266,7 @@ async function api(req, res, url) {
         if (!room.lobby?.requireTeamSelection || room.lobby.status !== 'selecting') fail(409, '전원 준비 후 팀 선택 단계에서 소속 팀을 선택하세요.');
         if (!TEAMS.includes(body.team)) fail(400, 'LCK 참가 팀을 선택하세요.');
         room.lobby.selectedTeam = body.team;
+        if (room.lobby.settings.npcPowerMode === 'team') room.lobby.settings.npcPower = getTeamNpcPower(body.team);
         room.season = createSeason({ ...room.lobby.settings, team: body.team });
         room.season.draft = true;
         for (const player of room.players) player.character.team = body.team;
@@ -245,28 +286,49 @@ async function api(req, res, url) {
         break;
       }
       case 'portrait': {
-        me.character.avatar = normalizeAvatar(body.avatar);
+        if (!Object.hasOwn(body, 'avatar')) fail(400, '변경하거나 삭제할 사진을 지정하세요.');
+        Object.assign(me.character, normalizePortrait(body));
+        break;
+      }
+      case 'balance': {
+        ensureHost(room, user);
+        if (body.mode !== 'team') fail(400, '팀 기본 NPC 전력으로 조정하는 방식을 선택하세요.');
+        extra.adjustment = applyTeamNpcPreset(room);
         break;
       }
       case 'action': {
         ensureStarted(room);
+        ensureNoBroadcast(room);
         ensureTurn(room, body);
         room.submissions[user.id] = { turn: room.season.turn, action: actionId(body), target: clean(body.target, 80) || null };
         break;
       }
       case 'settle': {
         ensureStarted(room);
+        ensureNoBroadcast(room);
         ensureHost(room, user); ensureTurn(room, body);
         const missing = room.players.filter(p => room.submissions[p.userId]?.turn !== room.season.turn);
         if (missing.length && body.npcTakeover !== true) fail(409, '아직 행동을 제출하지 않은 선수가 있습니다. 기다리거나 NPC 대행을 명시적으로 선택하세요.');
         const playedDate = room.season.date;
-        extra.summary = settleDay(room, { npcTakeover: body.npcTakeover === true });
+        if (body.live === true) {
+          const pending = clone(room);
+          const summary = settleDay(pending, { npcTakeover: body.npcTakeover === true });
+          const live = beginLiveMatch(room, pending, summary, { stepMs: Number(process.env.LIVE_STEP_MS) || 1400 });
+          if (live) {
+            extra.summary = { date: summary.date, turn: summary.turn, live: true, matches: [...room.liveMatch.gameIds] };
+          } else {
+            room.season = pending.season; room.players = pending.players;
+            room.submissions = pending.submissions; room.revision = pending.revision;
+            extra.summary = summary;
+          }
+        } else extra.summary = settleDay(room, { npcTakeover: body.npcTakeover === true });
         if (missing.length) systemMessage(room, `${playedDate} 미제출 ${missing.map(p => p.character.nickname).join(', ')}: 방장이 NPC 대행(휴식)을 선택했습니다.`);
-        systemMessage(room, `${playedDate} 일정 정산 완료. ${room.season.finished ? '시즌이 종료되었습니다.' : `다음 일정 ${room.season.date}.`}`);
+        systemMessage(room, room.liveMatch ? `${playedDate} 경기 중계를 시작합니다. 현재까지 진행된 장면과 점수만 공개됩니다.` : `${playedDate} 일정 정산 완료. ${room.season.finished ? '시즌이 종료되었습니다.' : `다음 일정 ${room.season.date}.`}`);
         break;
       }
       case 'auto': {
         ensureStarted(room);
+        ensureNoBroadcast(room);
         ensureHost(room, user); ensureTurn(room, body);
         if (room.players.length !== 1) fail(409, '자동 진행은 혼자 플레이하는 방에서만 사용할 수 있습니다.');
         const action = actionId(body);
@@ -355,6 +417,8 @@ const server = http.createServer(async (req, res) => {
     }
     if (!['GET', 'HEAD'].includes(req.method)) fail(405, '지원하지 않는 요청 방식입니다.');
     const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/scenes.js': ['scenes.js', 'text/javascript'], '/scenes.css': ['scenes.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
+    files['/world-events.js'] = ['world-events.js', 'text/javascript'];
+    files['/world-events.css'] = ['world-events.css', 'text/css'];
     const entry = files[url.pathname];
     if (!entry) fail(404, '페이지를 찾을 수 없습니다.');
     res.setHeader('Content-Type', `${entry[1]}; charset=utf-8`);

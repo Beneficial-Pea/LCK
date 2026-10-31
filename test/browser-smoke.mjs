@@ -97,9 +97,16 @@ try {
   const settled = page.waitForResponse(response => response.url().endsWith('/settle') && response.status() === 200);
   await action('settle').click(); await settled;
   room = (await getRoom(code)).room;
+  const broadcastDeadline = Date.now() + 240000;
+  while (room.broadcast && Date.now() < broadcastDeadline) {
+    await page.waitForTimeout(300);
+    room = (await getRoom(code)).room;
+  }
+  assert(!room.broadcast, 'The shared live broadcast must finish before archived replay is checked');
   const match = room.season.results.find(m => own(m));
   assert(match?.result.sets[0].events.some(e => e.type === 'first_blood'));
   await nav('match');
+  await action('select-set', '[data-index="0"]').click();
   await page.locator('.match-event').first().waitFor();
   const initialCount = await page.locator('.match-event').count();
   await action('event-next').click();

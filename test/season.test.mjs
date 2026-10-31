@@ -52,7 +52,7 @@ test('a selected fixed NPC duo keeps its identity and never becomes a temporary 
   assert.equal(room.players[0].duoId, 'NPC:TOP');
   assert.equal(room.season.relationships.length, 1);
   const relation = room.season.relationships[0];
-  assert.equal(relation.targetId, 'NPC:TOP'); assert.equal(relation.targetName, 'T1 Ridge');
+  assert.equal(relation.targetId, 'NPC:TOP'); assert.equal(relation.targetName, getRoster(room).find(player => player.position === 'TOP').nickname);
   assert.equal(relation.memories.length, 2); assert.equal(relation.affinity, 6);
   assert.ok(room.season.history.filter(e => e.type === 'action').every(e => !e.text.includes('임시 배정')));
   room.players[0].duoId = null; advance(room, 'duo');

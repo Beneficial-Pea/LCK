@@ -103,9 +103,10 @@ test('shared waiting rooms enforce personal readiness and a single host launch',
       const before = (await host.request(route)).data.room;
       const starts = await Promise.all([host.request(`${route}/start`, 'POST', {}), host.request(`${route}/start`, 'POST', {})]);
       assert.deepEqual(starts.map(r => r.status).sort(), [200, 409]);
-      const after = (await friend.request(route)).data.room;
+      const after = (await host.request(route)).data.room;
       assert.equal(after.lobby.status, 'started'); assert.ok(after.lobby.startedAt);
       assert.deepEqual(after.season, before.season); assert.deepEqual(after.players, before.players);
+      assert.deepEqual((await friend.request(route)).data.room.season, after.season);
       assert.deepEqual(after.submissions, before.submissions);
       assert.equal((await friend.request(`${route}/ready`, 'POST', { ready: false })).status, 409);
       assert.equal((await friend.request(`${route}/action`, 'POST', { turn: after.season.turn, action: 'rest' })).status, 200);

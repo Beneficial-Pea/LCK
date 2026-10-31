@@ -103,7 +103,7 @@ try {
   room = (await fetchRoom(code)).room;
   const newPhoto = room.players[0].character.avatar;
   assert.notEqual(newPhoto, savedPhoto);
-  assert.deepEqual({ ...room.players[0].character, avatar: original.avatar }, original);
+  assert.deepEqual({ ...room.players[0].character, avatar: original.avatar, avatarSource: original.avatarSource, avatarCrop: original.avatarCrop }, original);
   assert.equal(room.season.date, originalDate);assert.equal(room.season.turn, originalTurn);
   assert.equal((await session()).slots[0].avatar, savedPhoto);
   checks.push('Active photo-only edit preserves identity/stats/date/turn and leaves separate slot untouched');

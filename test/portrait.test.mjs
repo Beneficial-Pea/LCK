@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeAvatar } from '../lib/portrait.mjs';
+import { normalizeAvatar, normalizePortrait } from '../lib/portrait.mjs';
 
 const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aF1QAAAAASUVORK5CYII=';
 const dataUrl = (mime, bytes) => `data:${mime};base64,${Buffer.from(bytes).toString('base64')}`;
@@ -36,4 +36,30 @@ test('the upload limit is measured in decoded bytes and rejects oversized photos
   const boundary = dataUrl('image/jpeg', bytes);
   assert.equal(normalizeAvatar(boundary), boundary);
   assert.throws(() => normalizeAvatar(dataUrl('image/jpeg', Buffer.concat([bytes, Buffer.from([0])]))), isBadAvatar);
+});
+
+test('portrait crops keep a private source and bounded normalized crop coordinates', () => {
+  const source = dataUrl('image/png', Buffer.concat([Buffer.from(png.split(',')[1], 'base64'), Buffer.from('source')]));
+  const result = normalizePortrait({ avatar: png, avatarSource: source, avatarCrop: { x: 0.2, y: 0.9, zoom: 2.5 } });
+  assert.deepEqual(result, { avatar: png, avatarSource: source, avatarCrop: { x: 0.2, y: 0.9, zoom: 2.5 } });
+  assert.deepEqual(normalizePortrait({ avatar: png }), { avatar: png, avatarSource: null, avatarCrop: { x: 0.5, y: 0.5, zoom: 1 } });
+});
+
+test('removing a photo clears its editing source and crop', () => {
+  assert.deepEqual(normalizePortrait({ avatar: null, avatarSource: png, avatarCrop: { x: 0.1, y: 0.2, zoom: 3 } }), { avatar: null, avatarSource: null, avatarCrop: null });
+  assert.deepEqual(normalizePortrait({}), { avatar: null, avatarSource: null, avatarCrop: null });
+});
+
+test('crop validation rejects out of bounds, nonfinite and malformed values', () => {
+  const badCrops = [
+    { x: -0.01, y: 0.5, zoom: 1 }, { x: 1.01, y: 0.5, zoom: 1 },
+    { x: 0.5, y: -0.01, zoom: 1 }, { x: 0.5, y: 1.01, zoom: 1 },
+    { x: 0.5, y: 0.5, zoom: 0.99 }, { x: 0.5, y: 0.5, zoom: 4.01 },
+    { x: NaN, y: 0.5, zoom: 1 }, { x: 0.5, y: Infinity, zoom: 1 },
+    { x: '0.5', y: 0.5, zoom: 1 }, { x: 0.5, y: 0.5, zoom: '1' },
+    { x: 0.5, y: 0.5 }, [], 'center'
+  ];
+  for (const avatarCrop of badCrops) assert.throws(() => normalizePortrait({ avatar: png, avatarSource: png, avatarCrop }), isBadAvatar);
+  assert.throws(() => normalizePortrait({ avatarSource: png }), isBadAvatar);
+  assert.throws(() => normalizePortrait({ avatar: png, avatarSource: 'data:image/svg+xml;base64,PHN2Zy8+' }), isBadAvatar);
 });
