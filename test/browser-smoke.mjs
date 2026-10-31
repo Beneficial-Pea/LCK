@@ -131,7 +131,7 @@ try {
   await page.locator('[data-form="chat"] [name="text"]').fill('브라우저 검증 팀 메시지');
   await page.locator('[data-form="chat"] button[type="submit"]').click();
   await page.getByText('브라우저 검증 팀 메시지', { exact: true }).waitFor();
-  await action('chat-channel', '[data-channel="owner"]').click();
+  await nav('owner');
   assert.equal(await page.getByText('브라우저 검증 팀 메시지', { exact: true }).count(), 0);
   await page.locator('[data-form="chat"] [name="text"]').fill('오너 일정 조율 메시지');
   await page.locator('[data-form="chat"] button[type="submit"]').click();
