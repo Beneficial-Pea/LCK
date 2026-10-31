@@ -43,6 +43,13 @@ try {
   await slotForm.locator('[name="nickname"]').fill('Replay');
   await slotForm.locator('[name="age"]').fill('22');
   await slotForm.locator('[name="position"]').selectOption('MID');
+  assert.equal(await slotForm.locator('[name="background"] option').count(),28);
+  assert.equal(await slotForm.locator('[name="background"] optgroup').count(),4);
+  await slotForm.locator('[name="background"]').selectOption('signature_specialist');
+  assert((await page.locator('[data-background-preview]').textContent()).includes('주력 챔피언'));
+  assert.equal(await page.locator('.background-stat-preview strong').last().textContent(),'67');
+  await slotForm.locator('[name="background"]').selectOption('dynasty_captain');
+  assert.equal(await page.locator('.background-stat-preview strong').nth(3).textContent(),'67');
   await slotForm.locator('[name="background"]').selectOption('former_all_pro');
   assert((await page.locator('[data-background-preview]').textContent()).includes('올프로'));
   assert.equal(await page.locator('.background-stat-preview strong').first().textContent(),'66');
@@ -60,7 +67,7 @@ try {
   assert.equal(await createForm.locator('select[name=year]').count(),0);
   assert.equal(await createForm.locator('[name=year]').inputValue(),'2026');
   if (await createForm.locator('[name="name"]').count()) await createForm.locator('[name="name"]').fill('브라우저 검증 시즌');
-  if (await createForm.locator('[name="seed"]').count()) await createForm.locator('[name="seed"]').fill('browser-qa');
+  assert.equal(await createForm.locator('[name="seed"]').count(),0,'Seed input is absent');
   await createForm.locator('button[type="submit"]').click();
   await createForm.waitFor({ state: 'detached' });
   await page.locator('.assembly-header').waitFor();

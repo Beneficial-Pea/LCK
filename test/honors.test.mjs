@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { simulateSeries } from '../lib/match.mjs';
 import { annotateMultiKills, selectPom } from '../lib/match-honors.mjs';
-import { CHARACTER_BACKGROUNDS, startingStats, normalizeBackground } from '../lib/backgrounds.mjs';
+import { CHARACTER_BACKGROUNDS, startingStats, normalizeBackground, backgroundIntro, backgroundReactions } from '../lib/backgrounds.mjs';
 import { recordMatchAwards, publishSeasonAwards, ensureAwards } from '../lib/player-awards.mjs';
 import { createSeason, settleDay } from '../lib/season.mjs';
-import { renderCupProgress, renderPomCard, renderSeasonAwards, backgroundPreview, renderLckStandings, renderDomesticBracket, renderReadiness } from '../public/honors.js';
+import { renderCupProgress, renderPomCard, renderSeasonAwards, backgroundPreview, renderLckStandings, renderDomesticBracket, renderReadiness, domesticAdvancements } from '../public/honors.js';
 import { tournamentBoards, renderBracketBoard, renderActiveTournament } from '../public/tournament-board.js';
 import { readinessFor } from '../lib/readiness.mjs';
 import { renderMatchText } from '../public/match-feed.js';
@@ -49,10 +49,33 @@ test('multi-kills require consecutive real kills within the timer and never chan
 });
 test('backgrounds have small server-owned bonuses and previous All-Pro is separate from current trophies',()=>{
  assert.equal(normalizeBackground(undefined),'none');assert.throws(()=>normalizeBackground('champion'),/배경/);
- for(const b of CHARACTER_BACKGROUNDS){const stats=startingStats(b.id);assert.equal(Object.keys(stats).length,6);assert(Object.values(stats).every(v=>v>=65&&v<=67));assert.deepEqual(stats,startingStats(b.id));}
+ assert.equal(CHARACTER_BACKGROUNDS.length,28);assert.equal(new Set(CHARACTER_BACKGROUNDS.map(b=>b.id)).size,28);
+ const patterns=new Set();
+ for(const b of CHARACTER_BACKGROUNDS){const stats=startingStats(b.id);assert.equal(Object.keys(stats).length,6);assert(Object.values(stats).every(v=>v>=65&&v<=67));assert.deepEqual(stats,startingStats(b.id));
+  assert(Object.values(stats).reduce((n,v)=>n+v-65,0)<=6);patterns.add(JSON.stringify(stats));assert.equal(normalizeBackground(b.id),b.id);
+  assert(backgroundIntro({nickname:'CustomPlayer',background:b.id}).includes('CustomPlayer'));assert(!backgroundIntro({nickname:'CustomPlayer',background:b.id}).includes('{nickname}'));
+  if(b.id!=='none')assert(backgroundReactions(b.id,'CustomPlayer').every(line=>line.includes('CustomPlayer')));
+ }
+ assert.equal(patterns.size,28);
  assert.equal(startingStats('veteran').communication,67);assert.equal(startingStats('former_all_pro').mechanics,66);
  assert(backgroundPreview(CHARACTER_BACKGROUNDS,'former_all_pro').includes('올프로'));assert(!backgroundPreview(CHARACTER_BACKGROUNDS,'none').includes('+0'));
  const s={year:2026,results:[]};assert.equal(Object.keys(ensureAwards(s).ledger).length,0);assert.equal(s.awards.ceremony,null);
+});
+
+test('play-in updates partial next opponents, daily qualification, and completed-stage results immediately',()=>{
+ const room={season:createSeason({year:2026,team:'T1',seed:'daily-playin'}),players:[],submissions:{},revision:0};
+ while(room.season.date<='2026-02-07')settleDay(room,{npcTakeover:true});
+ const s=room.season,ids=s.tournaments.fixtureIds.cupPlayin,won=s.schedule.find(m=>m.id===ids[2]).result.winner;
+ assert(!s.flags.cupPlayoffSeeded);assert(!s.tournaments.cupPlayinQualifiers);
+ const html=renderDomesticBracket(room,'cupPlayin');assert(html.includes(`플레이인 통과: ${won}`));assert(html.includes('02/07 · 최근 경기일 진출 변동'));
+ assert(domesticAdvancements(room,'cupPlayin').some(r=>r.winner===won&&r.winnerStatus==='플레이오프 진출'));
+ settleDay(room,{npcTakeover:true});assert(renderDomesticBracket(room,'cupPlayoffs').includes('플레이인 최종 결과'));
+ while(s.date<'2026-08-27')settleDay(room,{npcTakeover:true});
+ const pi=s.tournaments.fixtureIds.playin,first=s.schedule.find(m=>m.id===pi[0]),third=s.schedule.find(m=>m.id===pi[2]);assert(!third.teamA&&!third.teamB);
+ const loser=first.result.winner===first.teamA?first.teamB:first.teamA;
+ const before=renderDomesticBracket(room,'playin'),thirdHtml=before.split(`data-bracket-match="${pi[2]}"`)[1].split('</article>')[0];
+ assert(thirdHtml.includes(loser));assert(thirdHtml.includes('상대 결정 대기'));
+ assert(domesticAdvancements(room,'playin').some(r=>r.winner===first.result.winner&&r.winnerStatus==='플레이오프 진출'));
 });
 test('ledger covers both teams exactly once; annual award counts only regular season and freezes 15 role-specific awards',()=>{
  const s={year:2026,date:'2026-09-30',turn:1,results:[],history:[]};

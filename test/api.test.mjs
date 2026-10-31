@@ -78,6 +78,30 @@ test('background bonuses are server-owned, do not stack on edits, and leave acti
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
 
+test('room seeds are random and client-independent, shared by peers, and stable through reloads and restarts',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'random-seed-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
+ try{
+  running=await launch(file);server.base=running.base;const host=actor(server),peer=actor(server);
+  await host.request('/api/session');await peer.request('/api/session');
+  await host.request('/api/slots/0','PUT',{character:character('MID','RandomHost')});await peer.request('/api/slots/0','PUT',{character:character('JGL','RandomPeer')});
+  const settings={slot:0,year:2026,seed:'cannot-force-this-seed'},first=(await host.request('/api/rooms','POST',settings)).data.room,second=(await host.request('/api/rooms','POST',settings)).data.room;
+  assert.match(first.season.seed,/^[a-f0-9]{48}$/);assert.notEqual(first.season.seed,settings.seed);assert.notEqual(first.season.seed,second.season.seed);
+  const route='/api/rooms/'+first.code;
+  const joined=await peer.request('/api/rooms/join','POST',{slot:0,code:first.code});assert.equal(joined.data.room.season.seed,first.season.seed);
+  let room=first;while(room.season.date<'2026-01-17'){
+   const settled=await host.request(route+'/settle','POST',{turn:room.season.turn,npcTakeover:true});assert.equal(settled.status,200);room=settled.data.room;
+  }
+  assert(room.season.results.length>=2);assert.equal(new Set(room.season.results.map(m=>m.result.seed)).size,room.season.results.length);
+  for(const m of room.season.results)assert.equal(m.result.seed,first.season.seed+':'+m.id);
+  assert.equal((await host.request(route)).data.room.season.seed,first.season.seed);assert.deepEqual((await peer.request(route)).data.room.season.results,room.season.results);
+  await running.stop();running=null;
+  const store=new Store(file),legacy=store.room(second.code);legacy.season.seed='previously-saved-seed';store.saveRoom(legacy);store.close();
+  running=await launch(file);server.base=running.base;
+  assert.equal((await host.request(route)).data.room.season.seed,first.season.seed);
+  assert.equal((await host.request('/api/rooms/'+second.code)).data.room.season.seed,'previously-saved-seed');
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});
+
 test('2026 team activities stop automatic skipping and persist exactly once across restarts',async()=>{
  const temp=await mkdtemp(path.join(tmpdir(),'club-api-')),dataFile=path.join(temp,'game.sqlite'),server={base:''};let running;
  try{
@@ -86,7 +110,7 @@ test('2026 team activities stop automatic skipping and persist exactly once acro
   const meta=await user.request('/api/meta');assert.deepEqual(meta.data.availableSeasons.map(s=>s.year),[2026]);
   let response=await user.request('/api/rooms','POST',{slot:0,year:2026,seed:'club-api'});assert.equal(response.status,200);
   const route='/api/rooms/'+response.data.room.code;
-  response=await user.request(route+'/auto','POST',{turn:1,action:'rest'});assert.equal(response.status,200);assert.equal(response.data.days,1);
+  response=await user.request(route+'/auto','POST',{turn:1,action:'rest'});assert.equal(response.status,200);assert.equal(response.data.days,1);assert.equal(response.data.decisions.length,1);assert.notEqual(response.data.decisions[0].action,'rest');assert(response.data.decisions[0].reason);assert(response.data.room.season.history.some(h=>h.autoReason));
   let r=response.data.room;const event=r.clubSchedule.find(e=>e.date===r.season.date);assert(event);
   const refused=await user.request(route+'/auto','POST',{turn:r.season.turn,action:'rest'});assert.equal(refused.status,409);
   await user.request(route+'/action','POST',{turn:r.season.turn,action:'rest'});

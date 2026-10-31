@@ -1,3 +1,4 @@
+import { choosePreparation, rememberPreparation } from './lib/auto-preparation.mjs';
 import { readinessFor } from './lib/readiness.mjs';
 import { CHARACTER_BACKGROUNDS, normalizeBackground, startingStats, backgroundIntro } from './lib/backgrounds.mjs';
 import { vacationFor, vacationWindows } from './lib/vacations.mjs';
@@ -201,7 +202,7 @@ async function api(req, res, url) {
     if (!['team', 'custom'].includes(npcPowerMode)) fail(400, 'NPC 전력 설정 방식을 확인하세요.');
     let code;
     do { code = randomBytes(5).toString('hex').slice(0, 8).toUpperCase(); } while (store.room(code));
-    const settings = { year, seed: clean(String(body.seed ?? year), 80), difficulty: body.difficulty || 'normal', npcPower: npcPowerMode === 'team' && character.team ? getTeamNpcPower(character.team) : npcPower, npcPowerMode, opponents: safeOpponents(body.opponents) ?? defaultOpponentSettings() };
+    const settings = { year, seed: randomBytes(24).toString('hex'), difficulty: body.difficulty || 'normal', npcPower: npcPowerMode === 'team' && character.team ? getTeamNpcPower(character.team) : npcPower, npcPowerMode, opponents: safeOpponents(body.opponents) ?? defaultOpponentSettings() };
     const season = createSeason({ ...settings, team: character.team || 'T1' });
     if (chooseTeam) { season.team = null; season.draft = true; }
     const room = {
@@ -358,18 +359,19 @@ async function api(req, res, url) {
         ensureNoBroadcast(room);
         ensureHost(room, user); ensureTurn(room, body);
         if (room.players.length !== 1) fail(409, '자동 진행은 혼자 플레이하는 방에서만 사용할 수 있습니다.');
-        const action = actionId(body);
-        let days = 0;
+        let days = 0;const decisions=[];
         for (let i = 0; i < 7 && !room.season.finished; i++) {
           const ownGame = room.season.schedule.some(g => g.date === room.season.date && g.status === 'scheduled' && [g.teamA, g.teamB].includes(room.season.team));
           if (ownGame||vacationFor(room.season)) break;
           if(clubSchedule(room).some(event=>event.date===room.season.date&&event.status==='scheduled'))break;
-          room.submissions[user.id] = { turn: room.season.turn, action };
+          const decision=choosePreparation(room,me,ACTIONS);
+          decisions.push(rememberPreparation(room.season,me,decision));
+          room.submissions[user.id] = { turn: room.season.turn, action:decision.action,autoReason:decision.reason };
           settleDay(room, { npcTakeover: false }); days++;
         }
-        if (!days) fail(409, '오늘은 우리 팀 경기·고정 활동 또는 휴가가 있습니다. 준비 행동을 제출한 뒤 직접 정산하세요.');
-        extra.days = days;
-        systemMessage(room, `혼자 플레이 자동 진행 ${days}일. 선택한 준비 행동을 반복했고 우리 팀 경기·고정 활동 전에는 멈춥니다.`);
+        if (!days) fail(409, '오늘은 우리 팀 경기·고정 활동 또는 휴가가 있습니다. 오늘 일정에서 직접 진행해 주세요.');
+        extra.days = days;extra.decisions=decisions;
+        systemMessage(room, `자동 준비 ${days}일. 매일 선수 상태와 다음 경기를 보고 훈련·회복을 선택했습니다. 우리 팀 경기·고정 활동 전에는 멈춥니다.`);
         break;
       }
       case 'location': {

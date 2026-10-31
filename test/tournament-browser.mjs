@@ -18,12 +18,21 @@ try{
  store=new Store(process.env.DATA_FILE);const room=store.room(created.code);
  await context.addInitScript(code=>localStorage.setItem('first-team.room',code),created.code);
  const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
- const checkpoints=[['2026-02-06','[data-lck-stage="cupPlayin"]'],['2026-02-13','[data-lck-stage="cupPlayoffs"]'],['2026-03-17','[data-active-tournament="fst"]'],['2026-04-15','[data-lck-stage="regular"]'],['2026-05-05','[data-active-tournament="ewcRoad"]'],['2026-06-07','[data-active-tournament="road"]'],['2026-06-29','[data-active-tournament="msiPlayin"]'],['2026-07-06','[data-active-tournament="msiMain"]'],['2026-07-15','[data-active-tournament="ewc"]'],['2026-07-18','[data-tournament-board="ewcPlayoffs"]'],['2026-08-27','[data-lck-stage="playin"]'],['2026-09-02','[data-lck-stage="playoffs"]'],['2026-10-05','[data-active-tournament="demacia"]'],['2026-11-08','[data-active-tournament="worldsKnockout"]']];
+ const checkpoints=[['2026-02-06','[data-lck-stage="cupPlayin"]'],['2026-02-07','[data-lck-stage="cupPlayin"]'],['2026-02-08','[data-lck-stage="cupPlayin"]'],['2026-02-13','[data-lck-stage="cupPlayoffs"]'],['2026-03-17','[data-active-tournament="fst"]'],['2026-04-15','[data-lck-stage="regular"]'],['2026-05-05','[data-active-tournament="ewcRoad"]'],['2026-06-07','[data-active-tournament="road"]'],['2026-06-29','[data-active-tournament="msiPlayin"]'],['2026-07-06','[data-active-tournament="msiMain"]'],['2026-07-15','[data-active-tournament="ewc"]'],['2026-07-18','[data-tournament-board="ewcPlayoffs"]'],['2026-08-27','[data-lck-stage="playin"]'],['2026-09-02','[data-lck-stage="playoffs"]'],['2026-10-05','[data-active-tournament="demacia"]'],['2026-11-08','[data-active-tournament="worldsKnockout"]']];
  for(const [date,selector] of checkpoints){
   while(room.season.date<date)settleDay(room,{npcTakeover:true});
   store.saveRoom(room);await page.goto('/');await page.locator('.season-strip').waitFor();
   const panel=page.locator(selector);await panel.waitFor();await panel.scrollIntoViewIfNeeded();
   assert(!(await panel.textContent()).includes('undefined'),date);
+  if(date==='2026-02-07'||date==='2026-02-08'||date==='2026-08-27'){
+   assert.equal(await panel.locator('[data-round-changes]').count(),1);
+   assert((await panel.locator('[data-round-changes]').textContent()).includes(date==='2026-02-07'?'플레이인 2R 진출':'플레이오프 진출'));
+  }
+  if(date==='2026-08-27'){
+   const lastId=room.season.tournaments.fixtureIds.playin[2],pending=panel.locator(`[data-bracket-match="${lastId}"]`);
+   assert((await pending.textContent()).includes('상대 결정 대기'));
+   assert(!(await pending.textContent()).includes('플레이인 1R · 1경기 패자'));
+  }
   for(const width of [1440,390]){
    await page.setViewportSize({width,height:width===390?844:1000});
    const sizes=await page.evaluate(()=>({page:document.documentElement.scrollWidth,viewport:innerWidth}));assert(sizes.page<=sizes.viewport+1,`${date} @${width} overflow: ${JSON.stringify(sizes)}`);

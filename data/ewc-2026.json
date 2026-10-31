@@ -172,28 +172,102 @@
   },
   "gameHistory": {
     "fictional": true,
-    "lckChampionChance": 0.5,
-    "foreignCandidates": [
+    "candidateBasis": "User-provided EWC 2025 twelve-team participant image",
+    "participants2025": [
       {
-        "team": "TES",
-        "region": "LPL"
+        "team": "T1",
+        "region": "LCK",
+        "displayName": "T1",
+        "region2025": "LCK"
       },
       {
-        "team": "FNC",
-        "region": "LEC"
+        "team": "Gen.G",
+        "region": "LCK",
+        "displayName": "Gen.G",
+        "region2025": "LCK"
       },
       {
-        "team": "CFO",
-        "region": "LCP"
+        "team": "HLE",
+        "region": "LCK",
+        "displayName": "Hanwha Life Esports",
+        "region2025": "LCK"
+      },
+      {
+        "team": "FUR",
+        "region": "CBLOL",
+        "displayName": "FURIA",
+        "region2025": "LTA South"
+      },
+      {
+        "team": "AL",
+        "region": "LPL",
+        "displayName": "AG.AL",
+        "region2025": "LPL"
+      },
+      {
+        "team": "BLG",
+        "region": "LPL",
+        "displayName": "Bilibili Gaming",
+        "region2025": "LPL"
+      },
+      {
+        "team": "MKOI",
+        "region": "LEC",
+        "displayName": "Movistar KOI",
+        "region2025": "LEC"
+      },
+      {
+        "team": "G2",
+        "region": "LEC",
+        "displayName": "G2 Esports",
+        "region2025": "LEC"
       },
       {
         "team": "FLY",
-        "region": "LCS"
+        "region": "LCS",
+        "displayName": "FlyQuest",
+        "region2025": "LTA North"
       },
       {
-        "team": "PNG",
-        "region": "CBLOL"
+        "team": "C9",
+        "region": "LCS",
+        "displayName": "Cloud9",
+        "region2025": "LTA North"
+      },
+      {
+        "team": "CFO",
+        "region": "LCP",
+        "displayName": "CTBC Flying Oyster",
+        "region2025": "LCP"
+      },
+      {
+        "team": "GAM",
+        "region": "LCP",
+        "displayName": "GAM Esports",
+        "region2025": "LCP"
       }
-    ]
+    ],
+    "regionalReserves": {
+      "LPL": [
+        "TES",
+        "WBG"
+      ],
+      "LEC": [
+        "FNC",
+        "GX"
+      ],
+      "LCP": [
+        "CFO",
+        "DCG"
+      ],
+      "LCS": [
+        "FLY",
+        "C9"
+      ],
+      "CBLOL": [
+        "PNG",
+        "RED"
+      ]
+    }
   }
 }

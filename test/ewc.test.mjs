@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSeason,TEAMS } from '../lib/season.mjs';
 import { simulateSeries } from '../lib/match.mjs';
-import { ensureEwc,updateEwc,ewcRoundOneTable,previousEwcChampion,qualifierNodes,resolveEwcSeats,drawEwcGroups } from '../lib/ewc.mjs';
+import { EWC_RULES,ensureEwc,updateEwc,ewcRoundOneTable,previousEwcChampion,qualifierNodes,resolveEwcSeats,drawEwcGroups } from '../lib/ewc.mjs';
 import { renderEwcCard,renderEwcTournament } from '../public/ewc.js';
 
 function seedFor(region,own='T1'){
@@ -30,6 +30,24 @@ function road(s,direct,second){
 test('the previous champion is saved, never the selected club, and enables both nine- and ten-team qualifiers',()=>{
  const modes=new Set();for(const team of TEAMS)for(let i=0;i<30;i++){const s=createSeason({year:2026,team,seed:'history-'+i}),e=s.ewc;modes.add(e.qualifierTeams.length);assert.notEqual(e.previousChampion.team,team);assert(e.qualifierTeams.includes(team));assert.deepEqual(e.previousChampion,previousEwcChampion(s));assert.equal(s.qualifications.ewc.status,'pending');assert(e.qualifierMatchCount===(e.qualifierTeams.length===10?15:14));}
  assert.deepEqual([...modes].sort((a,b)=>a-b),[9,10]);
+});
+test('only the twelve EWC 2025 participants can become champion, excluding the selected club',()=>{
+ const expected=['T1','Gen.G','HLE','FUR','AL','BLG','MKOI','G2','FLY','C9','CFO','GAM'];
+ assert.deepEqual(EWC_RULES.gameHistory.participants2025.map(p=>p.team),expected);
+ for(const own of TEAMS){
+  const observed=new Set();for(let i=0;i<350;i++){const previous=previousEwcChampion({seed:'eligible-'+i,team:own});assert(expected.includes(previous.team));assert.notEqual(previous.team,own);observed.add(previous.team);}
+  assert.equal(observed.size,expected.includes(own)?11:12);
+ }
+});
+test('every eligible foreign champion keeps its invitation while overlapping regional slots pass down',()=>{
+ const s=createSeason({year:2026,team:'T1',seed:'all-foreign-title-defenders'});
+ for(const champion of EWC_RULES.gameHistory.participants2025.filter(p=>p.region!=='LCK')){
+  const routes={split:'T1',qualifiers:['DK','HLE'],defending:champion.team,defendingRegion:champion.region};
+  const draw=drawEwcGroups(s,routes);assert.equal(new Set(draw.pools.flat().map(p=>p.team)).size,16,champion.team);
+  assert.equal(draw.pools.flat().filter(p=>p.team===champion.team).length,1);assert.equal(draw.pools[1][3].team,champion.team);
+  for(const g of draw.groups)assert.equal(new Set(g.slots.map(p=>p.region)).size,4);
+  for(const pass of draw.foreignPassdowns){assert.equal(pass.from,champion.team);assert.equal(pass.region,champion.region);assert.notEqual(pass.from,pass.to);}
+ }
 });
 test('seeding is an immutable first-round snapshot; later league results never change it',()=>{
  const s=ready(),snapshot=structuredClone(s.ewc.r1Standings),seeds=[...s.ewc.seeds];assert(snapshot.every(r=>r.played===9));assert(!seeds.includes(s.ewc.previousChampion.team));

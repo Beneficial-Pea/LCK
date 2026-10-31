@@ -35,6 +35,28 @@ export function tournamentBoards(room){
  return boards;
 }
 
+export function resolvedSlotTeam(room,slot){
+ if(slot?.team)return slot.team;
+ const prior=slot?.match?room.season.schedule.find(m=>m.id===slot.match):null;
+ if(!prior?.result)return null;
+ return slot.outcome==='winner'?prior.result.winner:prior.result.winner===prior.teamA?prior.teamB:prior.teamA;
+}
+
+function renderBoardChanges(matches,board,labels){
+ const completed=matches.filter(m=>m.result),date=completed.map(m=>m.date).sort().at(-1);if(!date)return '';
+ const changes=completed.filter(m=>m.date===date).map(m=>{
+  const winner=m.result.winner,loser=winner===m.teamA?m.teamB:m.teamA;
+  const next=outcome=>board.edges.find(edge=>edge.slots.some(slot=>slot.match===m.id&&slot.outcome===outcome));
+  const up=next('winner'),down=next('loser'),label=labels.get(m.id)||'',last=m.id===matches.at(-1).id;
+  const qualified=/Playin/.test(board.key)&&last||/진출전|MSI [12]시드/.test(label);
+  const winnerStatus=up?`${labels.get(up.id)||'다음 라운드'} 진출`:qualified?'본선 진출':/ewcGroup/.test(board.key)&&/승리 시 8강/.test(label)?'8강 진출':/최종 결승/.test(label)?'대회 우승':'경기 승리';
+  const loserStatus=down?`${labels.get(down.id)||'다음 라운드'} 이동`:qualified?'대회 탈락':'경기 패배';
+  const score=winner===m.teamA?`${m.result.scoreA}:${m.result.scoreB}`:`${m.result.scoreB}:${m.result.scoreA}`;
+  return `<div class="round-change-row"><p><strong>${e(winner)}</strong> <small>${e(score)}</small> · <span class="accent">${e(winnerStatus)}</span></p><p class="note">${e(loser)} · ${e(loserStatus)}</p></div>`;
+ }).join('');
+ return `<div class="round-changes" data-round-changes><h3>${e(date.slice(5).replace('-','/'))} · 최근 경기일 진출 변동</h3>${changes}</div>`;
+}
+
 export function renderBracketBoard(room,board){
  const matches=board.ids.map(id=>room.season.schedule.find(m=>m.id===id)).filter(Boolean);if(!matches.length)return '';
  const edges=board.edges,byId=new Map(matches.map((m,i)=>[m.id,{m,i,depth:0,lower:false}]));
@@ -89,12 +111,12 @@ export function renderBracketBoard(room,board){
   const x=source.x+200,y=source.y+76,tx=target.x,ty=target.y+65+port*32,mid=x+(tx-x)/2;
   return [`<path d="M${x},${y} H${mid} V${ty} H${tx}" class="bracket-edge ${slot.outcome==='loser'?'drop':''}"/>`];
  });}).join('');
- return `<section data-tournament-board="${e(board.key)}"><h3>${e(board.title)}</h3><div class="domestic-bracket-scroll" tabindex="0" role="region" aria-label="${e(board.title)} 대진표"><div class="domestic-bracket" style="width:${width}px;height:${height}px"><svg width="${width}" height="${height}" aria-hidden="true">${paths}</svg>${separateLanes?`<span class="bracket-lane" style="top:15px">UPPER · 승자조${/Road/.test(board.key)?' / 플레이인':''}</span><span class="bracket-lane" style="top:${lowerStart-30}px">LOWER · 패자조</span>`:''}${matches.map(m=>{
-  const n=byId.get(m.id),r=m.result,slots=edges.find(edge=>edge.id===m.id)?.slots||[];
+ return `<section data-tournament-board="${e(board.key)}"><h3>${e(board.title)}</h3>${renderBoardChanges(matches,board,labels)}<div class="domestic-bracket-scroll" tabindex="0" role="region" aria-label="${e(board.title)} 대진표"><div class="domestic-bracket" style="width:${width}px;height:${height}px"><svg width="${width}" height="${height}" aria-hidden="true">${paths}</svg>${separateLanes?`<span class="bracket-lane" style="top:15px">UPPER · 승자조${/Road/.test(board.key)?' / 플레이인':''}</span><span class="bracket-lane" style="top:${lowerStart-30}px">LOWER · 패자조</span>`:''}${matches.map(m=>{
+  const n=byId.get(m.id),r=m.result,slots=edges.find(edge=>edge.id===m.id)?.slots||[],known=['A','B'].map((side,j)=>m['team'+side]||resolvedSlotTeam(room,slots[j]));
   return `<article class="bracket-node ${r?'completed':''} ${/final$/.test(m.id)?'final':''}" style="left:${n.x}px;top:${n.y}px" data-bracket-match="${e(m.id)}"><header><strong>${e(labels.get(m.id))}</strong><small>${e(m.date.slice(5).replace('-','/'))} · BO${m.bestOf}</small></header>${['A','B'].map((side,j)=>{
-   const slot=slots[j],source=byId.get(slot?.match),pending=slot?.label||slot?.team||(source?`M${source.i+1} ${slot.outcome==='winner'?'승자':'패자'}`:/8강/.test(m.round)?'그룹 통과팀 추첨':'진출팀 미정'),team=m['team'+side];
+   const slot=slots[j],source=byId.get(slot?.match),pending=slot?.label||slot?.team||(source?`M${source.i+1} ${slot.outcome==='winner'?'승자':'패자'}`:/8강/.test(m.round)?'그룹 통과팀 추첨':'진출팀 미정'),team=known[j];
    return `<div class="bracket-team ${r?.winner===team?'winner':''} ${team===room.season.team?'ours':''}"><span>${e(team||pending)}</span><strong>${r?.['score'+side]??'—'}</strong></div>`;
-  }).join('')}<small class="bracket-id">M${n.i+1}</small>${r?`<button class="text-link" data-action="watch-match" data-id="${e(m.id)}">경기 기록 →</button>`:`<small class="bracket-pending">${m.teamA&&m.teamB?'대진 확정':'대진 확정 대기'}</small>`}</article>`;
+  }).join('')}<small class="bracket-id">M${n.i+1}</small>${r?`<button class="text-link" data-action="watch-match" data-id="${e(m.id)}">경기 기록 →</button>`:`<small class="bracket-pending">${known.every(Boolean)?'대진 확정':known.some(Boolean)?'상대 결정 대기':'대진 확정 대기'}</small>`}</article>`;
  }).join('')}</div></div></section>`;
 }
 
