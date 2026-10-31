@@ -6,13 +6,15 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { once } from 'node:events';
+import { Store } from '../lib/store.mjs';
+import { updateDemacia } from '../lib/demacia.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-async function launch(dataFile) {
+async function launch(dataFile,overrides={}) {
   const child = spawn(process.execPath, ['server.mjs'], {
     cwd: root,
-    env: { ...process.env, PORT: '0', HOST: '127.0.0.1', DATA_FILE: dataFile },
+    env: { ...process.env, PORT: '0', HOST: '127.0.0.1', DATA_FILE: dataFile,...overrides },
     stdio: ['ignore', 'pipe', 'pipe']
   });
   let output = '';
@@ -74,6 +76,42 @@ test('2026 team activities stop automatic skipping and persist exactly once acro
   await running.stop();running=await launch(dataFile);server.base=running.base;
   const restored=(await user.request(route)).data.room;assert.deepEqual(restored.season.clubDiary,r.season.clubDiary);
   assert.equal(restored.season.turn,r.season.turn);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});
+
+test('Demacia invitations enforce host authority and persist refusal; own games use the shared live broadcast',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'demacia-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
+ const start=async()=>{running=await launch(file,{LIVE_STEP_MS:'30'});server.base=running.base;};
+ try{
+  await start();const host=actor(server),peer=actor(server);
+  await host.request('/api/session');await peer.request('/api/session');
+  await host.request('/api/slots/0','PUT',{character:{...character('MID','DemaHost'),team:'KT'}});
+  await peer.request('/api/slots/0','PUT',{character:{...character('JGL','DemaPeer'),team:'KT'}});
+  const created=(await host.request('/api/rooms','POST',{slot:0,year:2026,seed:'demacia-api'})).data.room;
+  await peer.request('/api/rooms/join','POST',{slot:0,code:created.code});
+  await running.stop();
+  const db=new Store(file),r=db.room(created.code),s=r.season;
+  const order=['T1','Gen.G','HLE','DK','KT','BNK','DRX','NS','DNF','BRO'];
+  s.date='2026-09-14';s.turn=246;s.standings.sort((a,b)=>order.indexOf(a.team)-order.indexOf(b.team));s.groups={legend:order.slice(0,5),rise:order.slice(5)};
+  s.flags.worldsSeeded=true;s.qualifications.worlds.teams=order.slice(0,4);
+  s.results.push({id:'msi-final',stage:'MSI',teamA:'T1',teamB:'BLG',result:{winner:'T1',scoreA:3,scoreB:1}});updateDemacia(s);db.saveRoom(r);
+  const liveRoom=structuredClone(r);liveRoom.code='D3AC1A01';liveRoom.id+='-live';liveRoom.season.date='2026-10-03';liveRoom.season.turn=265;db.saveRoom(liveRoom);db.close();await start();
+  const route='/api/rooms/'+created.code;
+  assert.equal((await peer.request(route+'/demacia-decline','POST',{})).status,403);
+  const declined=await host.request(route+'/demacia-decline','POST',{});assert.equal(declined.status,200);assert.deepEqual(declined.data.room.season.qualifications.demacia.teams,['BNK','DRX','NS']);
+  assert.equal(declined.data.room.season.qualifications.demacia.status,'declined');
+  assert.equal((await host.request(route+'/demacia-decline','POST',{})).status,409);
+  await running.stop();await start();assert.deepEqual((await host.request(route)).data.room.season.demacia.declined,['KT']);
+  const liveRoute='/api/rooms/'+liveRoom.code;
+  assert.equal((await host.request(liveRoute+'/demacia-decline','POST',{})).status,409);
+  await host.request(liveRoute+'/action','POST',{turn:265,action:'rest'});await peer.request(liveRoute+'/action','POST',{turn:265,action:'rest'});
+  const live=await host.request(liveRoute+'/settle','POST',{turn:265,live:true});assert.equal(live.status,200);
+  assert.equal(live.data.room.broadcast.stage,'데마시아컵');assert.equal(live.data.room.season.date,'2026-10-03');assert(!live.data.room.liveMatch);
+  assert.equal(live.data.room.season.demacia.online.reduce((n,r)=>n+r.wins,0),0,'Upcoming online results stay private');
+  let after;
+  for(let i=0;i<100;i++){await new Promise(r=>setTimeout(r,30));after=(await host.request(liveRoute)).data.room;if(!after.broadcast)break;}
+  assert(!after.broadcast);assert.equal(after.season.date,'2026-10-04');assert.equal(after.season.turn,266);
+  assert.equal(after.season.results.filter(m=>m.id.startsWith('demacia-')).length,6);
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
 

@@ -1,0 +1,30 @@
+{
+  "name": "2026 Demacia Cup Global Invitational",
+  "source": {
+    "basis": "User-provided announcement text and tournament-format slides",
+    "overview": "https://x.com/lplenglish/status/2092869975249662263",
+    "invitations": "https://x.com/lplenglish/status/2092869978626158846",
+    "groups": ["https://x.com/lplenglish/status/2092869985248932089", "https://x.com/lplenglish/status/2092869988415688784"],
+    "knockout": "https://x.com/lplenglish/status/2092869991355826658",
+    "wiki": "https://namu.wiki/w/2026%20Demacia%20Cup%20Global%20Invitational",
+    "directFetchVerified": false
+  },
+  "startDate": "2026-10-03",
+  "endDate": "2026-10-17",
+  "announcedSlots": {"LCK":3,"LPL":3,"LEC":2,"LCS":2,"LCP":1,"CBLOL":1},
+  "slotDistribution": [3,3,2,2,1,1],
+  "foreignPriorityStart": {"LPL":5,"LEC":4,"LCS":4,"LCP":4,"CBLOL":4},
+  "schedule": [
+    {"from":1,"to":6,"date":"2026-10-03","bestOf":1,"round":"온라인 R1 · 0승 0패"},
+    {"from":7,"to":9,"date":"2026-10-04","bestOf":3,"round":"온라인 R2 · 1승 0패"},
+    {"from":10,"to":12,"date":"2026-10-05","bestOf":3,"round":"온라인 R2 · 0승 1패"},
+    {"from":13,"to":15,"date":"2026-10-06","bestOf":3,"round":"온라인 R3 · 1승 1패"},
+    {"from":16,"to":18,"date":"2026-10-07","bestOf":3,"round":"온라인 R3 · 0승 2패 라운드 로빈"},
+    {"from":19,"to":20,"date":"2026-10-08","bestOf":3,"round":"온라인 R4 · 마지막 진출전"},
+    {"from":21,"to":22,"date":"2026-10-12","bestOf":5,"round":"오프라인 8강 · 상단 브래킷"},
+    {"from":23,"to":24,"date":"2026-10-13","bestOf":5,"round":"오프라인 8강 · 하단 브래킷"},
+    {"from":25,"to":25,"date":"2026-10-14","bestOf":5,"round":"오프라인 4강 · 상단 브래킷"},
+    {"from":26,"to":26,"date":"2026-10-15","bestOf":5,"round":"오프라인 4강 · 하단 브래킷"},
+    {"from":27,"to":27,"date":"2026-10-17","bestOf":5,"round":"오프라인 결승"}
+  ]
+}

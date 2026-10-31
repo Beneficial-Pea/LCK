@@ -73,19 +73,26 @@ try {
   checks.push('room created with four NPC roster positions');
 
   await action('choose-action', '[data-id="analysis"]').click();
+  assert((await page.locator('[data-team-news] .news-declaration').textContent()).includes('상대 분석'));
+  const trainingBox=await page.locator('.training-grid').boundingBox(),newsBox=await page.locator('[data-team-news]').boundingBox();
+  assert(newsBox.x>trainingBox.x+trainingBox.width,'News sits beside the action area on desktop');
   await action('submit-action').click();
+  await page.waitForFunction(()=>document.querySelector('.news-declaration')?.textContent.includes('이번 턴 제출: 상대 분석'));
   await page.waitForFunction(() => document.querySelector('[data-action="settle"]') && !document.querySelector('[data-action="settle"]').disabled);
   await action('settle').click();
   await page.waitForFunction(() => document.querySelector('.strip-value')?.textContent?.includes('2026.01.13'));
   room = (await getRoom(code)).room;
   assert.equal(room.season.turn, 2);
+  assert((await page.locator('[data-team-news-log]').textContent()).includes('상대 분석'));
+  assert.equal(await page.locator('[data-activity-log]').count(),0);
+  checks.push('news sits beside action choices, reflects submitted action, then displays settlement records');
   checks.push('action submission and settlement advance exactly one day');
   assert.equal(room.season.year,2026);
   const firstActivity=room.clubSchedule.find(e=>e.date===room.season.date);assert(firstActivity);
   assert((await page.locator('.today-title').textContent()).includes(firstActivity.title));
   assert((await context.request.get('/crest.svg')).ok());
   assert.equal(await page.locator('.brand-mark img').first().getAttribute('src'),'/crest.svg');
-  await nav('calendar');await action('select-date',`[data-date="${firstActivity.date}"]`).click();
+  await nav('calendar');assert.equal(await page.locator('.demacia-panel').count(),1);await action('select-date',`[data-date="${firstActivity.date}"]`).click();
   assert((await page.locator('.day-detail').textContent()).includes(firstActivity.title));
   await nav('home');
   checks.push('2026-only room creation, original club crest and scheduled team activities in home/calendar');
@@ -109,6 +116,9 @@ try {
   await page.waitForFunction(() => !document.querySelector('[data-action="settle"]')?.disabled);
   const settled = page.waitForResponse(response => response.url().endsWith('/settle') && response.status() === 200);
   await action('settle').click(); await settled;
+  await page.locator('[data-live-match] .match-casting').first().waitFor();
+  const liveFact=await page.locator('[data-live-match] .match-situation p').first().textContent(),liveCast=await page.locator('[data-live-match] .match-casting p').first().textContent();
+  assert(!liveFact.includes(liveCast),'Live situations and casting use separate paragraphs');
   room = (await getRoom(code)).room;
   const broadcastDeadline = Date.now() + 240000;
   while (room.broadcast && Date.now() < broadcastDeadline) {
@@ -126,6 +136,10 @@ try {
   assert.equal(await page.locator('.match-event').count(), initialCount + 1);
   await action('all-events').click();
   await page.locator('.scoreboard').waitFor();
+  assert(await page.locator('.event-list .match-casting').count()>5);
+  const recordedCasting=new Set(match.result.sets[0].events.map(e=>e.casting).filter(Boolean));
+  assert((await page.locator('.event-list .match-casting p').allTextContents()).every(text=>recordedCasting.has(text)));
+  checks.push('live and archived scenes separate factual records from spoken casting');
   assert((await page.locator('.event-list').textContent()).includes('퍼스트 킬'));
   const shownReactions=await page.locator('.reaction-list .reaction p').allTextContents();
   const recordedReactions=new Set(match.result.sets[0].events.flatMap(event=>event.reactions));
@@ -205,7 +219,7 @@ try {
   await assertFits('desktop home');
   await page.setViewportSize({ width: 390, height: 844 });
   for (const view of ['home', 'match', 'calendar', 'roster', 'dorm']) {
-    await nav(view); await assertFits(`mobile ${view}`);
+    await nav(view);if(view==='home'){const actionBox=await page.locator('.settle-box').boundingBox(),newsBox=await page.locator('[data-team-news]').boundingBox();assert(newsBox.y>=actionBox.y+actionBox.height-2);assert(newsBox.y<actionBox.y+actionBox.height+70,'News follows settlement controls on mobile');} await assertFits(`mobile ${view}`);
   }
   await nav('home');
   await page.screenshot({ path: new URL('home-mobile.png', output).pathname, fullPage: true });

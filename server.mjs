@@ -1,3 +1,4 @@
+import { ensureDemacia, updateDemacia, declineDemacia } from './lib/demacia.mjs';
 import { answerDailyLife } from './lib/daily-life.mjs';
 import { clubSchedule } from './lib/club-schedule.mjs';
 import http from 'node:http';
@@ -70,6 +71,7 @@ function roomFor(code, userId) {
   const room = store.room(code.toUpperCase());
   if (!room) fail(404, '초대코드에 해당하는 방이 없습니다.');
   if (!room.players.some(p => p.userId === userId)) fail(403, '참가한 방만 조회하거나 진행할 수 있습니다.');
+  if(!room.liveMatch&&ensureDemacia(room.season)){updateDemacia(room.season);room.revision++;store.saveRoom(room);}
   progressRoom(room);
   return room;
 }
@@ -228,7 +230,7 @@ async function api(req, res, url) {
       return { room: roomView(room, user.id) };
     });
   }
-  const match = route.match(/^\/api\/rooms\/([A-Za-z0-9]+)(?:\/([a-z]+))?$/);
+  const match = route.match(/^\/api\/rooms\/([A-Za-z0-9]+)(?:\/([a-z]+(?:-[a-z]+)*))?$/);
   if (!match) fail(404, 'API 경로를 찾을 수 없습니다.');
   const [, code, operation] = match;
   if (method === 'GET') {
@@ -287,6 +289,10 @@ async function api(req, res, url) {
         if (room.season.draft) room.season.draft = false;
         systemMessage(room, '전원 준비 완료. 시즌을 시작합니다. 빈 포지션은 NPC가 맡으며 게임 날짜는 그대로 유지됩니다.');
         break;
+      }
+      case 'demacia-decline': {
+        ensureStarted(room);ensureNoBroadcast(room);ensureHost(room,user);
+        declineDemacia(room.season,room.season.team);break;
       }
       case 'life': {
         ensureStarted(room);ensureNoBroadcast(room);
@@ -427,6 +433,8 @@ const server = http.createServer(async (req, res) => {
     const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/scenes.js': ['scenes.js', 'text/javascript'], '/scenes.css': ['scenes.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
     files['/world-events.js'] = ['world-events.js', 'text/javascript'];
     files['/world-events.css'] = ['world-events.css', 'text/css'];
+    files['/match-feed.js'] = ['match-feed.js','text/javascript'];
+    files['/demacia.js'] = ['demacia.js','text/javascript'];
     files['/crest.svg'] = ['crest.svg', 'image/svg+xml'];
     const entry = files[url.pathname];
     if (!entry) fail(404, '페이지를 찾을 수 없습니다.');

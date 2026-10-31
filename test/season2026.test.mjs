@@ -45,10 +45,10 @@ test('2026 calendar keeps every imported KST slot and the actual fixed Cup/R1~2 
   const s = createSeason({ year: 2026, seed: '2026-calendar' });
   assert.equal(s.year, 2026); assert.equal(s.startDate, '2026-01-12'); assert.equal(s.endDate, '2026-11-15');
   assert.equal(s.totalTurns, 308); assert.equal(s.turn, 1); assert.equal(s.date, s.startDate);
-  assert.equal(s.schedule.length, sourceMatches.length);
+  assert.equal(s.schedule.length, sourceMatches.length+27);
   assert.equal(new Set(s.schedule.map(g => g.id)).size, s.schedule.length);
-  assert.equal(new Set(s.schedule.map(g => String(g.sourceId))).size, sourceMatches.length);
-  for (const match of s.schedule) {
+  assert.equal(new Set(s.schedule.filter(g=>g.sourceId!=null).map(g => String(g.sourceId))).size, sourceMatches.length);
+  for (const match of s.schedule.filter(g=>g.sourceId!=null)) {
     const source = sourceById.get(String(match.sourceId));
     assert.ok(source, `unknown source slot ${match.id}/${match.sourceId}`);
     assert.equal(match.date, source.date); assert.equal(match.sourceStart, source.start);
