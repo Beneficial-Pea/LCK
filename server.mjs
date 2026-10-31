@@ -1,7 +1,6 @@
 import {resetRoomSeason} from './lib/room-reset.mjs';
 import {dayActivity} from './lib/day-schedule.mjs';
 import {scrimSchedule,todayScrim,playScrim} from './lib/scrims.mjs';
-import {INTERVIEW_CHOICES,answerInterview} from './lib/pom-interviews.mjs';
 import {seasonShared} from './lib/season.mjs';
 import {listNotices,saveNotice,deleteNotice} from './lib/notices.mjs';
 import { ensureCupDraft, currentCupCaptain, pickCupTeam, completeCupDraft } from './lib/cup-draft.mjs';
@@ -93,7 +92,7 @@ function roomView(room, userId) {
   view.broadcast = getLiveBroadcast(room);
   view.clubSchedule = clubSchedule(room);
   view.dayActivity=dayActivity(room);
-  view.scrimSchedule=scrimSchedule(room);view.interviewChoices=INTERVIEW_CHOICES;
+  view.scrimSchedule=scrimSchedule(room);
   view.vacation=vacationFor(room.season);view.vacationWindows=vacationWindows(room.season);
   view.me = userId;
   view.balance = getBalanceReport(room);
@@ -349,10 +348,6 @@ async function api(req, res, url) {
       case 'scrim': {
         ensureStarted(room);ensureNoBroadcast(room);ensureHost(room,user);ensureTurn(room,body);
         extra.scrim=playScrim(room,body.id,body.focus,seasonShared.teamProfile);break;
-      }
-      case 'pom-interview': {
-        ensureStarted(room);ensureNoBroadcast(room);ensureTurn(room,body);
-        extra.interview=answerInterview(room,body.id,body.choice,user.id);break;
       }
       case 'action': {
         if(room.lobby?.requireTeamSelection&&['scheduled','drafting'].includes(room.season.cupDraft?.status))fail(409,'시즌 전 미디어데이에서 그룹 지명을 먼저 완료해 주세요.');

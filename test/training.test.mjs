@@ -4,7 +4,6 @@ import {createSeason,settleDay,seasonShared} from '../lib/season.mjs';
 import {beginLiveMatch,advanceLiveMatch,getLiveBroadcast,resumeLiveMatch} from '../lib/live-match.mjs';
 import {scrimSchedule,todayScrim,playScrim} from '../lib/scrims.mjs';
 import {completeCupDraft} from '../lib/cup-draft.mjs';
-import {queueInterview,answerInterview,expireInterviews} from '../lib/pom-interviews.mjs';
 import {simulateSeries} from '../lib/match.mjs';
 const make=(seed='training')=>({hostId:'u',revision:1,players:[{userId:'u',character:{id:'char',nickname:'Test',team:'T1',position:'MID',mainChampion:'아리',pool:['아리','아지르','오리아나'],style:'균형 운영',stats:{mechanics:75,laning:75,macro:75,communication:75,mental:75,mastery:75},condition:90,fatigue:10,stress:10}}],submissions:{},season:createSeason({year:2026,team:'T1',seed})});
 function ready(r){r.submissions.u={turn:r.season.turn,action:'rest'};}
@@ -20,7 +19,7 @@ test('interactive series pause at every set boundary and apply plans without rew
  resumeLiveMatch(room,{...b.intermission,strategy:'early'},r=>settleDay(r),{now:200000});
  let game=room.liveMatch.pendingRoom.season.results.find(m=>m.id===b.matchId);assert.deepEqual(game.result.sets[0],old);assert.equal(game.result.sets[1].strategy[game.teamA==='T1'?'teamA':'teamB'],'초반 주도권');
  let attempts=0;while(room.liveMatch&&attempts++<6){advanceLiveMatch(room,300000+attempts*100000);b=getLiveBroadcast(room);if(b?.intermission)resumeLiveMatch(room,{...b.intermission,strategy:'teamfight'},r=>settleDay(r),{now:300000+attempts*100000});}
- assert(!room.liveMatch);assert.equal(room.season.turn,turn+1);assert.equal(room.lastBroadcast.date,date);assert.equal(room.season.results.filter(m=>m.id===game.id).length,1);
+ assert(!room.liveMatch);assert.equal(room.season.turn,turn+1);assert.equal(room.lastBroadcast.date,date);assert.equal(room.season.results.filter(m=>m.id===game.id).length,1);assert(!room.season.interviews);assert(room.season.results.find(m=>m.id===game.id).result.pom);
 });
 test('strategy affects later combat while keeping the first set identical and preserving fearless draft rules',()=>{
  let changed=false;for(let i=0;i<8;i++){
@@ -34,14 +33,6 @@ test('scrims produce private set records and growth without changing official ta
  const room=make();completeCupDraft(room.season);const event=scrimSchedule(room)[0];assert(event);room.season.date=event.date;const before=structuredClone(room.season.standings),results=room.season.results.length,macro=room.players[0].character.stats.macro;
  assert.equal(todayScrim(room).id,event.id);const record=playScrim(room,event.id,'side',seasonShared.teamProfile);assert.equal(record.status,'completed');assert(record.sets.length>=2);assert.equal(room.players[0].character.stats.macro,macro+.3);assert.equal(room.season.results.length,results);assert.deepEqual(room.season.standings,before);assert(!todayScrim(room));assert.throws(()=>playScrim(room,event.id,'side',seasonShared.teamProfile),e=>e.status===409);assert.equal(scrimSchedule(structuredClone(room)).find(e=>e.id===event.id).status,'completed');
 });
-test('POM interviews belong to the selected player, reward once and resolve skipped interviews automatically',()=>{
- const room=make(),match={id:'test',teamA:'T1',teamB:'KT',date:room.season.date,stage:'LCK',round:'1R'},result={pom:{team:'T1',playerId:'char',nickname:'Test',position:'MID'}};
- queueInterview(room,match,result);queueInterview(room,match,result);assert.equal(room.season.interviews.length,1);const id=room.season.interviews[0].id,before=room.players[0].character.stats.communication;
- assert.throws(()=>answerInterview(room,id,'team','other'),e=>e.status===403);answerInterview(room,id,'team','u');assert.equal(room.players[0].character.stats.communication,before+.2);assert.throws(()=>answerInterview(room,id,'team','u'),e=>e.status===409);
- queueInterview(room,{...match,id:'next'},result);expireInterviews(room);assert(room.season.interviews.at(-1).automatic);
- queueInterview(room,{...match,id:'npc'},{pom:{team:'KT',playerId:'npc',nickname:'Opponent',position:'TOP'}});assert.equal(room.season.interviews.at(-1).status,'answered');assert.equal(room.season.interviews.at(-1).userId,null);
-});
-
 test('match and scrim days settle without generic preparation actions or hidden training benefits',()=>{
  const room=make('dedicated-days');completeCupDraft(room.season);
  const practice=scrimSchedule(room)[0];room.season.date=practice.date;playScrim(room,practice.id,'side',seasonShared.teamProfile);const before=room.players[0].character.stats.mechanics;room.submissions={u:{turn:room.season.turn,action:'mechanics'}};

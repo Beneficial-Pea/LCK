@@ -457,7 +457,7 @@ test('detailed practice blocks skip, uses host choices and persists separately f
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
 
-test('shared live strategy requires host and POM interviews require the awarded player',async()=>{
+test('shared live strategy requires host and retired interviews cannot grant bonuses',async()=>{
  const temp=await mkdtemp(path.join(tmpdir(),'strategy-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
  try{
   running=await launch(file,{LIVE_STEP_MS:'1'});server.base=running.base;const host=actor(server),peer=actor(server);await host.request('/api/slots/0','PUT',{character:character('MID','StrategyHost')});await peer.request('/api/slots/0','PUT',{character:character('JGL','StrategyPeer')});
@@ -465,10 +465,12 @@ test('shared live strategy requires host and POM interviews require the awarded 
   await host.request(route+'/cup-draft','POST',{turn:1,pickNumber:1,remaining:true});await peer.request('/api/rooms/join','POST',{slot:0,code:room.code});
   await running.stop();const db=new Store(file),r=db.room(room.code);
   r.season.interviews=[{id:'fixture-interview',status:'pending',userId:r.hostId,team:r.season.team,nickname:'StrategyHost',date:r.season.date,matchId:'fixture',question:'오늘 경기 소감은?'}];db.saveRoom(r);db.close();running=await launch(file,{LIVE_STEP_MS:'1'});server.base=running.base;
-  assert.equal((await peer.request(route+'/pom-interview','POST',{turn:1,id:'fixture-interview',choice:'team'})).status,403);
-  assert.equal((await host.request(route+'/pom-interview','POST',{turn:1,id:'fixture-interview',choice:'bad'})).status,400);
-  assert.equal((await host.request(route+'/pom-interview','POST',{turn:1,id:'fixture-interview',choice:'review'})).status,200);
-  assert.equal((await host.request(route+'/pom-interview','POST',{turn:1,id:'fixture-interview',choice:'team'})).status,409);
+  const beforeRetired=(await host.request(route)).data.room.players[0].character.stats;
+  assert.equal((await peer.request(route+'/pom-interview','POST',{turn:1,id:'fixture-interview',choice:'team'})).status,404);
+  assert.equal((await host.request(route+'/pom-interview','POST',{turn:1,id:'fixture-interview',choice:'bad'})).status,404);
+  assert.equal((await host.request(route+'/pom-interview','POST',{turn:1,id:'fixture-interview',choice:'review'})).status,404);
+  assert.equal((await host.request(route+'/pom-interview','POST',{turn:1,id:'fixture-interview',choice:'team'})).status,404);
+  assert.deepEqual((await host.request(route)).data.room.players[0].character.stats,beforeRetired);
   await running.stop();const data=new Store(file),prepared=data.room(room.code);for(let i=0;i<10&&!prepared.season.schedule.some(m=>m.date===prepared.season.date&&m.status==='scheduled'&&[m.teamA,m.teamB].includes(prepared.season.team));i++)settleDay(prepared,{npcTakeover:true});data.saveRoom(prepared);data.close();running=await launch(file,{LIVE_STEP_MS:'1'});server.base=running.base;
   const started=await host.request(route+'/settle','POST',{turn:prepared.season.turn,npcTakeover:true,live:true});assert.equal(started.status,200);
   for(let i=0;i<30;i++){room=(await host.request(route)).data.room;if(room.broadcast?.intermission)break;await new Promise(r=>setTimeout(r,10));}
