@@ -1,3 +1,4 @@
+import {renderNotices} from './notices.js';
 import {renderCupMedia} from './cup-draft.js';
 import { renderAuthPage, renderInvitationPage } from './auth.js';
 import { backgroundOptions, backgroundPreview, renderPomCard, renderSeasonAwards, renderLckStandings, renderReadiness } from './honors.js';
@@ -26,12 +27,14 @@ const icons = {
  slots:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 18h7m-3-4v7"/>',
  lobby:'<path d="M3 21V5h18v16M7 21v-8h10v8M7 8h1m4 0h1m4 0h1M11 17h2"/>',
  invites:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 5 9 7 9-7"/>',
+ notices:'<path d="M4 4h16v16H4zM7 8h10M7 12h10M7 16h6"/>',
  rules:'<path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/>'
 };
 const icon = name => `<svg viewBox="0 0 24 24" aria-hidden="true">${icons[name==='owner'?'chat':name] || icons.home}</svg>`;
 const nav = [['home','오늘의 일정'],['match','경기 센터'],['calendar','시즌 캘린더'],['roster','선수단'],['dorm','숙소 생활']];
 const state = {session:null,meta:{actions:[],teams:[],positions:[]},room:null,view:'home',slot:0,selectedAction:'analysis',month:'2026-01',selectedDate:null,matchId:null,setIndex:0,eventCount:1,playing:false,chat:'team',dmTo:'',modal:null,busy:false,pendingRender:false,liveSetNumber:null};
 const signupParams=new URLSearchParams(location.search),initialInvitation=(signupParams.get('invite')||'').slice(0,128);
+state.notices=[];state.noticeEditor=null;state.noticeDelete=null;
 state.auth={mode:initialInvitation?'register':'login',invitation:initialInvitation,status:{}};state.invitations=[];state.invitationIssued=null;
 if(signupParams.has('invite')){signupParams.delete('invite');history.replaceState(null,'',location.pathname+(signupParams.toString()?'?'+signupParams.toString():'')+location.hash);}
 let roomPollTimer;
@@ -214,8 +217,8 @@ function stopPlayback() { clearInterval(playbackTimer);playbackTimer=null;state.
 function navigate(view) {
  if(view==='owner'||view==='chat'){dockChannel=view==='chat'?'team':'owner';if(!state.room){toast('시즌 방에 참가한 뒤 채팅을 사용할 수 있습니다.');return;}ownerDockOpen=true;localStorage.setItem('first-team.owner-dock',ownerDockOpen?'1':'0');refreshOwnerDock(true);return;}
  stopPlayback();
- if(waitingRoom()&&!['lobby','slots','rules','chat','owner','invites'].includes(view)){toast('대기실에서 전원이 준비한 뒤 방장이 시즌을 시작합니다.');state.view='lobby';}
- else if(!state.room && !['home','lobby','slots','rules','invites'].includes(view)){toast('캐릭터를 선택한 뒤 시즌 방을 만들거나 참가해 주세요.');state.view='home';}
+ if(waitingRoom()&&!['lobby','slots','rules','notices','chat','owner','invites'].includes(view)){toast('대기실에서 전원이 준비한 뒤 방장이 시즌을 시작합니다.');state.view='lobby';}
+ else if(!state.room && !['home','lobby','slots','rules','notices','invites'].includes(view)){toast('캐릭터를 선택한 뒤 시즌 방을 만들거나 참가해 주세요.');state.view='home';}
  else state.view=view;
  if(state.view==='owner')state.chat='owner';else if(state.view==='chat'&&state.chat==='owner')state.chat='team';
  state.modal=null;render();window.scrollTo({top:0,behavior:'instant'});
@@ -229,9 +232,9 @@ function refreshLiveStatus() {
 function render() {
  if(!state.session?.user){renderAuth();return;}
  const oldEventList=$('#event-list'),eventPosition=oldEventList?{top:oldEventList.scrollTop,follow:oldEventList.scrollHeight-oldEventList.scrollTop-oldEventList.clientHeight<70}:null;
- const currentNav=[...nav,['lobby','시즌 방'],['slots','캐릭터 슬롯'],['rules','게임 안내'],['invites','초대장 관리']].find(x=>x[0]===state.view)?.[1]||'오늘의 일정';
+ const currentNav=[...nav,['lobby','시즌 방'],['slots','캐릭터 슬롯'],['notices','공지사항'],['rules','게임 안내'],['invites','초대장 관리']].find(x=>x[0]===state.view)?.[1]||'오늘의 일정';
  const room=state.room,s=room?.season;
- $('#app').innerHTML=`<div class="shell"><aside class="sidebar"><button class="brand" data-action="nav" data-view="home" aria-label="첫 화면"><span class="brand-mark club-crest"><img src="/crest.svg" alt="다섯 선수가 모인 팀 방패"></span><div><div class="brand-name">FIRST TEAM</div><div class="brand-tag">우리의 1군 생활</div></div></button><div class="nav-label">TEAM INTRANET</div><nav aria-label="게임 메뉴">${nav.map(([key,label])=>`<button class="nav-item ${state.view===key?'active':''}" data-action="nav" data-view="${key}">${icon(key)}<span>${label}</span>${key==='chat'&&room?'<span class="nav-dot"></span>':''}</button>`).join('')}</nav><div class="nav-label">MY CLUB</div>${[['lobby','시즌 방'],['slots','캐릭터 슬롯'],['rules','게임 안내'],...(state.session.user.role==='admin'?[['invites','초대장 관리']]:[])].map(([key,label])=>`<button class="nav-item ${state.view===key?'active':''}" data-action="nav" data-view="${key}">${icon(key)}<span>${label}</span></button>`).join('')}<div class="sidebar-bottom"><div class="connection"><span class="dot"></span>${room?(s.team?`${e(displayTeam(s.team))} 선수단 접속 중`:'대기실 접속 중'):'시즌을 시작할 준비 완료'}<div style="margin-top:5px;font-size:9px;color:#5f7185">SERVER SAVE · SEASON SIMULATION</div></div><button class="user-block" data-action="profile" aria-label="오너 닉네임 변경"><span class="avatar">${e(state.session.user.name.slice(0,1))}</span><span style="text-align:left"><div class="user-name">${e(state.session.user.name)}</div><div class="user-sub">내 계정 · 닉네임 설정</div></span></button></div></aside><div class="workspace"><header class="topbar"><div class="mobile-brand"><span class="brand-mark club-crest"><img src="/crest.svg" alt="다섯 선수가 모인 팀 방패"></span>FIRST TEAM</div><div class="breadcrumb"><span>선수단 내부망</span><span class="sep">/</span><strong>${e(currentNav)}</strong></div><div class="topbar-right">${room?`<button class="room-code" data-action="copy-code" title="초대 코드 복사"># ${e(room.code)}</button><span class="top-pill">SEASON ${gameYear()}</span><span class="save-status">✓ 서버 자동 저장</span>`:'<span class="top-pill">2026 SEASON</span>'}<button class="icon-btn mobile-brand" data-action="mobile-menu" aria-label="추가 메뉴">⋯</button></div></header><main class="main" id="main-content">${renderView()}</main></div><nav class="mobile-nav" aria-label="모바일 게임 메뉴">${nav.map(([key,label])=>`<button class="${state.view===key?'active':''}" data-action="nav" data-view="${key}">${icon(key)}${label.replace('선수단 메신저','메신저').replace('시즌 캘린더','캘린더').replace('오너 메신저','오너')}</button>`).join('')}</nav></div>`;
+ $('#app').innerHTML=`<div class="shell"><aside class="sidebar"><button class="brand" data-action="nav" data-view="home" aria-label="첫 화면"><span class="brand-mark club-crest"><img src="/crest.svg" alt="다섯 선수가 모인 팀 방패"></span><div><div class="brand-name">FIRST TEAM</div><div class="brand-tag">우리의 1군 생활</div></div></button><div class="nav-label">TEAM INTRANET</div><nav aria-label="게임 메뉴">${nav.map(([key,label])=>`<button class="nav-item ${state.view===key?'active':''}" data-action="nav" data-view="${key}">${icon(key)}<span>${label}</span>${key==='chat'&&room?'<span class="nav-dot"></span>':''}</button>`).join('')}</nav><div class="nav-label">MY CLUB</div>${[['lobby','시즌 방'],['slots','캐릭터 슬롯'],['notices','공지사항'],['rules','게임 안내'],...(state.session.user.role==='admin'?[['invites','초대장 관리']]:[])].map(([key,label])=>`<button class="nav-item ${state.view===key?'active':''}" data-action="nav" data-view="${key}">${icon(key)}<span>${label}</span></button>`).join('')}<div class="sidebar-bottom"><div class="connection"><span class="dot"></span>${room?(s.team?`${e(displayTeam(s.team))} 선수단 접속 중`:'대기실 접속 중'):'시즌을 시작할 준비 완료'}<div style="margin-top:5px;font-size:9px;color:#5f7185">SERVER SAVE · SEASON SIMULATION</div></div><button class="user-block" data-action="profile" aria-label="오너 닉네임 변경"><span class="avatar">${e(state.session.user.name.slice(0,1))}</span><span style="text-align:left"><div class="user-name">${e(state.session.user.name)}</div><div class="user-sub">내 계정 · 닉네임 설정</div></span></button></div></aside><div class="workspace"><header class="topbar"><div class="mobile-brand"><span class="brand-mark club-crest"><img src="/crest.svg" alt="다섯 선수가 모인 팀 방패"></span>FIRST TEAM</div><div class="breadcrumb"><span>선수단 내부망</span><span class="sep">/</span><strong>${e(currentNav)}</strong></div><div class="topbar-right">${room?`<button class="room-code" data-action="copy-code" title="초대 코드 복사"># ${e(room.code)}</button><span class="top-pill">SEASON ${gameYear()}</span><span class="save-status">✓ 서버 자동 저장</span>`:'<span class="top-pill">2026 SEASON</span>'}<button class="icon-btn mobile-brand" data-action="mobile-menu" aria-label="추가 메뉴">⋯</button></div></header><main class="main" id="main-content">${renderView()}</main></div><nav class="mobile-nav" aria-label="모바일 게임 메뉴">${nav.map(([key,label])=>`<button class="${state.view===key?'active':''}" data-action="nav" data-view="${key}">${icon(key)}${label.replace('선수단 메신저','메신저').replace('시즌 캘린더','캘린더').replace('오너 메신저','오너')}</button>`).join('')}</nav></div>`;
  if(state.meta.savePersistence==='ephemeral') {
   const notice=document.createElement('div');notice.className='notice section-gap';notice.style.marginBottom='22px';
   notice.textContent='무료 체험 서버 · 세이브는 임시 저장됩니다. 서버 중지·재시작·재배포 시 계정·선수·시즌 기록이 사라질 수 있습니다.';
@@ -263,6 +266,7 @@ function render() {
  if(['chat','owner'].includes(state.view)){const list=$('.chat-messages');if(list)list.scrollTop=list.scrollHeight;}if(state.view==='lobby'&&waitingRoom()){const list=$('.assembly-messages');if(list)list.scrollTop=list.scrollHeight;}
 }
 function renderView() {
+ if(state.view==='notices')return renderNotices(state.notices,state.session.user.role==='admin',state.noticeEditor,state.noticeDelete);
  if(state.view==='invites')return state.session.user.role==='admin'?renderInvitationPage(state.invitations,state.invitationIssued):'<div class="empty">관리자 전용 메뉴입니다.</div>';
  if(state.view==='rules')return renderRules();
  if(state.view==='slots')return renderSlotsPage();
@@ -488,7 +492,7 @@ function renderModal() {
   title='시즌 방 나가기';description='내 참가 선수가 빠진 자리는 NPC가 담당합니다.';form='leave';body='<p class="note">시즌 기록은 서버에 남습니다. 방장이 나가면 다음 참가자에게 방장이 넘어갑니다. 같은 코드로 다시 참가할 때는 빈 포지션이 있어야 합니다.</p>';footer='<button class="button" type="button" data-action="close-modal">취소</button><button class="button danger" type="submit">이 방에서 나가기</button>';
  } else if(modal.kind==='menu') {
   title='나의 게임';description='선수와 방을 관리합니다.';
-  body=`<div class="stack" style="gap:9px">${[['lobby','시즌 방 관리'],['slots','캐릭터 슬롯'],['rules','게임 안내']].map(([key,label])=>`<button class="button full" data-action="nav" data-view="${key}">${label} →</button>`).join('')}<button class="button full" data-action="profile">오너 닉네임 설정</button></div>`;
+  body=`<div class="stack" style="gap:9px">${[['lobby','시즌 방 관리'],['slots','캐릭터 슬롯'],['notices','공지사항'],['rules','게임 안내']].map(([key,label])=>`<button class="button full" data-action="nav" data-view="${key}">${label} →</button>`).join('')}<button class="button full" data-action="profile">오너 닉네임 설정</button></div>`;
  }
  $('#modal-root').innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal ${wide?'wide':''}" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><header class="modal-head"><div><h2 id="dialog-title">${title}</h2><p>${description}</p></div><button class="icon-btn" data-action="close-modal" aria-label="창 닫기">×</button></header>${form?`<form data-form="${form}">`:''}<div class="modal-body">${body}</div>${footer?`<footer class="modal-footer">${footer}</footer>`:''}${form?'</form>':''}</section></div>`;
  if(modal.kind==='slot'||modal.kind==='portrait')hydratePortraitSource(modal);
@@ -530,7 +534,14 @@ document.addEventListener('click', async ev=>{
  if(button.disabled||state.busy)return;
  const action=button.dataset.action;
  try {
-  if(action==='nav'){if(button.dataset.view==='invites')await refreshInvitations();navigate(button.dataset.view);return;}
+  if(action==='nav'){if(button.dataset.view==='invites')await refreshInvitations();if(button.dataset.view==='notices')await refreshNotices();navigate(button.dataset.view);return;}
+  if(action==='notice-refresh'){await refreshNotices();render();return;}
+  if(action==='notice-new'){state.noticeEditor={title:'',body:'',category:'안내',pinned:false};state.noticeDelete=null;render();return;}
+  if(action==='notice-edit'){const n=state.notices.find(n=>n.id===button.dataset.id);if(n){state.noticeEditor={...n};state.noticeDelete=null;render();}return;}
+  if(action==='notice-cancel'){state.noticeEditor=null;render();return;}
+  if(action==='notice-delete'){state.noticeDelete=button.dataset.id;render();return;}
+  if(action==='notice-cancel-delete'){state.noticeDelete=null;render();return;}
+  if(action==='notice-confirm-delete'){const n=state.notices.find(n=>n.id===button.dataset.id);if(n){await api('/api/notices/'+encodeURIComponent(n.id),{method:'DELETE',body:{revision:n.revision}});state.noticeDelete=null;if(state.noticeEditor?.id===n.id)state.noticeEditor=null;await refreshNotices();render();toast('공지를 삭제했습니다.');}return;}
   if(action==='cup-draft-pick'||action==='cup-draft-auto'){await roomCommand('cup-draft',{turn:state.room.season.turn,pickNumber:state.room.season.cupDraft.picks.length+1,...(button.dataset.team?{team:button.dataset.team}:{}),...(action==='cup-draft-auto'?{remaining:true}:{})});render();return;}
   if(action==='watch-live'){state.liveSetNumber=null;navigate('match');return;}
   if(action==='live-set'){state.liveSetNumber=Number(button.dataset.number);render();return;}
@@ -596,6 +607,9 @@ document.addEventListener('submit',async ev=>{
    if(kind==='auth-register'&&data.password!==data.passwordConfirm)throw new Error('비밀번호 확인이 일치하지 않습니다.');
    const session=await api('/api/auth/'+(kind==='auth-login'?'login':'register'),{method:'POST',body:{username:data.username,password:data.password,...(kind==='auth-register'?{nickname:data.nickname,invitation:data.invitation}:{})}});
    state.auth.invitation='';await enterAccount(session);toast(kind==='auth-login'?'로그인했습니다.':'초대 가입을 완료했습니다.');
+  }else if(kind==='notice'){
+   const editor=state.noticeEditor;if(!editor)throw new Error('작성할 공지를 다시 선택해 주세요.');
+   await api('/api/notices'+(editor.id?'/'+encodeURIComponent(editor.id):''),{method:editor.id?'PUT':'POST',body:{title:data.title,body:data.body,category:data.category,pinned:data.pinned==='on',revision:editor.revision}});state.noticeEditor=null;await refreshNotices();render();toast('공지를 저장했습니다.');
   }else if(kind==='issue-invitation'){
    state.invitationIssued=await api('/api/invitations',{method:'POST',body:{days:Number(data.days)}});await refreshInvitations();render();toast('초대장을 발급했습니다.');
   }else if(kind==='password'){
@@ -701,9 +715,10 @@ function resetLoginState(){
 function renderAuth(){
  $('#owner-dock')?.remove();$('#modal-root').innerHTML='';$('#app').innerHTML=renderAuthPage(state.auth);
 }
+async function refreshNotices(){state.notices=(await api('/api/notices')).notices;}
 async function refreshInvitations(){state.invitations=(await api('/api/invitations')).invitations;}
 async function enterAccount(session){
- state.session=session;state.meta=await api('/api/meta');state.view='home';state.room=null;state.modal=null;
+ state.session=session;state.meta=await api('/api/meta');state.notices=[];state.noticeEditor=null;state.noticeDelete=null;state.view='home';state.room=null;state.modal=null;
  const saved=localStorage.getItem('first-team.room');
  if(saved&&session.rooms?.some(r=>r.code===saved))try{setRoom((await api(`/api/rooms/${encodeURIComponent(saved)}`)).room,false);}catch{localStorage.removeItem('first-team.room');}
  render();if(!roomPollTimer)roomPollTimer=setInterval(pollRoom,650);

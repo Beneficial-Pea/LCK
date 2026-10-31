@@ -423,3 +423,25 @@ test('Cup media-day commands enforce captain turn and reject duplicate picks',as
   assert.equal((await fetch(server.base+'/cup-draft.js')).status,200);
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
+
+test('notices require login to read and admin permissions to publish, edit and delete',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'notices-api-')),file=path.join(temp,'game.sqlite');let server;
+ try{
+  server=await launch(file);assert.equal((await fetch(server.base+'/api/notices')).status,401);
+  const admin=actor(server),member=actor(server);await admin.request('/api/session');await member.request('/api/session');
+  const adminId=(await admin.request('/api/session')).data.user.id,db=new Store(file);db.db.prepare("UPDATE accounts SET role='admin' WHERE user_id=?").run(adminId);db.close();
+  const original=(await member.request('/api/notices')).data.notices;assert.equal(original.length,2);
+  const input={title:'점검 공지',body:'<script>alert(1)</script>\n안내 둘째 줄',category:'점검',pinned:true};
+  assert.equal((await member.request('/api/notices','POST',input)).status,403);
+  assert.equal((await admin.request('/api/notices','POST',{...input,title:' '})).status,400);
+  let result=await admin.request('/api/notices','POST',input);assert.equal(result.status,200);const created=result.data.notice;
+  result=await member.request('/api/notices');assert.equal(result.data.notices[0].id,created.id);assert.equal(result.data.notices[0].body,input.body);
+  const route='/api/notices/'+created.id,edit={...input,title:'수정한 공지',revision:created.revision};
+  assert.equal((await member.request(route,'PUT',edit)).status,403);assert.equal((await member.request(route,'DELETE',{revision:1})).status,403);
+  result=await admin.request(route,'PUT',edit);assert.equal(result.status,200);assert.equal(result.data.notice.revision,2);
+  assert.equal((await admin.request(route,'PUT',edit)).status,409);assert.equal((await admin.request(route,'DELETE',{revision:1})).status,409);
+  assert.equal((await admin.request(route,'DELETE',{revision:2})).status,200);
+  assert.equal((await member.request('/api/notices')).data.notices.length,2);
+  for(const asset of ['/notices.js','/notices.css'])assert.equal((await fetch(server.base+asset)).status,200);
+ }finally{await server?.stop();await rm(temp,{recursive:true,force:true});}
+});

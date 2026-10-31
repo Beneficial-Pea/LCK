@@ -1,3 +1,4 @@
+import {listNotices,saveNotice,deleteNotice} from './lib/notices.mjs';
 import { ensureCupDraft, currentCupCaptain, pickCupTeam, completeCupDraft } from './lib/cup-draft.mjs';
 import { Accounts } from './lib/accounts.mjs';
 import { CHAMPION_RECOMMENDATIONS, recommendChampions } from './lib/champion-recommendations.mjs';
@@ -169,7 +170,14 @@ async function api(req, res, url) {
   if(route==='/api/auth/login'&&method==='POST')return sessionView(await accounts.login(req,res,body));
   if(route==='/api/auth/logout'&&method==='POST')return accounts.logout(req,res);
   if(route==='/api/session'&&method==='GET'){const current=accounts.current(req);return current?sessionView(current.user):accounts.status(req);}
-  const {user}=accounts.require(req);
+  const {user,account}=accounts.require(req);
+  const noticeMatch=route.match(/^\/api\/notices\/([a-zA-Z0-9-]{1,64})$/);
+  if(route==='/api/notices'&&method==='GET')return {notices:listNotices(store)};
+  if((route==='/api/notices'&&method==='POST')||(noticeMatch&&['PUT','DELETE'].includes(method))){
+    if(account.role!=='admin')fail(403,'관리자만 공지를 작성하거나 변경할 수 있습니다.');
+    if(method==='DELETE')return deleteNotice(store,noticeMatch[1],body.revision);
+    return {notice:saveNotice(store,body,user.name,noticeMatch?.[1]||null)};
+  }
   if(route==='/api/auth/password'&&method==='POST')return accounts.changePassword(req,res,body);
   if(route==='/api/invitations'&&method==='GET')return accounts.invitations(req);
   if(route==='/api/invitations'&&method==='POST')return accounts.issue(req,body);
@@ -473,6 +481,8 @@ const server = http.createServer(async (req, res) => {
     files['/world-events.css'] = ['world-events.css', 'text/css'];
     files['/auth.js']=['auth.js','text/javascript'];
     files['/auth.css']=['auth.css','text/css'];
+    files['/notices.js']=['notices.js','text/javascript'];
+    files['/notices.css']=['notices.css','text/css'];
     files['/cup-draft.js']=['cup-draft.js','text/javascript'];
     files['/honors.js']=['honors.js','text/javascript'];
     files['/tournament-board.js']=['tournament-board.js','text/javascript'];
