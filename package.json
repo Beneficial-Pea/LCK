@@ -8,6 +8,9 @@
   "scripts": {
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
+    "db:inspect": "node scripts/storage.mjs inspect",
+    "db:backup": "node scripts/storage.mjs backup",
+    "db:restore": "node scripts/storage.mjs restore",
     "test": "node --test --test-isolation=none --test-reporter=spec test/*.test.mjs",
     "check": "node --check server.mjs && node --check public/app.js"
   }

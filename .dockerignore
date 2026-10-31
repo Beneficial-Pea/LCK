@@ -8,3 +8,8 @@ attachments
 *.log
 .env
 .env.*
+
+.backups
+**/*.sqlite
+**/*.sqlite-wal
+**/*.sqlite-shm

@@ -2,16 +2,21 @@ services:
   - type: web
     name: first-team-life
     runtime: docker
-    plan: free
+    plan: starter
+    numInstances: 1
+    disk:
+      name: first-team-data
+      mountPath: /data
+      sizeGB: 1
     branch: main
-    healthCheckPath: /
+    healthCheckPath: /healthz
     envVars:
       - key: COOKIE_SECURE
         value: "1"
       - key: DATA_FILE
-        value: /tmp/first-team/game.sqlite
+        value: /data/game.sqlite
       - key: SAVE_PERSISTENCE
-        value: ephemeral
+        value: persistent
       - key: FIRST_TEAM_ADMIN_INVITE
         generateValue: true
       - key: TRUST_PROXY

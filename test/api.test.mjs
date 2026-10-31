@@ -403,3 +403,23 @@ test('persistent multiplayer HTTP workflow enforces turn ownership and message p
     await rm(temp, { recursive: true, force: true });
   }
 });
+
+test('Cup media-day commands enforce captain turn and reject duplicate picks',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'cup-media-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
+ try{
+  running=await launch(file);server.base=running.base;const user=actor(server);
+  await user.request('/api/slots/0','PUT',{character:character('MID','Captain')});
+  const created=await user.request('/api/rooms','POST',{slot:0,year:2026}),code=created.data.room.code,route='/api/rooms/'+code;
+  await running.stop();const db=new Store(file),room=db.room(code);room.lobby.status='started';room.season.draft=false;
+  const d=room.season.cupDraft;room.season.team=d.previous.champion;room.season.date=d.date;room.players[0].character.team=room.season.team;db.saveRoom(room);db.close();
+  running=await launch(file);server.base=running.base;
+  const body={turn:room.season.turn,pickNumber:1,team:d.remaining[0]};
+  assert.equal((await user.request(route+'/cup-draft','POST',{...body,turn:999})).status,409);
+  assert.equal((await user.request(route+'/cup-draft','POST',{...body,team:d.previous.champion})).status,400);
+  let response=await user.request(route+'/cup-draft','POST',body);assert.equal(response.status,200);assert.equal(response.data.room.season.cupDraft.picks.length,1);
+  assert.equal((await user.request(route+'/cup-draft','POST',body)).status,409);
+  assert.equal((await user.request(route+'/cup-draft','POST',{...body,pickNumber:2,team:d.remaining[1]})).status,403);
+  response=await user.request(route+'/cup-draft','POST',{turn:room.season.turn,pickNumber:2,remaining:true});assert.equal(response.status,200);assert.equal(response.data.room.season.cupDraft.status,'completed');assert.equal(response.data.room.season.cupDraft.picks.length,8);
+  assert.equal((await fetch(server.base+'/cup-draft.js')).status,200);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});

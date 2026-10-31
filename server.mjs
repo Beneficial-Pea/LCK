@@ -1,3 +1,4 @@
+import { ensureCupDraft, currentCupCaptain, pickCupTeam, completeCupDraft } from './lib/cup-draft.mjs';
 import { Accounts } from './lib/accounts.mjs';
 import { CHAMPION_RECOMMENDATIONS, recommendChampions } from './lib/champion-recommendations.mjs';
 import { choosePreparation, rememberPreparation } from './lib/auto-preparation.mjs';
@@ -23,8 +24,9 @@ import { TEAM_PROFILES, TEAM_PROFILE_BASIS, defaultOpponentSettings } from './li
 import { ACTIONS, TEAMS, POSITIONS, RULES, RULES2026, createSeason, settleDay, getRoster } from './lib/season.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const store = new Store(process.env.DATA_FILE || path.join(root, '.data', 'game.sqlite'));
-const accounts=new Accounts(store,{adminInviteCode:process.env.FIRST_TEAM_ADMIN_INVITE||'',secure:process.env.COOKIE_SECURE==='1',trustProxy:process.env.TRUST_PROXY==='1'});
+const storageMaintenance=process.env.STORAGE_MAINTENANCE==='1';
+const store = storageMaintenance?null:new Store(process.env.DATA_FILE || path.join(root, '.data', 'game.sqlite'));
+const accounts=storageMaintenance?null:new Accounts(store,{adminInviteCode:process.env.FIRST_TEAM_ADMIN_INVITE||'',secure:process.env.COOKIE_SECURE==='1',trustProxy:process.env.TRUST_PROXY==='1'});
 const LIMIT = 256 * 1024;
 const locations = ['연습실', '거실', '주방', '분석실', '헬스장', '매니저실', '경기장', 'PC방', '편의점', '식당', '카페', '클리닉'];
 const clone = value => structuredClone(value);
@@ -67,7 +69,7 @@ function roomFor(code, userId) {
   const room = store.room(code.toUpperCase());
   if (!room) fail(404, '초대코드에 해당하는 방이 없습니다.');
   if (!room.players.some(p => p.userId === userId)) fail(403, '참가한 방만 조회하거나 진행할 수 있습니다.');
-  if(!room.liveMatch){const demaciaChanged=ensureDemacia(room.season),ewcChanged=ensureEwc(room.season);if(demaciaChanged||ewcChanged){updateDemacia(room.season);updateEwc(room.season);room.revision++;store.saveRoom(room);}}
+  if(!room.liveMatch){const demaciaChanged=ensureDemacia(room.season),ewcChanged=ensureEwc(room.season),cupChanged=ensureCupDraft(room.season);if(demaciaChanged||ewcChanged||cupChanged){updateDemacia(room.season);updateEwc(room.season);room.revision++;store.saveRoom(room);}}
   progressRoom(room);
   return room;
 }
@@ -316,6 +318,16 @@ async function api(req, res, url) {
         extra.adjustment = applyTeamNpcPreset(room);
         break;
       }
+      case 'cup-draft': {
+        ensureStarted(room);ensureHost(room,user);ensureNoBroadcast(room);ensureTurn(room,body);
+        const draft=room.season.cupDraft;
+        if(!draft||!['scheduled','drafting'].includes(draft.status)||room.season.date!==draft.date)fail(409,'오늘은 진행할 컵 미디어데이 지명이 없습니다.');
+        if(Number(body.pickNumber)!==draft.picks.length+1)fail(409,'지명이 이미 진행됐습니다. 최신 상태를 확인하세요.');
+        if(body.team){if(currentCupCaptain(room.season)!==room.season.team)fail(403,'우리 팀이 그룹 대표로 지명하는 차례가 아닙니다.');pickCupTeam(room.season,body.team);}
+        else if(body.remaining===true)completeCupDraft(room.season);
+        else pickCupTeam(room.season);
+        break;
+      }
       case 'action': {
         ensureStarted(room);if(vacationFor(room.season))fail(409,'선수단 휴가 중입니다. 행동 선택 없이 휴가를 넘겨주세요.');
         ensureNoBroadcast(room);
@@ -362,6 +374,7 @@ async function api(req, res, url) {
         for (let i = 0; i < 7 && !room.season.finished; i++) {
           const ownGame = room.season.schedule.some(g => g.date === room.season.date && g.status === 'scheduled' && [g.teamA, g.teamB].includes(room.season.team));
           if (ownGame||vacationFor(room.season)) break;
+          if(room.season.cupDraft?.date===room.season.date&&['scheduled','drafting'].includes(room.season.cupDraft.status))break;
           if(clubSchedule(room).some(event=>event.date===room.season.date&&event.status==='scheduled'))break;
           const decision=choosePreparation(room,me,ACTIONS);
           decisions.push(rememberPreparation(room.season,me,decision));
@@ -437,6 +450,16 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'");
   try {
     const url = new URL(req.url, 'http://localhost');
+    if(url.pathname==='/healthz'){
+      if(!['GET','HEAD'].includes(req.method))fail(405,'지원하지 않는 요청 방식입니다.');
+      res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type','application/json; charset=utf-8');
+      return res.end(req.method==='HEAD'?undefined:JSON.stringify({status:storageMaintenance?'maintenance':'ok'}));
+    }
+    if(storageMaintenance){
+      res.statusCode=503;res.setHeader('Cache-Control','no-store');res.setHeader('Retry-After','120');
+      if(url.pathname.startsWith('/api/')){res.setHeader('Content-Type','application/json; charset=utf-8');return res.end(JSON.stringify({error:'저장소를 안전하게 이전하고 있습니다. 잠시 후 다시 접속해 주세요.'}));}
+      res.setHeader('Content-Type','text/html; charset=utf-8');return res.end('<!doctype html><html lang="ko"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FIRST TEAM · 저장소 이전</title><body style="background:#0d1117;color:#e6ebf2;font-family:sans-serif;padding:12vh 8vw;line-height:1.8"><h1>저장소를 안전하게 이전하고 있어요.</h1><p>계정과 시즌 기록을 옮기는 동안 잠시 접속을 쉬어 갑니다.<br>이전이 끝나면 같은 계정으로 이어 할 수 있습니다.</p></body></html>');
+    }
     if (url.pathname.startsWith('/api/')) {
       res.setHeader('Cache-Control', 'no-store');
       const result = await api(req, res, url);
@@ -450,6 +473,7 @@ const server = http.createServer(async (req, res) => {
     files['/world-events.css'] = ['world-events.css', 'text/css'];
     files['/auth.js']=['auth.js','text/javascript'];
     files['/auth.css']=['auth.css','text/css'];
+    files['/cup-draft.js']=['cup-draft.js','text/javascript'];
     files['/honors.js']=['honors.js','text/javascript'];
     files['/tournament-board.js']=['tournament-board.js','text/javascript'];
     files['/match-feed.js'] = ['match-feed.js','text/javascript'];
@@ -473,6 +497,6 @@ const server = http.createServer(async (req, res) => {
 
 const port = Number(process.env.PORT || 3000), host = process.env.HOST || '0.0.0.0';
 server.listen(port, host, () => console.log(`FIRST TEAM listening on port ${server.address().port}`));
-function shutdown() { server.close(() => { store.close(); process.exit(0); }); }
+function shutdown() { server.close(() => { store?.close(); process.exit(0); }); }
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);

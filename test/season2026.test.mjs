@@ -41,7 +41,7 @@ const weakOptions = { team: 'BRO', power: 35, npcPower: 35, difficulty: 'hard', 
 const strongOptions = { team: 'T1', power: 99, npcPower: 95, difficulty: 'easy', seed: '2026-strong', opponents: TEAMS.map(name => ({ name, power: 35, style: '균형 운영' })) };
 const balancedOptions = { team: 'DK', power: 70, npcPower: 70, seed: '2026-balanced' };
 
-test('2026 calendar keeps every imported KST slot and the actual fixed Cup/R1~2 pairings', () => {
+test('2026 calendar keeps every imported KST slot and the Cup draft slots and fixed R1~2 pairings', () => {
   const s = createSeason({ year: 2026, seed: '2026-calendar' });
   assert.equal(s.year, 2026); assert.equal(s.startDate, '2026-01-12'); assert.equal(s.endDate, '2026-11-15');
   assert.equal(s.totalTurns, 308); assert.equal(s.turn, 1); assert.equal(s.date, s.startDate);
@@ -61,7 +61,8 @@ test('2026 calendar keeps every imported KST slot and the actual fixed Cup/R1~2 
   assert.equal(cup.length, 25); assert.equal(cup.filter(g => g.bestOf === 5).length, 5);
   assert.equal(league.length, 90);
   assert.equal(s.schedule.filter(g => g.id.startsWith('groups-')).length, 40);
-  for (const match of [...cup, ...league]) assert.deepEqual([match.teamA, match.teamB], sourceById.get(String(match.sourceId)).teams);
+  for (const match of cup) assert.deepEqual([match.teamA,match.teamB],[null,null]);
+  for (const match of league) assert.deepEqual([match.teamA, match.teamB], sourceById.get(String(match.sourceId)).teams);
   for (const team of TEAMS) assert.equal(league.filter(g => [g.teamA, g.teamB].includes(team)).length, 18);
   for (const a of TEAMS) for (const b of TEAMS) if (a !== b) {
     assert.equal(league.filter(g => [g.teamA, g.teamB].includes(a) && [g.teamA, g.teamB].includes(b)).length, 2);

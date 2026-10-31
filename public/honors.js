@@ -1,3 +1,4 @@
+import {cupDraftSummary} from './cup-draft.js';
 import { renderActiveTournament, resolvedSlotTeam } from './tournament-board.js';
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const positions={TOP:'탑',JGL:'정글',MID:'미드',ADC:'원딜',SUP:'서포터'};
@@ -27,9 +28,9 @@ export function renderCupProgress(room){
  const stageTeams=key=>[...new Set(matches.filter(m=>(ids[key]||[]).includes(m.id)&&m.teamA&&m.teamB).flatMap(m=>[m.teamA,m.teamB]))];
  const qualifiers=t.cupPlayinQualifiers||[2,3,4].map(i=>matches.find(m=>m.id===ids.cupPlayin?.[i])?.result?.winner).filter(Boolean);
  const direct=t.cupDirect||[],playin=t.cupPlayinTeams||stageTeams('cupPlayin'),playoffs=t.cupPlayoffTeams||(s.flags?.cupPlayoffSeeded?[...new Set([...direct,...qualifiers])]:[]);
- return `<section class="panel section-gap" data-cup-progress><div class="panel-header"><h2>LCK CUP · 그룹과 진출 현황</h2><span class="tag">${s.flags?.cupPlayoffSeeded?'플레이오프':s.flags?.cupSeeded?'플레이인':'그룹 배틀'}</span></div><div class="panel-body"><div class="cup-group-grid">${groups.map((teams,i)=>{
+ return `<section class="panel section-gap" data-cup-progress><div class="panel-header"><h2>LCK CUP · 그룹과 진출 현황</h2><span class="tag">${s.flags?.cupPlayoffSeeded?'플레이오프':s.flags?.cupSeeded?'플레이인':'그룹 배틀'}</span></div><div class="panel-body">${cupDraftSummary(s)}<div class="cup-group-grid">${groups.map((teams,i)=>{
   const rows=teams.map(team=>(s.cupStandings||[]).find(p=>p.team===team)||{team,points:0,wins:0,losses:0,setWins:0,setLosses:0}).sort((a,b)=>b.points-a.points||(b.setWins-b.setLosses)-(a.setWins-a.setLosses)||a.team.localeCompare(b.team));
-  return `<section><h3>${teams.includes('Gen.G')?'바론 그룹':'장로 그룹'} <span class="tag ${s.flags?.cupSeeded&&t.cupWinningGroup===i?'green':''}">${rows.reduce((n,r)=>n+(r.points||0),0)}점</span></h3><table class="standings"><thead><tr><th>팀</th><th>승</th><th>패</th><th>득실</th><th>점수</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.team===s.team?'ours':''}"><td>${e(r.team)}</td><td>${r.wins}</td><td>${r.losses}</td><td>${r.setWins-r.setLosses>0?'+':''}${r.setWins-r.setLosses}</td><td>${r.points||0}</td></tr>`).join('')}</tbody></table></section>`;
+  return `<section><h3>${i===0?'바론 그룹':'장로 그룹'} <span class="tag ${s.flags?.cupSeeded&&t.cupWinningGroup===i?'green':''}">${rows.reduce((n,r)=>n+(r.points||0),0)}점</span></h3><table class="standings"><thead><tr><th>팀</th><th>승</th><th>패</th><th>득실</th><th>점수</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.team===s.team?'ours':''}"><td>${e(r.team)}</td><td>${r.wins}</td><td>${r.losses}</td><td>${r.setWins-r.setLosses>0?'+':''}${r.setWins-r.setLosses}</td><td>${r.points||0}</td></tr>`).join('')}</tbody></table></section>`;
  }).join('')}</div><p class="note">그룹 합산 점수로 승리 그룹을 결정합니다. 마지막 주 BO5 승리는 2점입니다.</p><div class="cup-advancement"><div><span class="eyebrow accent">플레이오프 직행 · 3팀</span><p>${names(direct)}</p></div><div><span class="eyebrow">플레이인 참가 · 6팀</span><p>${names(playin)}</p></div><div><span class="eyebrow">플레이인 통과 · 3팀</span><p>${qualifiers.length?names(qualifiers):'플레이인 결과에 따라 확정'}</p></div><div><span class="eyebrow accent">플레이오프 진출 · 6팀</span><p>${playoffs.length?names(playoffs):'직행 3팀 + 플레이인 통과 3팀'}</p></div></div></div></section>`;
 }
 

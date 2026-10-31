@@ -5,6 +5,7 @@ COPY package.json server.mjs ./
 COPY lib/ ./lib/
 COPY data/ ./data/
 COPY public/ ./public/
+COPY scripts/ ./scripts/
 
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \

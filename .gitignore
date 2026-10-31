@@ -4,3 +4,8 @@ node_modules/
 coverage/
 .env
 test-results/
+
+.backups/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
