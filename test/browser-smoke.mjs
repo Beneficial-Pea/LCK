@@ -132,9 +132,9 @@ try {
   await page.locator('[data-form="chat"] button[type="submit"]').click();
   await page.getByText('브라우저 검증 팀 메시지', { exact: true }).waitFor();
   await nav('owner');
-  assert.equal(await page.getByText('브라우저 검증 팀 메시지', { exact: true }).count(), 0);
-  await page.locator('[data-form="chat"] [name="text"]').fill('오너 일정 조율 메시지');
-  await page.locator('[data-form="chat"] button[type="submit"]').click();
+  assert.equal(await page.locator('#owner-dock').getByText('브라우저 검증 팀 메시지', { exact: true }).count(), 0);
+  await page.locator('[data-form="owner-dock"] [name="text"]').fill('오너 일정 조율 메시지');
+  await page.locator('[data-form="owner-dock"] button[type="submit"]').click();
   await page.getByText('오너 일정 조율 메시지', { exact: true }).waitFor();
   checks.push('team and owner chat are distinct');
 

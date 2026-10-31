@@ -42,6 +42,29 @@ function portrait(character, size='small') {
  const source=safePortrait(character?.avatar),name=character?.nickname||character?.name||'선수';
  return source?`<img class="player-portrait ${size}" src="${e(source)}" alt="${e(name)} 프로필 사진" loading="lazy">`:`<span class="player-portrait ${size} portrait-fallback" role="img" aria-label="${e(name)} 기본 프로필">${e(name.slice(0,1))}</span>`;
 }
+let ownerDockOpen=localStorage.getItem('first-team.owner-dock')==='1';
+const ownerDrafts=new Map();
+function refreshOwnerDock(force=false){
+ let dock=$('#owner-dock');
+ if(!state.room||!state.session){dock?.remove();return;}
+ const code=state.room.code,key=`first-team.owner-seen:${state.session.user.id}:${code}`;
+ const messages=(state.room.messages||[]).filter(m=>m.channel==='owner');
+ const last=messages.at(-1)?.id||0;
+ let seen=Number(localStorage.getItem(key)||0);
+ if(ownerDockOpen){seen=last;localStorage.setItem(key,String(last));}
+ const unread=messages.filter(m=>m.senderId!==state.session.user.id&&m.id>seen).length;
+ if(!dock){dock=document.createElement('aside');dock.id='owner-dock';document.body.append(dock);force=true;}
+ if(force||dock.dataset.room!==code||dock.dataset.open!==String(ownerDockOpen)){
+  dock.dataset.room=code;dock.dataset.open=String(ownerDockOpen);
+  dock.innerHTML=ownerDockOpen?`<section class="owner-dock-panel" aria-label="오너 채팅"><header><div><strong>오너 채팅</strong><small>실제 참가자 대화 · ${e(state.room.name)}</small></div><button type="button" data-owner-toggle aria-label="오너 채팅 접기">—</button></header><div class="owner-dock-log" role="log" aria-label="오너 대화 기록"></div><form data-form="owner-dock"><label class="sr-only" for="owner-dock-text">오너 메시지</label><textarea id="owner-dock-text" name="text" rows="2" maxlength="2000" placeholder="게임을 보면서 이야기하기…" required>${e(ownerDrafts.get(code)||'')}</textarea><div><small>${e(state.session.user.name)} · 오너로 전송</small><button class="button primary small" type="submit">전송</button></div></form></section>`:`<button class="owner-dock-launcher" type="button" data-owner-toggle aria-expanded="false">◇ 오너 채팅 <span data-owner-unread></span></button>`;
+ }
+ if(!ownerDockOpen){const badge=$('[data-owner-unread]',dock);if(badge)badge.textContent=unread?String(unread):'';return;}
+ const list=$('.owner-dock-log',dock),follow=list.scrollHeight-list.scrollTop-list.clientHeight<50;
+ const signature=messages.map(m=>m.id).join(',');
+ if(list.dataset.messages!==signature){list.dataset.messages=signature;list.innerHTML=messages.length?messages.map(m=>`<article class="${m.senderId===state.session.user.id?'own':''}"><div><strong>${e(m.senderName)}</strong><time>${new Date(m.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</time></div><p>${e(m.text)}</p></article>`).join(''):'<p class="owner-dock-empty">일정과 잡담을 편하게 나눠보세요.<br>선수 관계나 경기 판정에는 반영되지 않습니다.</p>';if(follow||force)list.scrollTop=list.scrollHeight;}
+}
+document.addEventListener('click',event=>{if(event.target.closest('[data-owner-toggle]')){ownerDockOpen=!ownerDockOpen;localStorage.setItem('first-team.owner-dock',ownerDockOpen?'1':'0');refreshOwnerDock(true);}});
+document.addEventListener('input',event=>{if(event.target.id==='owner-dock-text'&&state.room)ownerDrafts.set(state.room.code,event.target.value);});
 function portraitEditor(character) {
  const crop=normalizePortraitCrop(state.modal.avatarCrop),available=Boolean(state.modal.avatarSource);
  return `<div class="portrait-editor crop-editor"><div id="portrait-preview"><div id="portrait-crop-frame" tabindex="${available?'0':'-1'}" role="group" aria-label="사진에 보일 부분. 드래그로 위치를 옮기고 확대 슬라이더로 조절하세요." aria-describedby="portrait-crop-help" class="${available?'has-photo':''}">${portrait({...character,avatar:state.modal.avatar},'large')}</div><p class="note portrait-frame-label">프로필에 표시될 영역</p></div><div class="portrait-editor-controls"><strong>프로필 사진 · 보이는 부분 설정</strong><p class="note" id="portrait-crop-help">사진을 드래그해 위치를 옮기고 확대를 조절하세요. 저장하면 미리보기 그대로 적용됩니다.</p><div class="row"><label class="button small" for="portrait-file">사진 선택<input class="sr-only" type="file" id="portrait-file" data-portrait-file accept="image/png,image/jpeg,image/webp"></label><button class="button small ghost" type="button" data-action="remove-portrait">사진 삭제</button></div><div class="portrait-crop-sliders">${[['zoom','확대',1,4,.05,crop.zoom,'배']].map(([key,label,min,max,step,value,unit])=>`<div class="portrait-crop-control"><label for="portrait-crop-${key}">${label}<output id="portrait-value-${key}">${key==='zoom'?Number(value).toFixed(2):value}${unit}</output></label><input id="portrait-crop-${key}" data-portrait-control="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${value}" aria-valuetext="${value}${unit}" ${available?'':'disabled'}></div>`).join('')}</div><button class="button small ghost portrait-reset" type="button" data-action="reset-portrait-crop" ${available?'':'disabled'}>위치·확대 초기화</button><p class="note" id="portrait-status" aria-live="polite">${state.modal.avatar?'등록된 사진을 다시 조절할 수 있습니다.':'사진이 없으면 닉네임 첫 글자를 표시합니다.'}</p><p class="note portrait-file-note">PNG · JPG · WebP / 원본 최대 8MB. 편집용 사진과 표시 사진을 작게 저장합니다.</p></div></div>`;
@@ -156,11 +179,13 @@ function setRoom(room, renderNow=true) {
  }
  if(wasWaiting&&!waitingRoom(room)&&state.view==='lobby'){state.view='home';toast('선수단 준비 완료. 시즌이 시작되었습니다.');}
  const submission=room.submissions[state.session?.user.id];if(submission)state.selectedAction=submission.action;
+ refreshOwnerDock();
  if(renderNow)render();
 }
 async function refreshSession() { state.session=await api('/api/session'); }
 function stopPlayback() { clearInterval(playbackTimer);playbackTimer=null;state.playing=false; }
 function navigate(view) {
+ if(view==='owner'){if(!state.room){toast('시즌 방에 참가한 뒤 오너 채팅을 사용할 수 있습니다.');return;}ownerDockOpen=!ownerDockOpen;localStorage.setItem('first-team.owner-dock',ownerDockOpen?'1':'0');refreshOwnerDock(true);return;}
  stopPlayback();
  if(waitingRoom()&&!['lobby','slots','rules','chat','owner'].includes(view)){toast('대기실에서 전원이 준비한 뒤 방장이 시즌을 시작합니다.');state.view='lobby';}
  else if(!state.room && !['home','lobby','slots','rules'].includes(view)){toast('캐릭터를 선택한 뒤 시즌 방을 만들거나 참가해 주세요.');state.view='home';}
@@ -197,6 +222,7 @@ function render() {
   }
   if(state.view==='match'){const list=$('#event-list');if(list)list.scrollTop=!eventPosition||eventPosition.follow?list.scrollHeight:eventPosition.top;}
  }
+ refreshOwnerDock();
  renderModal();
  if(['chat','owner'].includes(state.view)){const list=$('.chat-messages');if(list)list.scrollTop=list.scrollHeight;}if(state.view==='lobby'&&waitingRoom()){const list=$('.assembly-messages');if(list)list.scrollTop=list.scrollHeight;}
 }
@@ -509,6 +535,12 @@ document.addEventListener('submit',async ev=>{
   }else if(kind==='join-room'){
    const result=await api('/api/rooms/join',{method:'POST',body:{slot:Number(data.slot),code:data.code.trim().toUpperCase()}});await refreshSession();setRoom(result.room,false);closeModal();navigate(waitingRoom()?'lobby':'home');toast('선수단에 합류했습니다.');
   }else if(kind==='takeover'){await settle(true);}
+  else if(kind==='owner-dock'){
+   const code=state.room.code,text=data.text.trim();if(!text)throw new Error('메시지를 입력해 주세요.');
+   const result=await api(`/api/rooms/${encodeURIComponent(code)}/chat`,{method:'POST',body:{channel:'owner',text}});
+   ownerDrafts.delete(code);const input=$('#owner-dock-text');if(input&&state.room?.code===code)input.value='';
+   if(state.room?.code===code)setRoom(result.room,false);refreshOwnerDock();
+  }
   else if(kind==='lobby-chat'){
    const text=data.text.trim();if(!text)throw new Error('메시지를 입력해 주세요.');await roomCommand('chat',{channel:'owner',text});
   }else if(kind==='chat'){
@@ -561,7 +593,7 @@ document.addEventListener('keydown',ev=>{
  if(ev.key==='Tab'&&state.modal){const nodes=[...$('#modal-root').querySelectorAll('button:not([disabled]),input:not([type=hidden]):not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href]')];if(!nodes.length)return;const first=nodes[0],last=nodes[nodes.length-1];if(ev.shiftKey&&document.activeElement===first){ev.preventDefault();last.focus();}else if(!ev.shiftKey&&document.activeElement===last){ev.preventDefault();first.focus();}}
  if(ev.key==='Enter'&&(ev.ctrlKey||ev.metaKey)&&ev.target.matches('.chat-form textarea')){ev.preventDefault();ev.target.form.requestSubmit();}
 });
-function editing() {return !!state.modal||!!document.activeElement?.matches('input,textarea,select,[data-scene-floor]');}
+function editing() {return !!state.modal||(document.activeElement?.id!=='owner-dock-text'&&!!document.activeElement?.matches('input,textarea,select,[data-scene-floor]'));}
 document.addEventListener('focusout',()=>{setTimeout(()=>{if(state.pendingRender&&!editing()){state.pendingRender=false;render();}},30);});
 async function pollRoom() {
  if(!state.room||state.busy||document.hidden||roomPollInFlight)return;
