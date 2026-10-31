@@ -1,3 +1,4 @@
+import { authenticatedBrowserContext } from './helpers/accounts.mjs';
 // Optional real-browser QA: node test/crop-browser.mjs (Playwright + Chromium).
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -20,7 +21,7 @@ const noCrop=character=>{const copy=structuredClone(character);delete copy.avata
 try{
  const baseURL=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error(output||'Server timeout')),10000);child.stdout.on('data',data=>{output+=data;const port=output.match(/listening on port (\d+)/)?.[1];if(port){clearTimeout(timer);resolve(`http://127.0.0.1:${port}`);}});child.stderr.on('data',data=>output+=data);child.once('error',reject);child.once('exit',code=>{clearTimeout(timer);reject(new Error(`Server exit ${code}: ${output}`));});});
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
- const context=await browser.newContext({baseURL,hasTouch:true,viewport:{width:1440,height:1000}}),page=await context.newPage();
+ const context=await authenticatedBrowserContext(browser,{baseURL,hasTouch:true,viewport:{width:1440,height:1000}}),page=await context.newPage();
  page.on('pageerror',error=>errors.push(error.message));
  const request=async(route,data,method='POST')=>{const response=await context.request.fetch(route,{method,data});const body=await response.json();assert(response.ok(),JSON.stringify(body));return body;};
  const session=async()=>(await context.request.get('/api/session')).json();
@@ -63,7 +64,7 @@ try{
  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+30,y:y+8}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
  assert(Number(await page.locator('[data-portrait-control=x]').inputValue())<beforeTouch);await fit();await page.screenshot({path:path.join(root,'test-results/crop-mobile.png'),fullPage:true});await save(page.locator('[data-form=portrait]'));
  checks.push('Mobile 390px crop editor fits; actual touch drag moves framing and saves');
- const peer=await browser.newContext({baseURL});await peer.request.get('/api/session');assert((await peer.request.put('/api/slots/0',{data:{character:{name:'동료',nickname:'Peer',age:20,position:'JGL',mainChampion:'리 신'}}})).ok());assert((await peer.request.post('/api/rooms/join',{data:{slot:0,code}})).ok());const peerRoom=(await(await peer.request.get(`/api/rooms/${code}`)).json()).room;
+ const peer=await authenticatedBrowserContext(browser,{baseURL});await peer.request.get('/api/session');assert((await peer.request.put('/api/slots/0',{data:{character:{name:'동료',nickname:'Peer',age:20,position:'JGL',mainChampion:'리 신'}}})).ok());assert((await peer.request.post('/api/rooms/join',{data:{slot:0,code}})).ok());const peerRoom=(await(await peer.request.get(`/api/rooms/${code}`)).json()).room;
  assert.equal(peerRoom.players[0].character.avatarSource,undefined);assert.equal(peerRoom.players[0].character.avatarCrop,undefined);assert.equal(peerRoom.players[0].character.avatar,(await roomFor(code)).players[0].character.avatar);await peer.close();
  await page.setViewportSize({width:1440,height:1000});await request('/api/slots/1',{character:{name:'이전사진',nickname:'Legacy',age:21,position:'SUP',mainChampion:'룰루',avatar:slot.avatar}},'PUT');await page.reload();await page.locator('.season-strip').waitFor();await nav(page,'slots');await button(page,'select-slot','[data-index="1"]').click();await page.waitForFunction(()=>!document.querySelector('#modal-root [type=submit]')?.disabled);
  assert((await page.locator('#portrait-status').textContent()).includes('이전 사진'));await slider('zoom',2);assert.equal(Number(await page.locator('[data-portrait-control=zoom]').inputValue()),2);await button(page,'remove-portrait').click();await save(page.locator('[data-form=slot]'));state=await session();assert.equal(state.slots[1].avatar,null);assert.equal(state.slots[1].avatarSource,null);assert.equal(state.slots[1].avatarCrop,null);

@@ -1,3 +1,4 @@
+import { authenticatedBrowserContext } from './helpers/accounts.mjs';
 // Optional browser QA: requires Playwright and a Chromium executable.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -33,7 +34,7 @@ try {
     child.once('exit', code => { clearTimeout(timer); reject(new Error(`Server exited ${code}: ${output}`)); });
   });
   browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, baseURL });
+  const context = await authenticatedBrowserContext(browser,{ viewport: { width: 1440, height: 1000 }, baseURL });
   const page = await context.newPage();
   page.on('pageerror', e => errors.push(e.message));
   const button = (action, scope = page) => scope.locator(`[data-action="${action}"]`).filter({ visible: true }).first();
@@ -112,7 +113,7 @@ try {
   assert.equal(await page.locator('.player-card img[alt="Portrait 프로필 사진"]').getAttribute('src'), newPhoto);
   checks.push('Reload restores the active room photo');
 
-  const peerContext = await browser.newContext({ viewport: { width: 1280, height: 900 }, baseURL });
+  const peerContext = await authenticatedBrowserContext(browser,{ viewport: { width: 1280, height: 900 }, baseURL });
   await peerContext.request.get('/api/session');
   assert((await peerContext.request.put('/api/slots/0', { data: { character: { name: '이친구', nickname: 'NoPhoto', age: 20, team: 'T1', position: 'JGL', mainChampion: '리 신', pool: ['리 신', '바이'], style: '균형 운영' } } })).ok());
   assert((await peerContext.request.post('/api/rooms/join', { data: { code, slot: 0 } })).ok());

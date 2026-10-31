@@ -1,3 +1,4 @@
+import { authenticatedBrowserContext } from './helpers/accounts.mjs';
 // Optional end-to-end browser QA. Uses an isolated server and temporary SQLite.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -41,7 +42,7 @@ try {
   browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
   const contexts = [], pages = [];
   for (let i = 0; i < 2; i++) {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, baseURL });
+    const context = await authenticatedBrowserContext(browser,{ viewport: { width: 1440, height: 1000 }, baseURL });
     const page = await context.newPage();page.on('pageerror', e => errors.push(e.message));
     await page.goto('/');await page.locator('.welcome-hero').waitFor();
     contexts.push(context);pages.push(page);

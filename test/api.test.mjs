@@ -1,3 +1,4 @@
+import { registerTestServer, ensureTestAccount } from './helpers/accounts.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -31,6 +32,7 @@ async function launch(dataFile,overrides={}) {
     child.once('error', error => { clearTimeout(timeout); reject(error); });
     child.once('exit', code => { clearTimeout(timeout); reject(new Error(`Server exited ${code}: ${output}`)); });
   });
+  registerTestServer(base,dataFile);
   return {
     base,
     async stop() {
@@ -45,6 +47,7 @@ function actor(server) {
   return {
     cookie: '',
     async request(route, method = 'GET', body) {
+      await ensureTestAccount(server,this);
       const headers = {};
       if (this.cookie) headers.Cookie = this.cookie;
       if (body !== undefined) headers['Content-Type'] = 'application/json';

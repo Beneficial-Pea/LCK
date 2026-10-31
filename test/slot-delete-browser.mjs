@@ -1,3 +1,4 @@
+import { authenticatedBrowserContext } from './helpers/accounts.mjs';
 // Optional browser QA for explicit private-slot deletion and active-season isolation.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -25,7 +26,7 @@ try {
     child.stderr.on('data', chunk => { output += chunk; });child.once('error', reject);child.once('exit', code => { clearTimeout(timer);reject(new Error(`Server exited ${code}: ${output}`)); });
   });
   browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, baseURL });
+  const context = await authenticatedBrowserContext(browser,{ viewport: { width: 1440, height: 1000 }, baseURL });
   const request = async (route, data, method = data ? 'POST' : 'GET') => { const response = await context.request.fetch(route, { method, ...(data ? { data } : {}) });const body = await response.json();assert(response.ok(), `${route}: ${JSON.stringify(body)}`);return body; };
   const avatar = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+Xn1cAAAAASUVORK5CYII=';
   const character = nickname => ({ name: nickname, nickname, age: 20, position: 'MID', mainChampion: '아리', pool: ['아리', '아지르'], avatar, avatarSource: avatar, avatarCrop: { x: .3, y: .6, zoom: 2 } });

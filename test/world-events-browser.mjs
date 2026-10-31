@@ -1,3 +1,4 @@
+import { authenticatedBrowserContext } from './helpers/accounts.mjs';
 // Optional real-browser QA. Uses two sessions and a real naturally rolled event.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -34,8 +35,8 @@ try {
     child.once('exit', code => { clearTimeout(timer);reject(new Error(`Server exited ${code}: ${output}`)); });
   });
   browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
-  const hostContext = await browser.newContext({ viewport: { width: 1440, height: 1000 }, baseURL });
-  const peerContext = await browser.newContext({ viewport: { width: 1280, height: 900 }, baseURL });
+  const hostContext = await authenticatedBrowserContext(browser,{ viewport: { width: 1440, height: 1000 }, baseURL });
+  const peerContext = await authenticatedBrowserContext(browser,{ viewport: { width: 1280, height: 900 }, baseURL });
   const request = async (context, route, data, method = data ? 'POST' : 'GET') => {
     const response = await context.request.fetch(route, { method, ...(data ? { data } : {}) });
     const body = await response.json();assert(response.ok(), `${route}: ${JSON.stringify(body)}`);return body;

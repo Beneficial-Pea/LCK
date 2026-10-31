@@ -12,3 +12,7 @@ services:
         value: /tmp/first-team/game.sqlite
       - key: SAVE_PERSISTENCE
         value: ephemeral
+      - key: FIRST_TEAM_ADMIN_INVITE
+        generateValue: true
+      - key: TRUST_PROXY
+        value: "1"

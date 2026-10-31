@@ -1,3 +1,4 @@
+import { authenticatedBrowserContext } from './helpers/accounts.mjs';
 // Optional real-browser check. Install Playwright + Chromium separately when needed.
 // BASE_URL=http://127.0.0.1:3000 node test/browser-smoke.mjs
 import assert from 'node:assert/strict';
@@ -12,7 +13,7 @@ await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
 const errors = [];
 const checks = [];
-const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, baseURL });
+const context = await authenticatedBrowserContext(browser,{ viewport: { width: 1440, height: 1000 }, baseURL });
 const page = await context.newPage();
 page.on('pageerror', error => errors.push(error.message));
 const action = (name, extra = '') => page.locator(`[data-action="${name}"]${extra}`).filter({ visible: true }).first();
@@ -226,7 +227,7 @@ try {
   assert.equal((await getRoom(code)).room.season.turn, room.season.turn);
   checks.push('refresh restores the saved room and date');
 
-  const friend = await browser.newContext({ viewport: { width: 1280, height: 900 }, baseURL });
+  const friend = await authenticatedBrowserContext(browser,{ viewport: { width: 1280, height: 900 }, baseURL });
   try {
     await friend.request.get('/api/session');
     const slotResponse = await friend.request.put('/api/slots/0', { data: { character: { name: '이정글', nickname: 'Pathfinder', age: 23, team: 'T1', position: 'JGL', mainChampion: '리 신', pool: ['리 신', '바이', '비에고'], style: '초반 주도권' } } });

@@ -1,3 +1,4 @@
+import { Accounts } from './lib/accounts.mjs';
 import { CHAMPION_RECOMMENDATIONS, recommendChampions } from './lib/champion-recommendations.mjs';
 import { choosePreparation, rememberPreparation } from './lib/auto-preparation.mjs';
 import { readinessFor } from './lib/readiness.mjs';
@@ -11,7 +12,7 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { randomBytes, randomUUID, createHash } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { Store } from './lib/store.mjs';
 import { normalizePortrait } from './lib/portrait.mjs';
 import { applyWorldEffects } from './lib/world-events.mjs';
@@ -23,27 +24,13 @@ import { ACTIONS, TEAMS, POSITIONS, RULES, RULES2026, createSeason, settleDay, g
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const store = new Store(process.env.DATA_FILE || path.join(root, '.data', 'game.sqlite'));
+const accounts=new Accounts(store,{adminInviteCode:process.env.FIRST_TEAM_ADMIN_INVITE||'',secure:process.env.COOKIE_SECURE==='1',trustProxy:process.env.TRUST_PROXY==='1'});
 const LIMIT = 256 * 1024;
 const locations = ['연습실', '거실', '주방', '분석실', '헬스장', '매니저실', '경기장', 'PC방', '편의점', '식당', '카페', '클리닉'];
-const hash = value => createHash('sha256').update(value).digest('hex');
 const clone = value => structuredClone(value);
 const clean = (value, max = 120) => typeof value === 'string' ? value.trim().slice(0, max) : '';
 const fail = (status, message) => { const e = new Error(message); e.status = status; throw e; };
 
-function identity(req, res) {
-  const cookie = (req.headers.cookie || '').split(';').map(x => x.trim()).find(x => x.startsWith('ft_session='));
-  const token = cookie?.slice('ft_session='.length);
-  let user = token ? store.userByToken(hash(token)) : null;
-  if (!user) {
-    const next = randomBytes(32).toString('hex');
-    user = { id: randomUUID(), name: '오너', slots: Array(5).fill(null), createdAt: new Date().toISOString() };
-    store.createUser(user, hash(next));
-    res.setHeader('Set-Cookie', `ft_session=${next}; HttpOnly; SameSite=Strict; Path=/; Max-Age=31536000${process.env.COOKIE_SECURE === '1' ? '; Secure' : ''}`);
-  }
-  // Legacy character tiers are always migrated to first team, without changing seasons.
-  for (const char of user.slots) if (char) char.tier = '1군';
-  return user;
-}
 
 function normalizeCharacter(input = {}) {
   if (!input || typeof input !== 'object') fail(400, '선수 설정이 필요합니다.');
@@ -68,8 +55,10 @@ function normalizeCharacter(input = {}) {
 }
 
 function sessionView(user) {
-  return {
-    user: { id: user.id, name: user.name }, slots: user.slots,
+  const account=accounts.account(user.id);
+  for(const c of user.slots||[])if(c)c.tier='1군';
+  return { authenticated:true,
+    user: { id: user.id, name: user.name, username:account.username, role:account.role }, slots: user.slots,
     rooms: store.roomsFor(user.id).map(r => { progressRoom(r); return { code: r.code, name: r.name, team: r.season.team, date: r.season.date, turn: r.season.turn, memberCount: r.players.length, lobbyStatus: r.lobby?.status || 'started' }; })
   };
 }
@@ -163,22 +152,30 @@ async function bodyOf(req) {
     if (size > LIMIT) fail(413, '요청이 너무 큽니다.');
     chunks.push(chunk);
   }
-  try { return chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : {}; }
+  try { const parsed=chunks.length?JSON.parse(Buffer.concat(chunks).toString('utf8')):{};if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))fail(400,'올바른 JSON 요청이 필요합니다.');return parsed; }
   catch { fail(400, '올바른 JSON 요청이 필요합니다.'); }
 }
 
 async function api(req, res, url) {
-  const user = identity(req, res);
   const method = req.method, route = url.pathname;
   if (!['GET', 'HEAD'].includes(method) && req.headers.origin) {
-    const origin = new URL(req.headers.origin);
+    let origin;try{origin=new URL(req.headers.origin);}catch{fail(403,'다른 사이트에서 보낸 요청은 허용되지 않습니다.');}
     if (origin.host !== req.headers.host) fail(403, '다른 사이트에서 보낸 요청은 허용되지 않습니다.');
   }
-  if (route === '/api/meta' && method === 'GET') return { championRecommendations:CHAMPION_RECOMMENDATIONS, characterBackgrounds:CHARACTER_BACKGROUNDS, actions: ACTIONS, teams: TEAMS, teamProfiles: TEAM_PROFILES, teamProfileBasis: TEAM_PROFILE_BASIS, availableSeasons: [{ year: 2026, label: '2026 시즌', startDate: '2026-01-12', endDate: '2026-11-15', totalTurns: 308 }], positions: POSITIONS, rules: RULES2026, seasonRules: { 2025: RULES, 2026: RULES2026 }, locations, savePersistence: process.env.SAVE_PERSISTENCE || 'server' };
-  if (route === '/api/session' && method === 'GET') return sessionView(user);
   const body = ['POST', 'PUT', 'DELETE'].includes(method) ? await bodyOf(req) : {};
+  if(route==='/api/auth/register'&&method==='POST')return sessionView(await accounts.register(req,res,body));
+  if(route==='/api/auth/login'&&method==='POST')return sessionView(await accounts.login(req,res,body));
+  if(route==='/api/auth/logout'&&method==='POST')return accounts.logout(req,res);
+  if(route==='/api/session'&&method==='GET'){const current=accounts.current(req);return current?sessionView(current.user):accounts.status(req);}
+  const {user}=accounts.require(req);
+  if(route==='/api/auth/password'&&method==='POST')return accounts.changePassword(req,res,body);
+  if(route==='/api/invitations'&&method==='GET')return accounts.invitations(req);
+  if(route==='/api/invitations'&&method==='POST')return accounts.issue(req,body);
+  const invitationMatch=route.match(/^\/api\/invitations\/([a-zA-Z0-9-]{1,64})$/);
+  if(invitationMatch&&method==='DELETE')return accounts.revoke(req,invitationMatch[1]);
+  if (route === '/api/meta' && method === 'GET') return { championRecommendations:CHAMPION_RECOMMENDATIONS, characterBackgrounds:CHARACTER_BACKGROUNDS, actions: ACTIONS, teams: TEAMS, teamProfiles: TEAM_PROFILES, teamProfileBasis: TEAM_PROFILE_BASIS, availableSeasons: [{ year: 2026, label: '2026 시즌', startDate: '2026-01-12', endDate: '2026-11-15', totalTurns: 308 }], positions: POSITIONS, rules: RULES2026, seasonRules: { 2025: RULES, 2026: RULES2026 }, locations, savePersistence: process.env.SAVE_PERSISTENCE || 'server' };
   if (route === '/api/profile' && method === 'POST') {
-    user.name = clean(body.name, 24) || '오너'; store.saveUser(user); return sessionView(user);
+    accounts.rename(user,body.name);return sessionView(user);
   }
   const slotMatch = route.match(/^\/api\/slots\/([0-4])$/);
   if (slotMatch && method === 'DELETE') {
@@ -436,8 +433,8 @@ async function api(req, res, url) {
 
 const server = http.createServer(async (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Referrer-Policy', 'same-origin');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'");
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'");
   try {
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname.startsWith('/api/')) {
@@ -451,6 +448,8 @@ const server = http.createServer(async (req, res) => {
     const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/scenes.js': ['scenes.js', 'text/javascript'], '/scenes.css': ['scenes.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
     files['/world-events.js'] = ['world-events.js', 'text/javascript'];
     files['/world-events.css'] = ['world-events.css', 'text/css'];
+    files['/auth.js']=['auth.js','text/javascript'];
+    files['/auth.css']=['auth.css','text/css'];
     files['/honors.js']=['honors.js','text/javascript'];
     files['/tournament-board.js']=['tournament-board.js','text/javascript'];
     files['/match-feed.js'] = ['match-feed.js','text/javascript'];

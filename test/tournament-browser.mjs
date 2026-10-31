@@ -1,3 +1,4 @@
+import { authenticatedBrowserContext } from './helpers/accounts.mjs';
 // Run only against a disposable test server with DATA_FILE and BASE_URL set.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -7,7 +8,7 @@ import { settleDay } from '../lib/season.mjs';
 const require=createRequire(import.meta.url),{chromium}=require('playwright');
 assert(process.env.DATA_FILE&&process.env.BASE_URL,'Use a disposable DATA_FILE and BASE_URL');
 const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
-const context=await browser.newContext({baseURL:process.env.BASE_URL,viewport:{width:1440,height:1000}}),errors=[],checks=[];
+const context=await authenticatedBrowserContext(browser,{baseURL:process.env.BASE_URL,viewport:{width:1440,height:1000}}),errors=[],checks=[];
 const request=async(route,data,method='POST')=>{const res=await context.request.fetch(route,{method,data});assert(res.ok(),await res.text());return res.json();};
 const output=new URL('../test-results/',import.meta.url);await mkdir(output,{recursive:true});
 let store;

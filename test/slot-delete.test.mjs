@@ -1,3 +1,4 @@
+import { registerTestServer, ensureTestAccount } from './helpers/accounts.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -16,10 +17,12 @@ async function launch(file) {
     child.stderr.on('data', chunk => { output += chunk; });
     child.once('error', reject);child.once('exit', code => { clearTimeout(timer);reject(new Error(`Server exited ${code}: ${output}`)); });
   });
+  registerTestServer(base,file);
   return { base, async stop() { if (child.exitCode === null) { child.kill('SIGTERM'); await once(child, 'exit'); } } };
 }
 function actor(server) {
   return { cookie: '', async request(route, method = 'GET', body) {
+      await ensureTestAccount(server,this);
     const r = await fetch(server.base + route, { method, headers: { ...(this.cookie ? { Cookie: this.cookie } : {}), ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
     const cookie = r.headers.get('set-cookie');if (cookie) this.cookie = cookie.split(';')[0];
     return { status: r.status, data: await r.json() };

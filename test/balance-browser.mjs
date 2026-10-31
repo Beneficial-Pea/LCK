@@ -1,3 +1,4 @@
+import { authenticatedBrowserContext } from './helpers/accounts.mjs';
 // Optional real-browser QA for NPC team presets and explicit legacy recalibration.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -25,7 +26,7 @@ try {
     child.stderr.on('data', chunk => { output += chunk; });child.once('error', reject);child.once('exit', code => { clearTimeout(timer);reject(new Error(`Server exited ${code}: ${output}`)); });
   });
   browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, baseURL });
+  const context = await authenticatedBrowserContext(browser,{ viewport: { width: 1440, height: 1000 }, baseURL });
   const request = async (ctx, route, data, method = data ? 'POST' : 'GET') => { const response = await ctx.request.fetch(route, { method, ...(data ? { data } : {}) });const body = await response.json();assert(response.ok(), `${route}: ${JSON.stringify(body)}`);return body; };
   const character = nickname => ({ name: nickname, nickname, age: 20, position: 'MID', mainChampion: '아리', pool: ['아리', '아지르', '오리아나'], style: '균형 운영' });
   await request(context, '/api/session');await request(context, '/api/slots/0', { character: character('SettingHero') }, 'PUT');
@@ -59,7 +60,7 @@ try {
   assert.equal(customSaved.season.npcPower, 70);assert.equal(customSaved.lobby.settings.npcPowerMode, 'custom');
   checks.push('Selecting Gen.G applies NPC power 90 in team mode, leaves the human at 65 and does not overwrite a separate custom-70 room');
 
-  const legacyContext = await browser.newContext({ viewport: { width: 1440, height: 1000 }, baseURL });
+  const legacyContext = await authenticatedBrowserContext(browser,{ viewport: { width: 1440, height: 1000 }, baseURL });
   await request(legacyContext, '/api/session');await request(legacyContext, '/api/slots/0', { character: { ...character('LegacyHero'), team: 'Gen.G' } }, 'PUT');
   let { room: legacy } = await request(legacyContext, '/api/rooms', { slot: 0, year: 2025, seed: 'balance-browser', npcPower: 65, npcPowerMode: 'custom' });
   const legacyRoute = `/api/rooms/${legacy.code}`;
