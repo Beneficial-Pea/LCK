@@ -1,4 +1,5 @@
 import { answerDailyLife } from './lib/daily-life.mjs';
+import { clubSchedule } from './lib/club-schedule.mjs';
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -84,6 +85,7 @@ function roomView(room, userId) {
   const view = clone(room);
   delete view.liveMatch;
   view.broadcast = getLiveBroadcast(room);
+  view.clubSchedule = clubSchedule(room);
   view.me = userId;
   view.balance = getBalanceReport(room);
   view.messages = store.messages(room.code, userId);
@@ -160,7 +162,7 @@ async function api(req, res, url) {
     const origin = new URL(req.headers.origin);
     if (origin.host !== req.headers.host) fail(403, '다른 사이트에서 보낸 요청은 허용되지 않습니다.');
   }
-  if (route === '/api/meta' && method === 'GET') return { actions: ACTIONS, teams: TEAMS, teamProfiles: TEAM_PROFILES, teamProfileBasis: TEAM_PROFILE_BASIS, availableSeasons: [{ year: 2026, label: '2026 시즌', startDate: '2026-01-12', endDate: '2026-11-15', totalTurns: 308 }, { year: 2025, label: '2025 시즌', startDate: '2025-01-13', endDate: '2025-11-09', totalTurns: 301 }], positions: POSITIONS, rules: RULES2026, seasonRules: { 2025: RULES, 2026: RULES2026 }, locations, savePersistence: process.env.SAVE_PERSISTENCE || 'server' };
+  if (route === '/api/meta' && method === 'GET') return { actions: ACTIONS, teams: TEAMS, teamProfiles: TEAM_PROFILES, teamProfileBasis: TEAM_PROFILE_BASIS, availableSeasons: [{ year: 2026, label: '2026 시즌', startDate: '2026-01-12', endDate: '2026-11-15', totalTurns: 308 }], positions: POSITIONS, rules: RULES2026, seasonRules: { 2025: RULES, 2026: RULES2026 }, locations, savePersistence: process.env.SAVE_PERSISTENCE || 'server' };
   if (route === '/api/session' && method === 'GET') return sessionView(user);
   const body = ['POST', 'PUT', 'DELETE'].includes(method) ? await bodyOf(req) : {};
   if (route === '/api/profile' && method === 'POST') {
@@ -341,12 +343,13 @@ async function api(req, res, url) {
         for (let i = 0; i < 7 && !room.season.finished; i++) {
           const ownGame = room.season.schedule.some(g => g.date === room.season.date && g.status === 'scheduled' && [g.teamA, g.teamB].includes(room.season.team));
           if (ownGame) break;
+          if(clubSchedule(room).some(event=>event.date===room.season.date&&event.status==='scheduled'))break;
           room.submissions[user.id] = { turn: room.season.turn, action };
           settleDay(room, { npcTakeover: false }); days++;
         }
-        if (!days) fail(409, '오늘은 우리 팀 경기일입니다. 준비 행동을 제출한 뒤 경기일을 직접 정산하세요.');
+        if (!days) fail(409, '오늘은 우리 팀 경기 또는 고정 활동이 있습니다. 준비 행동을 제출한 뒤 직접 정산하세요.');
         extra.days = days;
-        systemMessage(room, `혼자 플레이 자동 진행 ${days}일. 선택한 준비 행동을 반복했고 우리 팀 경기일에는 멈춥니다.`);
+        systemMessage(room, `혼자 플레이 자동 진행 ${days}일. 선택한 준비 행동을 반복했고 우리 팀 경기·고정 활동 전에는 멈춥니다.`);
         break;
       }
       case 'location': {
@@ -424,6 +427,7 @@ const server = http.createServer(async (req, res) => {
     const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/scenes.js': ['scenes.js', 'text/javascript'], '/scenes.css': ['scenes.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
     files['/world-events.js'] = ['world-events.js', 'text/javascript'];
     files['/world-events.css'] = ['world-events.css', 'text/css'];
+    files['/crest.svg'] = ['crest.svg', 'image/svg+xml'];
     const entry = files[url.pathname];
     if (!entry) fail(404, '페이지를 찾을 수 없습니다.');
     res.setHeader('Content-Type', `${entry[1]}; charset=utf-8`);

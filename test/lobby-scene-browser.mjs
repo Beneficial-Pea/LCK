@@ -11,7 +11,7 @@ import { once } from 'node:events';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const testYear = process.env.TEST_YEAR || '2025';
+const testYear = process.env.TEST_YEAR || '2026';
 const temp = await mkdtemp(path.join(tmpdir(), 'first-team-lobby-scene-'));
 await mkdir(path.join(root, 'test-results'), { recursive: true });
 const server = spawn(process.execPath, ['server.mjs'], {
@@ -72,7 +72,7 @@ try {
   checks.push('Two independent browser users register teamless characters; own photo stored');
 
   await action(host, 'open-create').click();let form = host.locator('[data-form="create-room"]');
-  if (await form.locator('[name="year"]').count()) await form.locator('[name="year"]').selectOption(testYear);
+  assert.equal(await form.locator('[name=year]').inputValue(),'2026');
   await form.locator('[name="name"]').fill('준비와 픽셀 이동 검증');
   await form.locator('[type="submit"]').click();await form.waitFor({ state: 'detached' });
   await host.locator('.assembly-header').waitFor();

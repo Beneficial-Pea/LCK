@@ -56,6 +56,27 @@ const character = (position, nickname) => ({
   team: 'T1', position, mainChampion: '아지르', pool: ['아지르', '오리아나', '신드라'], style: '균형 운영', tier: '연습생'
 });
 
+test('2026 team activities stop automatic skipping and persist exactly once across restarts',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'club-api-')),dataFile=path.join(temp,'game.sqlite'),server={base:''};let running;
+ try{
+  running=await launch(dataFile);server.base=running.base;const user=actor(server);
+  await user.request('/api/session');await user.request('/api/slots/0','PUT',{character:character('MID','ClubPlayer')});
+  const meta=await user.request('/api/meta');assert.deepEqual(meta.data.availableSeasons.map(s=>s.year),[2026]);
+  let response=await user.request('/api/rooms','POST',{slot:0,year:2026,seed:'club-api'});assert.equal(response.status,200);
+  const route='/api/rooms/'+response.data.room.code;
+  response=await user.request(route+'/auto','POST',{turn:1,action:'rest'});assert.equal(response.status,200);assert.equal(response.data.days,1);
+  let r=response.data.room;const event=r.clubSchedule.find(e=>e.date===r.season.date);assert(event);
+  const refused=await user.request(route+'/auto','POST',{turn:r.season.turn,action:'rest'});assert.equal(refused.status,409);
+  await user.request(route+'/action','POST',{turn:r.season.turn,action:'rest'});
+  response=await user.request(route+'/settle','POST',{turn:r.season.turn});assert.equal(response.status,200);
+  r=response.data.room;assert.equal(r.season.clubDiary.filter(e=>e.id===event.id).length,1);
+  assert.equal(r.clubSchedule.find(e=>e.id===event.id).status,'completed');
+  await running.stop();running=await launch(dataFile);server.base=running.base;
+  const restored=(await user.request(route)).data.room;assert.deepEqual(restored.season.clubDiary,r.season.clubDiary);
+  assert.equal(restored.season.turn,r.season.turn);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});
+
 test('persistent multiplayer HTTP workflow enforces turn ownership and message privacy', { timeout: 90_000 }, async t => {
   const temp = await mkdtemp(path.join(tmpdir(), 'first-team-api-'));
   const dataFile = path.join(temp, 'game.sqlite');

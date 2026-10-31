@@ -53,7 +53,8 @@ try {
   await action('open-create').click();
   const createForm = page.locator('[data-form="create-room"]');
   await createForm.waitFor();
-  if (await createForm.locator('[name="year"]').count()) await createForm.locator('[name="year"]').selectOption('2025');
+  assert.equal(await createForm.locator('select[name=year]').count(),0);
+  assert.equal(await createForm.locator('[name=year]').inputValue(),'2026');
   if (await createForm.locator('[name="name"]').count()) await createForm.locator('[name="name"]').fill('브라우저 검증 시즌');
   if (await createForm.locator('[name="seed"]').count()) await createForm.locator('[name="seed"]').fill('browser-qa');
   await createForm.locator('button[type="submit"]').click();
@@ -75,10 +76,19 @@ try {
   await action('submit-action').click();
   await page.waitForFunction(() => document.querySelector('[data-action="settle"]') && !document.querySelector('[data-action="settle"]').disabled);
   await action('settle').click();
-  await page.waitForFunction(() => document.querySelector('.strip-value')?.textContent?.includes('2025.01.14'));
+  await page.waitForFunction(() => document.querySelector('.strip-value')?.textContent?.includes('2026.01.13'));
   room = (await getRoom(code)).room;
   assert.equal(room.season.turn, 2);
   checks.push('action submission and settlement advance exactly one day');
+  assert.equal(room.season.year,2026);
+  const firstActivity=room.clubSchedule.find(e=>e.date===room.season.date);assert(firstActivity);
+  assert((await page.locator('.today-title').textContent()).includes(firstActivity.title));
+  assert((await context.request.get('/crest.svg')).ok());
+  assert.equal(await page.locator('.brand-mark img').first().getAttribute('src'),'/crest.svg');
+  await nav('calendar');await action('select-date',`[data-date="${firstActivity.date}"]`).click();
+  assert((await page.locator('.day-detail').textContent()).includes(firstActivity.title));
+  await nav('home');
+  checks.push('2026-only room creation, original club crest and scheduled team activities in home/calendar');
 
   // Reach the first own match by the same public API used by the client; the UI
   // itself is used to settle that game and read its progressive replay.
@@ -86,7 +96,10 @@ try {
   for (let attempts = 0; attempts < 12; attempts++) {
     room = (await getRoom(code)).room;
     if (room.season.schedule.some(m => m.date === room.season.date && m.status === 'scheduled' && own(m))) break;
-    await request(`/api/rooms/${code}/auto`, { turn: room.season.turn, action: 'analysis' });
+    if(room.clubSchedule.some(e=>e.date===room.season.date&&e.status==='scheduled')){
+      await request(`/api/rooms/${code}/action`,{turn:room.season.turn,action:'rest'});
+      await request(`/api/rooms/${code}/settle`,{turn:room.season.turn});
+    }else await request(`/api/rooms/${code}/auto`, { turn: room.season.turn, action: 'analysis' });
   }
   room = (await getRoom(code)).room;
   assert(room.season.schedule.some(m => m.date === room.season.date && m.status === 'scheduled' && own(m)), 'first own game reached');

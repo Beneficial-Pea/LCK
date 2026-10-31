@@ -80,7 +80,7 @@ try {
 
   await button('open-create').click();
   form = page.locator('[data-form="create-room"]');
-  if (await form.locator('[name="year"]').count()) await form.locator('[name="year"]').selectOption('2025');
+  assert.equal(await form.locator('[name=year]').inputValue(),'2026');
   await form.locator('[name=name]').fill('사진 브라우저 검증');
   await save(form);
   await page.locator('.assembly-header').waitFor();

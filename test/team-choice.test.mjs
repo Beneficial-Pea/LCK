@@ -64,7 +64,7 @@ test('character selection, shared readiness, host team selection and cosmetic sc
       const meta = (await host.request('/api/meta')).data;
       assert.equal(meta.teamProfiles.length, 10); assert.ok(meta.teamProfiles.every(p => p.name && p.description && p.power));
       assert.ok(meta.teamProfileBasis.description);
-      assert.deepEqual(meta.availableSeasons.map(s => s.year), [2026, 2025]);
+      assert.deepEqual(meta.availableSeasons.map(s => s.year), [2026]);
       assert.equal((await host.request('/api/rooms', 'POST', { slot: 0, chooseTeam: true, year: 2030 })).status, 400);
       const created = await host.request('/api/rooms', 'POST', { slot: 0, waitingRoom: true, chooseTeam: true, seed: 'team-choice-test' });
       assert.equal(created.status, 200); room = created.data.room; route = `/api/rooms/${room.code}`;

@@ -50,7 +50,7 @@ try{
  await nav(page,'slots');await button(page,'edit-slot').click();await page.waitForFunction(()=>!document.querySelector('#modal-root [type=submit]')?.disabled);
  assert.equal(Number(await page.locator('[data-portrait-control=zoom]').inputValue()),2);assert.equal(Number(await page.locator('[data-portrait-control=x]').inputValue()),Math.round(slot.avatarCrop.x*100));await button(page,'close-modal').click();
  checks.push('Mouse drag and keyboard sliders save full source plus crop settings and reopen them accurately');
- await button(page,'open-create').click();form=page.locator('[data-form=create-room]');await form.locator('[name=year]').selectOption('2026');await save(form);
+ await button(page,'open-create').click();form=page.locator('[data-form=create-room]');assert.equal(await form.locator('[name=year]').inputValue(),'2026');await save(form);
  const code=(await session()).rooms[0].code;await button(page,'lobby-ready').click();await button(page,'lobby-prepare').click();await button(page,'choose-team','[data-team="T1"]').click();await button(page,'lobby-start').click();await page.locator('.season-strip').waitFor();
  let room=await roomFor(code);assert.equal(room.players[0].character.avatarSource,slot.avatarSource);assert.deepEqual(room.players[0].character.avatarCrop,slot.avatarCrop);const original=structuredClone(room.players[0].character),originalDate=room.season.date,originalTurn=room.season.turn;
  await nav(page,'roster');await button(page,'edit-portrait').click();await page.waitForFunction(()=>!document.querySelector('#modal-root [type=submit]')?.disabled);
