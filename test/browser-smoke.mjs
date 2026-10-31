@@ -43,6 +43,22 @@ try {
   await slotForm.locator('[name="nickname"]').fill('Replay');
   await slotForm.locator('[name="age"]').fill('22');
   await slotForm.locator('[name="position"]').selectOption('MID');
+  assert(await slotForm.locator('[name="autoChampions"]').isChecked());
+  await slotForm.locator('[name="position"]').selectOption('SUP');
+  await slotForm.locator('[name="style"]').selectOption('한타');
+  assert.equal(await slotForm.locator('[name="mainChampion"]').inputValue(),'렐');
+  assert((await slotForm.locator('[name="pool"]').inputValue()).includes('알리스타'));
+  await slotForm.locator('[name="mainChampion"]').fill('바드');
+  assert(!(await slotForm.locator('[name="autoChampions"]').isChecked()));
+  await slotForm.locator('[name="position"]').selectOption('MID');
+  await slotForm.locator('[name="style"]').selectOption('초반 주도권');
+  assert.equal(await slotForm.locator('[name="mainChampion"]').inputValue(),'바드','Manual choices survive style/role changes');
+  await action('recommend-champions').click();
+  assert(await slotForm.locator('[name="autoChampions"]').isChecked());
+  assert.equal(await slotForm.locator('[name="mainChampion"]').inputValue(),'르블랑');
+  await slotForm.locator('[name="style"]').selectOption('균형 운영');
+  assert.equal(await slotForm.locator('[name="mainChampion"]').inputValue(),'아리');
+
   assert.equal(await slotForm.locator('[name="background"] option').count(),28);
   assert.equal(await slotForm.locator('[name="background"] optgroup').count(),4);
   await slotForm.locator('[name="background"]').selectOption('signature_specialist');

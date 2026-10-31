@@ -78,6 +78,23 @@ test('background bonuses are server-owned, do not stack on edits, and leave acti
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
 
+test('automatic champion pools follow position/style on the server and manual edits preserve active snapshots',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'champion-suggestions-')),server={base:''};let running;
+ try{
+  running=await launch(path.join(temp,'game.sqlite'));server.base=running.base;const user=actor(server);await user.request('/api/session');
+  const meta=(await user.request('/api/meta')).data;assert.equal(Object.keys(meta.championRecommendations).length,5);
+  const input={...character('SUP','SuggestionPlayer'),style:'한타',autoChampions:true,mainChampion:'',pool:['아리']};
+  let response=await user.request('/api/slots/0','PUT',{character:input});assert.equal(response.status,200);const support=response.data.slots[0];
+  assert.equal(support.mainChampion,'렐');assert.deepEqual(support.pool,meta.championRecommendations.SUP['한타'].pool);assert.equal(support.autoChampions,true);
+  const room=(await user.request('/api/rooms','POST',{slot:0,year:2026})).data.room;
+  response=await user.request('/api/slots/0','PUT',{character:{...input,position:'MID',style:'사이드 운영',mainChampion:'제이스'}});
+  assert.equal(response.data.slots[0].mainChampion,'트위스티드 페이트');assert.deepEqual(response.data.slots[0].pool,meta.championRecommendations.MID['사이드 운영'].pool);
+  const active=(await user.request('/api/rooms/'+room.code)).data.room.players[0].character;assert.equal(active.position,'SUP');assert.equal(active.mainChampion,'렐');assert.deepEqual(active.pool,support.pool);
+  response=await user.request('/api/slots/0','PUT',{character:{...input,autoChampions:false,position:'TOP',mainChampion:'갱플랭크',pool:['그웬']}});
+  assert.equal(response.data.slots[0].mainChampion,'갱플랭크');assert.deepEqual(response.data.slots[0].pool,['갱플랭크','그웬']);assert.equal(response.data.slots[0].autoChampions,false);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});
+
 test('room seeds are random and client-independent, shared by peers, and stable through reloads and restarts',async()=>{
  const temp=await mkdtemp(path.join(tmpdir(),'random-seed-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
  try{

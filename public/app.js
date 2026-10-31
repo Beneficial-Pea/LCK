@@ -428,7 +428,7 @@ function renderModal() {
  if(modal.kind==='slot') {
   const c=state.session.slots[modal.index]||{name:'',nickname:'',age:19,background:'rookie',team:null,position:'MID',mainChampion:'아리',pool:['아리','오리아나','아지르','신드라','사일러스'],style:'균형 운영'};
   title=`SLOT 0${modal.index+1} · ${c.id?'선수 편집':'선수 등록'}`;description='내 오리지널 캐릭터로 프로게이머 생활을 시작합니다.';wide=true;form='slot';
-  body=`<div class="notice" style="margin-bottom:20px">모든 선수는 처음부터 <strong>1군</strong>으로 시작합니다. 기본 능력치 65에 선택한 배경의 소폭 보너스를 적용하며, 시즌 행동에 따라 성장합니다.</div><input type="hidden" name="index" value="${modal.index}">${portraitEditor(c)}<div class="form-grid"><label class="field">선수 이름 <span class="field-required">필수</span><input name="name" maxlength="24" placeholder="김선우" value="${e(c.name)}" required></label><label class="field">선수 닉네임 <span class="field-required">필수</span><input name="nickname" maxlength="24" placeholder="Rookie" value="${e(playerLabel(c))}" required></label><label class="field">나이<input type="number" name="age" min="17" max="60" value="${c.age||19}" required></label><div class="field">소속 팀<span class="note">대기실에서 준비를 마친 뒤 함께 선택합니다.</span></div><label class="field">포지션<select name="position">${state.meta.positions.map(p=>`<option value="${e(p)}" ${c.position===p?'selected':''}>${e(posName[p]||p)} · ${e(p)}</option>`).join('')}</select></label><label class="field">플레이 성향<select name="style">${styleNames.map(s=>`<option ${c.style===s?'selected':''}>${s}</option>`).join('')}</select></label><label class="field">주력 챔피언<input name="mainChampion" maxlength="30" value="${e(c.mainChampion)}" required></label><label class="field">챔피언 풀<input name="pool" maxlength="500" value="${e((c.pool||[]).join(', '))}" placeholder="아리, 오리아나, 아지르, 신드라"><small>쉼표로 구분 · 최대 20개 · 주력 챔피언 자동 포함</small></label><label class="field full">선수 배경<select name="background">${backgroundOptions(state.meta.characterBackgrounds,c.background||'none')}</select><div class="background-preview" data-background-preview>${backgroundPreview(state.meta.characterBackgrounds,c.background||'none')}</div></label><label class="field full">외관<textarea name="appearance" maxlength="1000" rows="2" placeholder="선수의 인상, 스타일 등을 적어주세요.">${e(c.appearance)}</textarea></label><label class="field full">성격<textarea name="personality" maxlength="1000" rows="2" placeholder="말투, 팀에서의 모습 등을 적어주세요.">${e(c.personality)}</textarea></label><label class="field full">캐릭터 메모<textarea name="memo" maxlength="2000" rows="2" placeholder="알아두고 싶은 선수의 이야기.">${e(c.memo)}</textarea></label></div>`;
+  body=`<div class="notice" style="margin-bottom:20px">모든 선수는 처음부터 <strong>1군</strong>으로 시작합니다. 기본 능력치 65에 선택한 배경의 소폭 보너스를 적용하며, 시즌 행동에 따라 성장합니다.</div><input type="hidden" name="index" value="${modal.index}">${portraitEditor(c)}<div class="form-grid"><label class="field">선수 이름 <span class="field-required">필수</span><input name="name" maxlength="24" placeholder="김선우" value="${e(c.name)}" required></label><label class="field">선수 닉네임 <span class="field-required">필수</span><input name="nickname" maxlength="24" placeholder="Rookie" value="${e(playerLabel(c))}" required></label><label class="field">나이<input type="number" name="age" min="17" max="60" value="${c.age||19}" required></label><div class="field">소속 팀<span class="note">대기실에서 준비를 마친 뒤 함께 선택합니다.</span></div><label class="field">포지션<select name="position">${state.meta.positions.map(p=>`<option value="${e(p)}" ${c.position===p?'selected':''}>${e(posName[p]||p)} · ${e(p)}</option>`).join('')}</select></label><label class="field">플레이 성향<select name="style">${styleNames.map(s=>`<option ${c.style===s?'selected':''}>${s}</option>`).join('')}</select></label><div class="field full champion-recommendation"><div class="row between"><label class="champion-auto-toggle"><input type="checkbox" name="autoChampions" ${(c.autoChampions??!c.id)?'checked':''}> 포지션·성향에 맞춰 챔피언 자동 추천</label><button class="button small ghost" type="button" data-action="recommend-champions">추천 다시 적용</button></div><p class="note" data-champion-recommendation></p></div><label class="field">주력 챔피언<input name="mainChampion" maxlength="30" value="${e(c.mainChampion)}" required></label><label class="field">챔피언 풀<input name="pool" maxlength="500" value="${e((c.pool||[]).join(', '))}" placeholder="아리, 오리아나, 아지르, 신드라"><small>쉼표로 구분 · 최대 20개 · 주력 챔피언 자동 포함</small></label><label class="field full">선수 배경<select name="background">${backgroundOptions(state.meta.characterBackgrounds,c.background||'none')}</select><div class="background-preview" data-background-preview>${backgroundPreview(state.meta.characterBackgrounds,c.background||'none')}</div></label><label class="field full">외관<textarea name="appearance" maxlength="1000" rows="2" placeholder="선수의 인상, 스타일 등을 적어주세요.">${e(c.appearance)}</textarea></label><label class="field full">성격<textarea name="personality" maxlength="1000" rows="2" placeholder="말투, 팀에서의 모습 등을 적어주세요.">${e(c.personality)}</textarea></label><label class="field full">캐릭터 메모<textarea name="memo" maxlength="2000" rows="2" placeholder="알아두고 싶은 선수의 이야기.">${e(c.memo)}</textarea></label></div>`;
   footer='<p class="note">기존 시즌의 선수와 기록은 바뀌지 않습니다.</p><button class="button primary" type="submit">슬롯에 저장 →</button>';
  } else if(modal.kind==='awards') {
   title='POM · 시즌 시상식';description='올해의 선수와 올프로를 향한 시즌 기록';wide=true;body=renderSeasonAwards(state.room);
@@ -480,6 +480,16 @@ function renderModal() {
  }
  $('#modal-root').innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal ${wide?'wide':''}" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><header class="modal-head"><div><h2 id="dialog-title">${title}</h2><p>${description}</p></div><button class="icon-btn" data-action="close-modal" aria-label="창 닫기">×</button></header>${form?`<form data-form="${form}">`:''}<div class="modal-body">${body}</div>${footer?`<footer class="modal-footer">${footer}</footer>`:''}${form?'</form>':''}</section></div>`;
  if(modal.kind==='slot'||modal.kind==='portrait')hydratePortraitSource(modal);
+ if(modal.kind==='slot')refreshChampionRecommendation($('[data-form="slot"]'));
+}
+function refreshChampionRecommendation(form,{force=false}={}){
+ if(!form)return;
+ const enabled=form.querySelector('[name="autoChampions"]'),hint=form.querySelector('[data-champion-recommendation]');
+ if(!enabled?.checked&&!force){if(hint)hint.textContent='직접 설정 중입니다. 포지션·성향을 바꿔도 입력한 챔피언은 유지됩니다.';return;}
+ const position=form.querySelector('[name="position"]').value,style=form.querySelector('[name="style"]').value,rec=state.meta.championRecommendations?.[position]?.[style];
+ if(!rec)return;
+ enabled.checked=true;form.querySelector('[name="mainChampion"]').value=rec.mainChampion;form.querySelector('[name="pool"]').value=rec.pool.join(', ');
+ if(hint)hint.textContent=`${posName[position]} · ${style} 추천: ${rec.reason} 직접 입력하면 자동 추천이 꺼집니다.`;
 }
 function validateSlot() {if(!state.session.slots.some(Boolean)){toast('먼저 나의 선수를 만들어 주세요.');openModal('slot',{index:state.slot});return false;}return true;}
 async function roomCommand(command,body={}) {const data=await api(`/api/rooms/${encodeURIComponent(state.room.code)}/${command}`,{method:'POST',body});if(data.room)setRoom(data.room);return data;}
@@ -516,6 +526,7 @@ document.addEventListener('click', async ev=>{
   if(action==='close-modal'){closeModal();return;}
   if(action==='mobile-menu'){openModal('menu');return;}
   if(action==='awards'){openModal('awards');return;}
+  if(action==='recommend-champions'){refreshChampionRecommendation(button.closest('form'),{force:true});return;}
   if(action==='profile'){openModal('profile');return;}
   if(action==='review-balance'){if(liveBroadcast()){toast('중계가 끝난 뒤 NPC 전력을 조정할 수 있습니다.');return;}openModal('balance');return;}
   if(action==='scene-profile'){openModal('character',{characterId:button.dataset.characterId});return;}
@@ -564,7 +575,7 @@ document.addEventListener('submit',async ev=>{
  const kind=form.dataset.form,data=Object.fromEntries(new FormData(form));const submit=form.querySelector('[type=submit]');state.busy=true;if(submit)submit.disabled=true;
  try {
   if(kind==='slot'){
-   commitPortraitCrop();const index=Number(data.index);const character={...data,team:state.session.slots[index]?.team||null,...portraitFields(),age:Number(data.age),pool:data.pool.split(/[,，\n]/).map(x=>x.trim()).filter(Boolean)};delete character.index;
+   commitPortraitCrop();const index=Number(data.index);const character={...data,team:state.session.slots[index]?.team||null,...portraitFields(),age:Number(data.age),autoChampions:data.autoChampions==='on',pool:data.pool.split(/[,，\n]/).map(x=>x.trim()).filter(Boolean)};delete character.index;
    const result=await api(`/api/slots/${index}`,{method:'PUT',body:{character}});state.session.slots=result.slots;state.slot=index;closeModal();render();toast('선수를 1군 캐릭터 슬롯에 저장했습니다.');
   }else if(kind==='delete-slot'){
    const result=await api(`/api/slots/${Number(data.index)}`,{method:'DELETE'});state.session.slots=result.slots;closeModal();render();toast('캐릭터 슬롯을 삭제했습니다. 진행 중인 시즌 기록은 유지됩니다.');
@@ -616,7 +627,12 @@ document.addEventListener('pointermove',ev=>{
  changePortraitCrop({x:image.naturalWidth>side?drag.crop.x-dx/drag.width*side/(image.naturalWidth-side):drag.crop.x,y:image.naturalHeight>side?drag.crop.y-dy/drag.width*side/(image.naturalHeight-side):drag.crop.y});
 });
 for(const type of ['pointerup','pointercancel'])document.addEventListener(type,ev=>{if(portraitDrag?.pointerId===ev.pointerId)portraitDrag=null;});
+document.addEventListener('input',ev=>{
+ if(!['mainChampion','pool'].includes(ev.target.name))return;const form=ev.target.closest('[data-form="slot"]');if(!form)return;
+ form.querySelector('[name="autoChampions"]').checked=false;refreshChampionRecommendation(form);
+});
 document.addEventListener('change',async ev=>{
+ if(['position','style','autoChampions'].includes(ev.target.name)){const form=ev.target.closest('[data-form="slot"]');if(form){refreshChampionRecommendation(form);return;}}
  if(ev.target.name==='background'){const preview=$('[data-background-preview]');if(preview)preview.innerHTML=backgroundPreview(state.meta.characterBackgrounds,ev.target.value);return;}
  if(ev.target.name==='npcPowerMode'){
   const form=ev.target.closest('[data-form="create-room"]'),input=form?.querySelector('[name="npcPower"]'),help=form?.querySelector('[data-npc-power-help]'),custom=ev.target.value==='custom';

@@ -1,3 +1,4 @@
+import { CHAMPION_RECOMMENDATIONS, recommendChampions } from './lib/champion-recommendations.mjs';
 import { choosePreparation, rememberPreparation } from './lib/auto-preparation.mjs';
 import { readinessFor } from './lib/readiness.mjs';
 import { CHARACTER_BACKGROUNDS, normalizeBackground, startingStats, backgroundIntro } from './lib/backgrounds.mjs';
@@ -52,14 +53,15 @@ function normalizeCharacter(input = {}) {
   if (input.team != null && input.team !== '' && !TEAMS.includes(input.team)) fail(400, '리그 참가 팀을 확인하세요.');
   const age = Number(input.age);
   if (!Number.isInteger(age) || age < 17 || age > 60) fail(400, '나이는 17~60세로 입력하세요.');
-  const mainChampion = clean(input.mainChampion, 32);
+  const style=clean(input.style,40)||'균형 운영',autoChampions=input.autoChampions===true,recommendation=autoChampions?recommendChampions(input.position,style):null;
+  const mainChampion = recommendation?.mainChampion||clean(input.mainChampion, 32);
   if (!mainChampion) fail(400, '주력 챔피언을 입력하세요.');
-  let pool = Array.isArray(input.pool) ? input.pool : String(input.pool || '').split(/[,\n]/);
+  let pool = recommendation?.pool||(Array.isArray(input.pool) ? input.pool : String(input.pool || '').split(/[,\n]/));
   pool = [...new Set([mainChampion, ...pool.map(x => clean(x, 32)).filter(Boolean)])].slice(0, 20);
   return {
     id: randomUUID(), name, nickname, age, background:normalizeBackground(input.background), team: input.team || null, position: input.position, tier: '1군',
     appearance: clean(input.appearance, 1000), personality: clean(input.personality, 1000), memo: clean(input.memo, 2000), ...normalizePortrait(input),
-    mainChampion, pool, style: clean(input.style, 40) || '균형 운영',
+    mainChampion, pool, style, autoChampions,
     stats: startingStats(normalizeBackground(input.background)),
     condition: 85, fatigue: 10, stress: 10
   };
@@ -172,7 +174,7 @@ async function api(req, res, url) {
     const origin = new URL(req.headers.origin);
     if (origin.host !== req.headers.host) fail(403, '다른 사이트에서 보낸 요청은 허용되지 않습니다.');
   }
-  if (route === '/api/meta' && method === 'GET') return { characterBackgrounds:CHARACTER_BACKGROUNDS, actions: ACTIONS, teams: TEAMS, teamProfiles: TEAM_PROFILES, teamProfileBasis: TEAM_PROFILE_BASIS, availableSeasons: [{ year: 2026, label: '2026 시즌', startDate: '2026-01-12', endDate: '2026-11-15', totalTurns: 308 }], positions: POSITIONS, rules: RULES2026, seasonRules: { 2025: RULES, 2026: RULES2026 }, locations, savePersistence: process.env.SAVE_PERSISTENCE || 'server' };
+  if (route === '/api/meta' && method === 'GET') return { championRecommendations:CHAMPION_RECOMMENDATIONS, characterBackgrounds:CHARACTER_BACKGROUNDS, actions: ACTIONS, teams: TEAMS, teamProfiles: TEAM_PROFILES, teamProfileBasis: TEAM_PROFILE_BASIS, availableSeasons: [{ year: 2026, label: '2026 시즌', startDate: '2026-01-12', endDate: '2026-11-15', totalTurns: 308 }], positions: POSITIONS, rules: RULES2026, seasonRules: { 2025: RULES, 2026: RULES2026 }, locations, savePersistence: process.env.SAVE_PERSISTENCE || 'server' };
   if (route === '/api/session' && method === 'GET') return sessionView(user);
   const body = ['POST', 'PUT', 'DELETE'].includes(method) ? await bodyOf(req) : {};
   if (route === '/api/profile' && method === 'POST') {
