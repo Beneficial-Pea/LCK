@@ -1,0 +1,14 @@
+{
+  "name": "first-team-life",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "방 기반 LCK 프로게이머 협동 시즌 시뮬레이션",
+  "engines": { "node": ">=24.0.0" },
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node --test --test-isolation=none --test-reporter=spec test/*.test.mjs",
+    "check": "node --check server.mjs && node --check public/app.js"
+  }
+}
