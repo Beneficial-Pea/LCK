@@ -8,7 +8,7 @@ import path from 'node:path';
 import {Store} from '../lib/store.mjs';
 import {issueInvitation,tokenHash} from '../lib/accounts.mjs';
 import {createSeason} from '../lib/season.mjs';
-const bootstrap='operator-bootstrap-invite-for-tests-2026',password='valid-password-for-tests-2026';
+const bootstrap='operator-bootstrap-invite-for-tests-2026',password='eight123';
 async function launch(file,env={}){
  const child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',HOST:'127.0.0.1',COOKIE_SECURE:'0',DATA_FILE:file,FIRST_TEAM_ADMIN_INVITE:bootstrap,...env},stdio:['ignore','pipe','pipe']});let output='';
  const base=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Auth server startup timeout')),10000);child.stdout.on('data',chunk=>{output+=chunk;const port=output.match(/listening on port (\d+)/)?.[1];if(port){clearTimeout(timer);resolve('http://127.0.0.1:'+port);}});child.stderr.on('data',chunk=>{output+=chunk;});child.once('exit',()=>{clearTimeout(timer);reject(new Error(output));});child.once('error',reject);});
@@ -59,17 +59,17 @@ test('invite-only authentication gates APIs, preserves accounts across devices, 
    const renamed=await member.request('/api/profile','POST',{name:'새회원이름'});assert.equal(renamed.status,200);assert.equal((await secondDevice.request('/api/session')).data.user.name,'새회원이름');assert.equal((await secondDevice.request('/api/rooms/'+code)).data.room.players[0].ownerName,'새회원이름');
   });
   await t.test('password changes revoke other devices and old cookies; logout revokes the current session',async()=>{
-   const prior=member.cookie;assert.equal((await member.request('/api/auth/password','POST',{currentPassword:'wrong',newPassword:'replacement-password-2026'})).status,400);
-   const changed=await member.request('/api/auth/password','POST',{currentPassword:password,newPassword:'replacement-password-2026'});assert.equal(changed.status,200);assert.notEqual(member.cookie,prior);
+   const prior=member.cookie;assert.equal((await member.request('/api/auth/password','POST',{currentPassword:'wrong',newPassword:'newpass8'})).status,400);
+   const changed=await member.request('/api/auth/password','POST',{currentPassword:password,newPassword:'newpass8'});assert.equal(changed.status,200);assert.notEqual(member.cookie,prior);
    assert.equal((await actor(server,prior).request('/api/session')).data.authenticated,false);assert.equal((await secondDevice.request('/api/session')).data.authenticated,false);
    assert.equal((await secondDevice.request('/api/auth/login','POST',{username:'member',password})).status,401);
-   assert.equal((await secondDevice.request('/api/auth/login','POST',{username:'member',password:'replacement-password-2026'})).status,200);
+   assert.equal((await secondDevice.request('/api/auth/login','POST',{username:'member',password:'newpass8'})).status,200);
    const cookie=secondDevice.cookie;await secondDevice.request('/api/auth/logout','POST',{});assert.equal((await actor(server,cookie).request('/api/meta')).status,401);assert.equal((await secondDevice.request('/api/session')).data.authenticated,false);
   });
   await t.test('restarting retains accounts, active sessions and gameplay without reopening bootstrap registration',async()=>{
    await running.stop();running=null;running=await launch(file,{FIRST_TEAM_ADMIN_INVITE:''});server.base=running.base;
    assert.equal((await member.request('/api/session')).data.user.id,userId);assert.equal((await member.request('/api/rooms/'+code)).data.room.players[0].character.nickname,player.nickname);assert.equal((await admin.request('/api/session')).data.user.role,'admin');
-   const database=new Store(file),account=database.db.prepare('SELECT password_hash FROM accounts WHERE user_id=?').get(userId);assert(account.password_hash.startsWith('scrypt$'));assert(!account.password_hash.includes('replacement-password'));database.close();
+   const database=new Store(file),account=database.db.prepare('SELECT password_hash FROM accounts WHERE user_id=?').get(userId);assert(account.password_hash.startsWith('scrypt$'));assert(!account.password_hash.includes('newpass8'));database.close();
   });
  }finally{await running?.stop();await rm(folder,{recursive:true,force:true});}
 });

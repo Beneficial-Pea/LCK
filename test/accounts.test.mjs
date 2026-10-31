@@ -13,7 +13,8 @@ function fixture(options={}){const folder=mkdtempSync(path.join(tmpdir(),'accoun
 test('passwords use independent scrypt salts, reject wrong passwords, and never store plaintext',async()=>{
  const password='test-password-with-spaces 2026',first=await hashPassword(password),second=await hashPassword(password);
  assert.notEqual(first,second);assert(first.startsWith('scrypt$'));assert(!first.includes(password));assert(await verifyPassword(password,first));assert(!await verifyPassword('wrong-password',first));assert(!await verifyPassword(password,'malformed'));
- await assert.rejects(()=>hashPassword('short'),/10~128/);
+ const eight=await hashPassword('eight123');assert(await verifyPassword('eight123',eight));
+ await assert.rejects(()=>hashPassword('seven12'),/8~128/);
 });
 test('bootstrap requires an operator secret; an ordinary invitation cannot promote an account',async()=>{
  const f=fixture();try{

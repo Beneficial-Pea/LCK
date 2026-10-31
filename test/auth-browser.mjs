@@ -7,7 +7,7 @@ const bootstrap=process.env.FIRST_TEAM_ADMIN_INVITE;assert(bootstrap,'Set FIRST_
 const baseURL=process.env.BASE_URL||'http://127.0.0.1:3000',browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']}),errors=[],checks=[];
 const output=new URL('../test-results/',import.meta.url);await mkdir(output,{recursive:true});
 const owner=await browser.newContext({baseURL,viewport:{width:1440,height:1000}}),page=await owner.newPage();page.on('pageerror',e=>errors.push(e.message));
-const password='browser-auth-password-2026';
+const password='eight123';
 const fillSignup=async(p,username,nickname,invitation)=>{const form=p.locator('[data-form="auth-register"]');await form.locator('[name="username"]').fill(username);await form.locator('[name="nickname"]').fill(nickname);if(invitation)await form.locator('[name="invitation"]').fill(invitation);await form.locator('[name="password"]').fill(password);await form.locator('[name="passwordConfirm"]').fill(password);await form.locator('[type=submit]').click();};
 try{
  await page.goto('/');await page.locator('[data-form="auth-login"]').waitFor();assert.equal(await page.locator('.shell').count(),0);assert.equal((await owner.request.get('/api/meta')).status(),401);
