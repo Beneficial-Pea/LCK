@@ -1,3 +1,5 @@
+import { readinessFor } from './lib/readiness.mjs';
+import { CHARACTER_BACKGROUNDS, normalizeBackground, startingStats, backgroundIntro } from './lib/backgrounds.mjs';
 import { vacationFor, vacationWindows } from './lib/vacations.mjs';
 import { ensureEwc, updateEwc } from './lib/ewc.mjs';
 import { ensureDemacia, updateDemacia, declineDemacia } from './lib/demacia.mjs';
@@ -54,10 +56,10 @@ function normalizeCharacter(input = {}) {
   let pool = Array.isArray(input.pool) ? input.pool : String(input.pool || '').split(/[,\n]/);
   pool = [...new Set([mainChampion, ...pool.map(x => clean(x, 32)).filter(Boolean)])].slice(0, 20);
   return {
-    id: randomUUID(), name, nickname, age, team: input.team || null, position: input.position, tier: '1군',
+    id: randomUUID(), name, nickname, age, background:normalizeBackground(input.background), team: input.team || null, position: input.position, tier: '1군',
     appearance: clean(input.appearance, 1000), personality: clean(input.personality, 1000), memo: clean(input.memo, 2000), ...normalizePortrait(input),
     mainChampion, pool, style: clean(input.style, 40) || '균형 운영',
-    stats: { mechanics: 65, laning: 65, macro: 65, communication: 65, mental: 65, mastery: 65 },
+    stats: startingStats(normalizeBackground(input.background)),
     condition: 85, fatigue: 10, stress: 10
   };
 }
@@ -88,6 +90,7 @@ function progressRoom(room) {
 function roomView(room, userId) {
   const view = clone(room);
   delete view.liveMatch;
+  if(Array.isArray(view.season.rules))view.season.rules=view.season.rules.map(rule=>typeof rule==='string'?rule.replace('밴은 팀당 3개로 간소화했습니다.','매 세트 양 팀이 각각 챔피언 5개를 밴합니다.'):rule);
   view.broadcast = getLiveBroadcast(room);
   view.clubSchedule = clubSchedule(room);
   view.vacation=vacationFor(room.season);view.vacationWindows=vacationWindows(room.season);
@@ -98,11 +101,12 @@ function roomView(room, userId) {
   for (const profile of view.season.opponents || []) profile.players = applyWorldEffects(room, ensureRosterNicknames(room, profile.players || [], profile.name));
   for (const p of view.players) {
     p.character = applyWorldEffects(room, [p.character])[0];
-    p.character.tier = '1군';
+    p.character.tier = '1군';p.character.readiness=readinessFor(p.character);
     if (p.userId !== userId) { delete p.character.avatarSource; delete p.character.avatarCrop; }
   }
   const ownCharacterId = view.players.find(p => p.userId === userId)?.character.id;
   for (const character of view.roster) {
+    character.readiness=readinessFor(character);
     if (character.id !== ownCharacterId) { delete character.avatarSource; delete character.avatarCrop; }
   }
   return view;
@@ -167,7 +171,7 @@ async function api(req, res, url) {
     const origin = new URL(req.headers.origin);
     if (origin.host !== req.headers.host) fail(403, '다른 사이트에서 보낸 요청은 허용되지 않습니다.');
   }
-  if (route === '/api/meta' && method === 'GET') return { actions: ACTIONS, teams: TEAMS, teamProfiles: TEAM_PROFILES, teamProfileBasis: TEAM_PROFILE_BASIS, availableSeasons: [{ year: 2026, label: '2026 시즌', startDate: '2026-01-12', endDate: '2026-11-15', totalTurns: 308 }], positions: POSITIONS, rules: RULES2026, seasonRules: { 2025: RULES, 2026: RULES2026 }, locations, savePersistence: process.env.SAVE_PERSISTENCE || 'server' };
+  if (route === '/api/meta' && method === 'GET') return { characterBackgrounds:CHARACTER_BACKGROUNDS, actions: ACTIONS, teams: TEAMS, teamProfiles: TEAM_PROFILES, teamProfileBasis: TEAM_PROFILE_BASIS, availableSeasons: [{ year: 2026, label: '2026 시즌', startDate: '2026-01-12', endDate: '2026-11-15', totalTurns: 308 }], positions: POSITIONS, rules: RULES2026, seasonRules: { 2025: RULES, 2026: RULES2026 }, locations, savePersistence: process.env.SAVE_PERSISTENCE || 'server' };
   if (route === '/api/session' && method === 'GET') return sessionView(user);
   const body = ['POST', 'PUT', 'DELETE'].includes(method) ? await bodyOf(req) : {};
   if (route === '/api/profile' && method === 'POST') {
@@ -207,7 +211,7 @@ async function api(req, res, url) {
       lobby: { status: waitingRoom ? 'waiting' : 'started', ready: {}, startedAt: waitingRoom ? null : new Date().toISOString(), requireTeamSelection: chooseTeam, selectedTeam: character.team, ...(chooseTeam ? { settings } : {}) },
       season
     };
-    store.transaction(() => { store.saveRoom(room); systemMessage(room, `${character.nickname} 입단. 오늘부터 1군 일정에 합류합니다. 비어 있는 포지션은 NPC가 맡습니다.`); });
+    store.transaction(() => { store.saveRoom(room); systemMessage(room, `${backgroundIntro(character)} 오늘부터 1군 일정에 합류합니다. 비어 있는 포지션은 NPC가 맡습니다.`); });
     return { room: roomView(room, user.id) };
   }
   if (route === '/api/rooms/join' && method === 'POST') {
@@ -229,7 +233,7 @@ async function api(req, res, url) {
       room.players.push({ userId: user.id, ownerName: user.name, character, duoId: null, location: '연습실', joinedAt: new Date().toISOString() });
       if (!room.hostId) room.hostId = user.id;
       if (room.lobby?.status === 'waiting') room.lobby.ready[user.id] = false;
-      room.revision++; store.saveRoom(room); systemMessage(room, `${character.nickname} 합류. ${character.position}의 NPC가 자리를 비웠습니다.`);
+      room.revision++; store.saveRoom(room); systemMessage(room, `${backgroundIntro(character)} ${character.position}의 NPC가 자리를 비웠습니다.`);
       return { room: roomView(room, user.id) };
     });
   }
@@ -443,6 +447,8 @@ const server = http.createServer(async (req, res) => {
     const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/scenes.js': ['scenes.js', 'text/javascript'], '/scenes.css': ['scenes.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
     files['/world-events.js'] = ['world-events.js', 'text/javascript'];
     files['/world-events.css'] = ['world-events.css', 'text/css'];
+    files['/honors.js']=['honors.js','text/javascript'];
+    files['/tournament-board.js']=['tournament-board.js','text/javascript'];
     files['/match-feed.js'] = ['match-feed.js','text/javascript'];
     files['/vacations.js'] = ['vacations.js','text/javascript'];
     files['/ewc.js'] = ['ewc.js','text/javascript'];

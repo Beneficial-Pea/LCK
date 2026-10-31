@@ -98,6 +98,17 @@ test('elapsed progress survives persistence and neither duplicate polling nor a 
   advanceLiveMatch(restarted, 1400);assert.equal(getLiveBroadcast(restarted).sets[1].events.length, 2);
 });
 
+test('POM stays private until the final nexus and awards commit with the pending season',()=>{
+ const {room,pending,summary}=fixture();
+ const pom={nickname:'AFTER-FINAL-NEXUS',team:'A',playerId:'u-player'};
+ pending.season.results[0].result.pom=pom;pending.season.awards={ledger:{private:'FUTURE-AWARD'}};
+ beginLiveMatch(room,pending,summary,{now:1000,stepMs:100});
+ assert(!JSON.stringify(getLiveBroadcast(room)).includes('AFTER-FINAL-NEXUS'));assert(!room.season.awards);
+ advanceLiveMatch(room,1400);assert(!getLiveBroadcast(room).pom);
+ advanceLiveMatch(room,1500);assert.deepEqual(getLiveBroadcast(room).pom,pom);assert(!room.season.awards);
+ advanceLiveMatch(room,1600);assert.deepEqual(room.season.awards,pending.season.awards);
+});
+
 test('the match commits exactly once after the final frame while retaining current membership and cosmetics', () => {
   const { room, pending, summary } = fixture();beginLiveMatch(room, pending, summary, { now: 1000, stepMs: 100 });
   room.players[0].character.avatar = 'new-final'; room.players[0].character.avatarSource = 'new-private-source';

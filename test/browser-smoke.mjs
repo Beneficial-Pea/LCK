@@ -43,11 +43,15 @@ try {
   await slotForm.locator('[name="nickname"]').fill('Replay');
   await slotForm.locator('[name="age"]').fill('22');
   await slotForm.locator('[name="position"]').selectOption('MID');
+  await slotForm.locator('[name="background"]').selectOption('former_all_pro');
+  assert((await page.locator('[data-background-preview]').textContent()).includes('올프로'));
+  assert.equal(await page.locator('.background-stat-preview strong').first().textContent(),'66');
   await slotForm.locator('[name="mainChampion"]').fill('아리');
   await slotForm.locator('[name="pool"]').fill('아리, 아지르, 오리아나, 사일러스, 갈리오');
   await slotForm.locator('button[type="submit"]').click();
   await slotForm.waitFor({ state: 'detached' });
   assert.equal((await state()).slots[0].nickname, 'Replay');
+  assert.equal((await state()).slots[0].background,'former_all_pro');assert.equal((await state()).slots[0].stats.mechanics,66);
   checks.push('character created and saved through UI');
 
   await action('open-create').click();
@@ -76,6 +80,10 @@ try {
   assert.equal(await page.locator('[data-my-stat=macro] strong').textContent(),Number(room.players[0].character.effectiveStats?.macro??myStatsBefore.macro).toFixed(1));
   assert(room.season.ewc.qualifierTeams.includes('T1'));assert.notEqual(room.season.ewc.previousChampion.team,'T1');
   checks.push('own six abilities are visible above actions and selected team always enters Road to EWC');
+  assert((await page.locator('[data-cup-progress]').textContent()).includes('바론 그룹'));
+  assert((await page.locator('[data-cup-progress]').textContent()).includes('장로 그룹'));
+  assert((await page.locator('[data-player-readiness]').textContent()).includes('경기력 보정'));
+  await action('awards').click();await page.locator('#dialog-title').getByText('POM · 시즌 시상식').waitFor();await action('close-modal').click();
 
   await action('choose-action', '[data-id="analysis"]').click();
   assert((await page.locator('[data-team-news] .news-declaration').textContent()).includes('상대 분석'));
@@ -135,6 +143,7 @@ try {
   assert(!room.broadcast, 'The shared live broadcast must finish before archived replay is checked');
   const match = room.season.results.find(m => own(m));
   assert(match?.result.sets[0].events.some(e => e.type === 'first_blood'));
+  assert.equal(match.result.pom.team,match.result.winner);for(const set of match.result.sets){assert.equal(set.draft.bansA.length,5);assert.equal(set.draft.bansB.length,5);}
   await nav('match');
   await action('select-set', '[data-index="0"]').click();
   await page.locator('.match-event').first().waitFor();
@@ -143,6 +152,7 @@ try {
   assert.equal(await page.locator('.match-event').count(), initialCount + 1);
   await action('all-events').click();
   await page.locator('.scoreboard').waitFor();
+  assert.equal(await page.locator('[data-match-pom]').count(),1);assert((await page.locator('[data-match-pom]').textContent()).includes(match.result.pom.nickname));
   assert(await page.locator('.event-list .match-casting').count()>5);
   const recordedCasting=new Set(match.result.sets[0].events.map(e=>e.casting).filter(Boolean));
   assert((await page.locator('.event-list .match-casting p').allTextContents()).every(text=>recordedCasting.has(text)));

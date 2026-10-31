@@ -60,6 +60,24 @@ const character = (position, nickname) => ({
   team: 'T1', position, mainChampion: '아지르', pool: ['아지르', '오리아나', '신드라'], style: '균형 운영', tier: '연습생'
 });
 
+test('background bonuses are server-owned, do not stack on edits, and leave active character snapshots intact',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'background-api-')),server={base:''};let running;
+ try{
+  running=await launch(path.join(temp,'game.sqlite'));server.base=running.base;const user=actor(server);
+  await user.request('/api/session');
+  const meta=(await user.request('/api/meta')).data;assert(meta.characterBackgrounds.some(b=>b.id==='former_all_pro'));
+  const input={...character('MID','PriorAllPro'),background:'former_all_pro',stats:{mechanics:999},bonuses:{mechanics:999}};
+  let result=await user.request('/api/slots/0','PUT',{character:input});assert.equal(result.status,200);const saved=result.data.slots[0];
+  assert(Object.values(saved.stats).every(v=>v===66));assert.equal(saved.background,'former_all_pro');
+  result=await user.request('/api/rooms','POST',{slot:0,year:2026,seed:'background-api'});assert.equal(result.status,200);const code=result.data.room.code;
+  result=await user.request('/api/slots/0','PUT',{character:{...saved,background:'veteran'}});assert.equal(result.data.slots[0].stats.mechanics,65);assert.equal(result.data.slots[0].stats.communication,67);
+  const room=(await user.request('/api/rooms/'+code)).data.room;assert.equal(room.players[0].character.background,'former_all_pro');assert.deepEqual(room.players[0].character.stats,saved.stats);assert(room.players[0].character.readiness);
+  assert.equal((await user.request('/api/slots/0','PUT',{character:{...input,background:'invented'}})).status,400);
+  await user.request('/api/slots/1','PUT',{character:character('SUP','LegacyBase')});assert(Object.values((await user.request('/api/session')).data.slots[1].stats).every(v=>v===65));
+  for(const file of ['/honors.js','/tournament-board.js'])assert.equal((await fetch(server.base+file)).status,200);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});
+
 test('2026 team activities stop automatic skipping and persist exactly once across restarts',async()=>{
  const temp=await mkdtemp(path.join(tmpdir(),'club-api-')),dataFile=path.join(temp,'game.sqlite'),server={base:''};let running;
  try{
