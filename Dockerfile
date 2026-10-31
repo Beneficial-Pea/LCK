@@ -3,6 +3,7 @@ FROM node:24-bookworm-slim
 WORKDIR /app
 COPY package.json server.mjs ./
 COPY lib/ ./lib/
+COPY data/ ./data/
 COPY public/ ./public/
 
 ENV NODE_ENV=production \

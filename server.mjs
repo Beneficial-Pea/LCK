@@ -4,7 +4,9 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import { Store } from './lib/store.mjs';
-import { ACTIONS, TEAMS, POSITIONS, RULES, createSeason, settleDay, getRoster } from './lib/season.mjs';
+import { normalizeAvatar } from './lib/portrait.mjs';
+import { TEAM_PROFILES, TEAM_PROFILE_BASIS, defaultOpponentSettings } from './lib/team-profiles.mjs';
+import { ACTIONS, TEAMS, POSITIONS, RULES, RULES2026, createSeason, settleDay, getRoster } from './lib/season.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const store = new Store(process.env.DATA_FILE || path.join(root, '.data', 'game.sqlite'));
@@ -35,7 +37,7 @@ function normalizeCharacter(input = {}) {
   const nickname = clean(input.nickname, 24), name = clean(input.name, 24);
   if (!nickname || !name) fail(400, '선수 이름과 닉네임을 입력하세요.');
   if (!POSITIONS.includes(input.position)) fail(400, '올바른 포지션을 선택하세요.');
-  if (!TEAMS.includes(input.team)) fail(400, '리그 참가 팀을 선택하세요.');
+  if (input.team != null && input.team !== '' && !TEAMS.includes(input.team)) fail(400, '리그 참가 팀을 확인하세요.');
   const age = Number(input.age);
   if (!Number.isInteger(age) || age < 17 || age > 60) fail(400, '나이는 17~60세로 입력하세요.');
   const mainChampion = clean(input.mainChampion, 32);
@@ -43,8 +45,8 @@ function normalizeCharacter(input = {}) {
   let pool = Array.isArray(input.pool) ? input.pool : String(input.pool || '').split(/[,\n]/);
   pool = [...new Set([mainChampion, ...pool.map(x => clean(x, 32)).filter(Boolean)])].slice(0, 20);
   return {
-    id: randomUUID(), name, nickname, age, team: input.team, position: input.position, tier: '1군',
-    appearance: clean(input.appearance, 1000), personality: clean(input.personality, 1000), memo: clean(input.memo, 2000),
+    id: randomUUID(), name, nickname, age, team: input.team || null, position: input.position, tier: '1군',
+    appearance: clean(input.appearance, 1000), personality: clean(input.personality, 1000), memo: clean(input.memo, 2000), avatar: normalizeAvatar(input.avatar),
     mainChampion, pool, style: clean(input.style, 40) || '균형 운영',
     stats: { mechanics: 65, laning: 65, macro: 65, communication: 65, mental: 65, mastery: 65 },
     condition: 85, fatigue: 10, stress: 10
@@ -54,7 +56,7 @@ function normalizeCharacter(input = {}) {
 function sessionView(user) {
   return {
     user: { id: user.id, name: user.name }, slots: user.slots,
-    rooms: store.roomsFor(user.id).map(r => ({ code: r.code, name: r.name, team: r.season.team, date: r.season.date, turn: r.season.turn, memberCount: r.players.length }))
+    rooms: store.roomsFor(user.id).map(r => ({ code: r.code, name: r.name, team: r.season.team, date: r.season.date, turn: r.season.turn, memberCount: r.players.length, lobbyStatus: r.lobby?.status || 'started' }))
   };
 }
 
@@ -69,7 +71,7 @@ function roomView(room, userId) {
   const view = clone(room);
   view.me = userId;
   view.messages = store.messages(room.code, userId);
-  view.roster = getRoster(room);
+  view.roster = getRoster(room.season.team ? room : { ...room, season: { ...room.season, team: '대기실' } });
   for (const p of view.players) p.character.tier = '1군';
   return view;
 }
@@ -78,6 +80,16 @@ function systemMessage(room, text, senderName = '매니저') {
   store.addMessage(room.code, { channel: 'team', senderId: 'system', senderName, text, at: new Date().toISOString() });
 }
 function ensureHost(room, user) { if (room.hostId !== user.id) fail(403, '방장만 정산하거나 방을 관리할 수 있습니다.'); }
+function ensureStarted(room) {
+  if (room.lobby && room.lobby.status !== 'started') fail(409, '대기실에서 준비와 팀 선택을 완료한 뒤 방장이 시즌 시작을 눌러야 합니다.');
+}
+function ensureWaiting(room) {
+  if (room.lobby?.status !== 'waiting') fail(409, '이미 시작한 시즌입니다. 준비 상태를 변경하거나 다시 시작할 수 없습니다.');
+}
+function ensureAllReady(room) {
+  const missing = room.players.filter(p => room.lobby.ready[p.userId] !== true);
+  if (missing.length) fail(409, `${missing.map(p => p.character.nickname).join(', ')}의 준비를 기다리고 있습니다.`);
+}
 function ensureTurn(room, body) {
   if (Number(body.turn) !== room.season.turn) fail(409, '이전 턴의 요청입니다. 현재 날짜를 확인하고 다시 제출하세요.');
   if (room.season.finished) fail(409, '종료된 시즌입니다. 기록을 열람하거나 새 시즌을 만드세요.');
@@ -120,7 +132,7 @@ async function api(req, res, url) {
     const origin = new URL(req.headers.origin);
     if (origin.host !== req.headers.host) fail(403, '다른 사이트에서 보낸 요청은 허용되지 않습니다.');
   }
-  if (route === '/api/meta' && method === 'GET') return { actions: ACTIONS, teams: TEAMS, positions: POSITIONS, rules: RULES, locations, savePersistence: process.env.SAVE_PERSISTENCE || 'server' };
+  if (route === '/api/meta' && method === 'GET') return { actions: ACTIONS, teams: TEAMS, teamProfiles: TEAM_PROFILES, teamProfileBasis: TEAM_PROFILE_BASIS, availableSeasons: [{ year: 2026, label: '2026 시즌', startDate: '2026-01-12', endDate: '2026-11-15', totalTurns: 308 }, { year: 2025, label: '2025 시즌', startDate: '2025-01-13', endDate: '2025-11-09', totalTurns: 301 }], positions: POSITIONS, rules: RULES2026, seasonRules: { 2025: RULES, 2026: RULES2026 }, locations, savePersistence: process.env.SAVE_PERSISTENCE || 'server' };
   if (route === '/api/session' && method === 'GET') return sessionView(user);
   const body = ['POST', 'PUT', 'DELETE'].includes(method) ? await bodyOf(req) : {};
   if (route === '/api/profile' && method === 'POST') {
@@ -133,17 +145,26 @@ async function api(req, res, url) {
   }
   if (route === '/api/rooms' && method === 'POST') {
     const character = slotCharacter(user, body.slot);
+    const chooseTeam = body.chooseTeam === true;
+    const waitingRoom = chooseTeam || body.waitingRoom === true;
+    const year = Number(body.year ?? (chooseTeam ? 2026 : 2025));
+    if (![2025, 2026].includes(year)) fail(400, '지원하는 시즌은 2025년과 2026년입니다.');
+    character.team = chooseTeam ? null : character.team || 'T1';
     if (store.roomsFor(user.id).length >= 20) fail(400, '저장된 시즌 방은 최대 20개입니다. 기존 방에서 나간 뒤 새 방을 만드세요.');
     if (body.difficulty && !['easy', 'normal', 'hard'].includes(body.difficulty)) fail(400, '난이도를 선택하세요.');
     const npcPower = Number(body.npcPower ?? 65);
     if (!Number.isFinite(npcPower) || npcPower < 35 || npcPower > 95) fail(400, 'NPC 능력치는 35~95입니다.');
     let code;
     do { code = randomBytes(5).toString('hex').slice(0, 8).toUpperCase(); } while (store.room(code));
+    const settings = { year, seed: clean(String(body.seed ?? year), 80), difficulty: body.difficulty || 'normal', npcPower, opponents: safeOpponents(body.opponents) ?? defaultOpponentSettings() };
+    const season = createSeason({ ...settings, team: character.team || 'T1' });
+    if (chooseTeam) { season.team = null; season.draft = true; }
     const room = {
-      id: randomUUID(), code, name: clean(body.name, 50) || `${character.team} 선수단`, hostId: user.id,
+      id: randomUUID(), code, name: clean(body.name, 50) || (chooseTeam ? '우리의 시즌 대기실' : `${character.team} 선수단`), hostId: user.id,
       players: [{ userId: user.id, ownerName: user.name, character, duoId: null, location: '연습실', joinedAt: new Date().toISOString() }],
       submissions: {}, revision: 1, createdAt: new Date().toISOString(),
-      season: createSeason({ team: character.team, seed: clean(String(body.seed ?? '2025'), 80), difficulty: body.difficulty || 'normal', npcPower, opponents: safeOpponents(body.opponents) })
+      lobby: { status: waitingRoom ? 'waiting' : 'started', ready: {}, startedAt: waitingRoom ? null : new Date().toISOString(), requireTeamSelection: chooseTeam, selectedTeam: character.team, ...(chooseTeam ? { settings } : {}) },
+      season
     };
     store.transaction(() => { store.saveRoom(room); systemMessage(room, `${character.nickname} 입단. 오늘부터 1군 일정에 합류합니다. 비어 있는 포지션은 NPC가 맡습니다.`); });
     return { room: roomView(room, user.id) };
@@ -153,12 +174,17 @@ async function api(req, res, url) {
       const code = clean(body.code, 20).toUpperCase(), room = store.room(code);
       if (!room) fail(404, '초대코드를 확인하세요.');
       if (room.players.some(p => p.userId === user.id)) return { room: roomView(room, user.id) };
+      if (room.lobby?.status === 'selecting') fail(409, '팀 선택이 진행 중입니다. 방장이 시즌을 시작한 뒤 다시 참가하세요.');
       if (room.players.length >= 5) fail(409, '이 방은 정원 5명이 모두 참가했습니다.');
       if (room.season.finished) fail(409, '종료된 시즌에는 새로 참가할 수 없습니다.');
       const character = slotCharacter(user, body.slot);
-      if (character.team !== room.season.team) fail(409, `이 방은 ${room.season.team} 선수단입니다. 같은 팀 캐릭터로 참가하세요.`);
+      if (room.lobby?.requireTeamSelection) character.team = room.lobby.status === 'waiting' ? null : room.season.team;
+      else if (!character.team) character.team = room.season.team;
+      else if (character.team !== room.season.team) fail(409, `이 방은 ${room.season.team} 선수단입니다. 같은 팀 캐릭터로 참가하세요.`);
       if (room.players.some(p => p.character.position === character.position)) fail(409, '이미 참가자가 맡고 있는 포지션입니다. 다른 포지션 캐릭터를 선택하세요.');
       room.players.push({ userId: user.id, ownerName: user.name, character, duoId: null, location: '연습실', joinedAt: new Date().toISOString() });
+      if (!room.hostId) room.hostId = user.id;
+      if (room.lobby?.status === 'waiting') room.lobby.ready[user.id] = false;
       room.revision++; store.saveRoom(room); systemMessage(room, `${character.nickname} 합류. ${character.position}의 NPC가 자리를 비웠습니다.`);
       return { room: roomView(room, user.id) };
     });
@@ -181,12 +207,55 @@ async function api(req, res, url) {
     const me = room.players.find(p => p.userId === user.id);
     let extra = {};
     switch (operation) {
+      case 'ready': {
+        ensureWaiting(room);
+        if (typeof body.ready !== 'boolean') fail(400, '준비 상태는 true 또는 false로 제출하세요.');
+        room.lobby.ready[user.id] = body.ready;
+        break;
+      }
+      case 'prepare': {
+        ensureHost(room, user); ensureWaiting(room);
+        if (!room.lobby.requireTeamSelection) fail(409, '이 방은 기존 시작 방식을 사용합니다. 시즌 시작을 눌러 주세요.');
+        ensureAllReady(room);
+        room.lobby.status = 'selecting';
+        systemMessage(room, '전원 준비 완료. 방장이 팀 소개를 확인하고 이번 시즌의 소속 팀을 선택합니다.');
+        break;
+      }
+      case 'team': {
+        ensureHost(room, user);
+        if (!room.lobby?.requireTeamSelection || room.lobby.status !== 'selecting') fail(409, '전원 준비 후 팀 선택 단계에서 소속 팀을 선택하세요.');
+        if (!TEAMS.includes(body.team)) fail(400, 'LCK 참가 팀을 선택하세요.');
+        room.lobby.selectedTeam = body.team;
+        room.season = createSeason({ ...room.lobby.settings, team: body.team });
+        room.season.draft = true;
+        for (const player of room.players) player.character.team = body.team;
+        break;
+      }
+      case 'start': {
+        ensureHost(room, user);
+        if (room.lobby?.requireTeamSelection) {
+          if (room.lobby.status !== 'selecting') fail(409, '전원 준비 후 팀 선택 단계로 이동하세요.');
+          if (!room.lobby.selectedTeam) fail(409, '이번 시즌의 소속 팀을 선택하세요.');
+        } else ensureWaiting(room);
+        ensureAllReady(room);
+        room.lobby.status = 'started';
+        room.lobby.startedAt = new Date().toISOString();
+        if (room.season.draft) room.season.draft = false;
+        systemMessage(room, '전원 준비 완료. 시즌을 시작합니다. 빈 포지션은 NPC가 맡으며 게임 날짜는 그대로 유지됩니다.');
+        break;
+      }
+      case 'portrait': {
+        me.character.avatar = normalizeAvatar(body.avatar);
+        break;
+      }
       case 'action': {
+        ensureStarted(room);
         ensureTurn(room, body);
         room.submissions[user.id] = { turn: room.season.turn, action: actionId(body), target: clean(body.target, 80) || null };
         break;
       }
       case 'settle': {
+        ensureStarted(room);
         ensureHost(room, user); ensureTurn(room, body);
         const missing = room.players.filter(p => room.submissions[p.userId]?.turn !== room.season.turn);
         if (missing.length && body.npcTakeover !== true) fail(409, '아직 행동을 제출하지 않은 선수가 있습니다. 기다리거나 NPC 대행을 명시적으로 선택하세요.');
@@ -197,6 +266,7 @@ async function api(req, res, url) {
         break;
       }
       case 'auto': {
+        ensureStarted(room);
         ensureHost(room, user); ensureTurn(room, body);
         if (room.players.length !== 1) fail(409, '자동 진행은 혼자 플레이하는 방에서만 사용할 수 있습니다.');
         const action = actionId(body);
@@ -215,6 +285,14 @@ async function api(req, res, url) {
       case 'location': {
         if (!locations.includes(body.location)) fail(400, '이동할 장소를 선택하세요.');
         me.location = body.location;
+        me.scenePosition = null;
+        break;
+      }
+      case 'move': {
+        if (body.location !== me.location) fail(409, '장소가 변경되었습니다. 현재 장소에서 다시 이동하세요.');
+        const { x, y } = body;
+        if (typeof x !== 'number' || typeof y !== 'number' || !Number.isFinite(x) || !Number.isFinite(y) || x < 8 || x > 92 || y < 58 || y > 90) fail(400, '이동 위치는 장면의 이동 가능한 바닥 안이어야 합니다.');
+        me.scenePosition = { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, location: me.location };
         break;
       }
       case 'duo': {
@@ -246,8 +324,12 @@ async function api(req, res, url) {
       case 'leave': {
         room.players = room.players.filter(p => p.userId !== user.id);
         delete room.submissions[user.id];
+        if (room.lobby?.ready) delete room.lobby.ready[user.id];
         for (const p of room.players) if (p.duoId === user.id) p.duoId = null;
         if (room.hostId === user.id) room.hostId = room.players[0]?.userId || null;
+        if (!room.players.length && room.lobby?.requireTeamSelection && room.lobby.status !== 'started') {
+          room.lobby.status = 'waiting'; room.lobby.selectedTeam = null; room.season.team = null; room.season.draft = true;
+        }
         systemMessage(room, `${me.character.nickname} 퇴장. 빈 포지션은 NPC가 맡습니다.${room.players.length ? ' 방장은 남은 참가자에게 이전됩니다.' : ' 시즌 기록은 서버에 보관됩니다.'}`);
         room.revision++; store.saveRoom(room); return { left: true };
       }
@@ -272,7 +354,7 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify(result));
     }
     if (!['GET', 'HEAD'].includes(req.method)) fail(405, '지원하지 않는 요청 방식입니다.');
-    const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
+    const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/scenes.js': ['scenes.js', 'text/javascript'], '/scenes.css': ['scenes.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
     const entry = files[url.pathname];
     if (!entry) fail(404, '페이지를 찾을 수 없습니다.');
     res.setHeader('Content-Type', `${entry[1]}; charset=utf-8`);

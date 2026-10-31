@@ -1,0 +1,6292 @@
+{
+  "source": {
+    "url": "https://github.com/jaykhan24/lol_2026cal_for_lck",
+    "commit": "cf744d78d841257b0334731b81777c289a94952d",
+    "snapshotDate": "2026-10-31",
+    "timeZone": "Asia/Seoul",
+    "primaryVerified": false,
+    "note": "독립 공개 캘린더의 API 수집 결과에서 날짜·대진·완료 점수 사실만 추출했습니다. 원 수집 코드를 실행하지 않았으며 공식 원문 직접 대조는 미완료입니다. 실제 점수는 초기 전력 환산에만 사용하고 게임 승패로 고정하지 않습니다."
+  },
+  "domestic": [
+    {
+      "id": "115848316381096423",
+      "start": "2026-01-14T17:00:00+09:00",
+      "date": "2026-01-14",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "KT",
+        "DNF"
+      ],
+      "originalTeams": [
+        "KT",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848316596054531",
+      "start": "2026-01-14T19:00:00+09:00",
+      "date": "2026-01-14",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "BRO",
+        "DK"
+      ],
+      "originalTeams": [
+        "BRO",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848315835312526",
+      "start": "2026-01-15T17:00:00+09:00",
+      "date": "2026-01-15",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "Gen.G",
+        "DRX"
+      ],
+      "originalTeams": [
+        "GEN",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848316120066501",
+      "start": "2026-01-15T19:00:00+09:00",
+      "date": "2026-01-15",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "BNK",
+        "NS"
+      ],
+      "originalTeams": [
+        "BFX",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848316355275232",
+      "start": "2026-01-16T17:00:00+09:00",
+      "date": "2026-01-16",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "DNF",
+        "DK"
+      ],
+      "originalTeams": [
+        "DNS",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848315857267093",
+      "start": "2026-01-16T19:00:00+09:00",
+      "date": "2026-01-16",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "HLE",
+        "T1"
+      ],
+      "originalTeams": [
+        "HLE",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848316736891410",
+      "start": "2026-01-17T17:00:00+09:00",
+      "date": "2026-01-17",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "BRO",
+        "BNK"
+      ],
+      "originalTeams": [
+        "BRO",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848315792779652",
+      "start": "2026-01-17T19:00:00+09:00",
+      "date": "2026-01-17",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "Gen.G",
+        "KT"
+      ],
+      "originalTeams": [
+        "GEN",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848316005247408",
+      "start": "2026-01-18T17:00:00+09:00",
+      "date": "2026-01-18",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "NS",
+        "HLE"
+      ],
+      "originalTeams": [
+        "NS",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848315958585771",
+      "start": "2026-01-18T19:00:00+09:00",
+      "date": "2026-01-18",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "DRX",
+        "T1"
+      ],
+      "originalTeams": [
+        "KRX",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848316064229817",
+      "start": "2026-01-21T17:00:00+09:00",
+      "date": "2026-01-21",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "NS",
+        "DK"
+      ],
+      "originalTeams": [
+        "NS",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848316475468277",
+      "start": "2026-01-21T19:00:00+09:00",
+      "date": "2026-01-21",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "DRX",
+        "DNF"
+      ],
+      "originalTeams": [
+        "KRX",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848316505221627",
+      "start": "2026-01-22T17:00:00+09:00",
+      "date": "2026-01-22",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "BRO",
+        "HLE"
+      ],
+      "originalTeams": [
+        "BRO",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848315813882249",
+      "start": "2026-01-22T19:00:00+09:00",
+      "date": "2026-01-22",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "BNK",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "BFX",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848315902486943",
+      "start": "2026-01-23T17:00:00+09:00",
+      "date": "2026-01-23",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "KT",
+        "T1"
+      ],
+      "originalTeams": [
+        "KT",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848316188289487",
+      "start": "2026-01-23T19:00:00+09:00",
+      "date": "2026-01-23",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "NS",
+        "DRX"
+      ],
+      "originalTeams": [
+        "NS",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848316302387673",
+      "start": "2026-01-24T17:00:00+09:00",
+      "date": "2026-01-24",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "HLE",
+        "DNF"
+      ],
+      "originalTeams": [
+        "HLE",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848315768924542",
+      "start": "2026-01-24T19:00:00+09:00",
+      "date": "2026-01-24",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "Gen.G",
+        "DK"
+      ],
+      "originalTeams": [
+        "GEN",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848315926276517",
+      "start": "2026-01-25T17:00:00+09:00",
+      "date": "2026-01-25",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "T1",
+        "BNK"
+      ],
+      "originalTeams": [
+        "T1",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115848316696848907",
+      "start": "2026-01-25T19:00:00+09:00",
+      "date": "2026-01-25",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "KT",
+        "BRO"
+      ],
+      "originalTeams": [
+        "KT",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115855145893081236",
+      "start": "2026-01-28T17:00:00+09:00",
+      "date": "2026-01-28",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "BRO",
+        "DRX"
+      ],
+      "originalTeams": [
+        "BRO",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115855145878728844",
+      "start": "2026-01-29T17:00:00+09:00",
+      "date": "2026-01-29",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "DNF",
+        "BNK"
+      ],
+      "originalTeams": [
+        "DNS",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115855145864310916",
+      "start": "2026-01-30T17:00:00+09:00",
+      "date": "2026-01-30",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "NS",
+        "KT"
+      ],
+      "originalTeams": [
+        "NS",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        2
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115855145849761916",
+      "start": "2026-01-31T17:00:00+09:00",
+      "date": "2026-01-31",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "T1",
+        "DK"
+      ],
+      "originalTeams": [
+        "T1",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115855145826562164",
+      "start": "2026-02-01T17:00:00+09:00",
+      "date": "2026-02-01",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "HLE",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "HLE",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115604876650618779",
+      "start": "2026-02-06T17:00:00+09:00",
+      "date": "2026-02-06",
+      "league": "LCK",
+      "round": "LCK · 플레이-인",
+      "teams": [
+        "DRX",
+        "BRO"
+      ],
+      "originalTeams": [
+        "KRX",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115604876650880927",
+      "start": "2026-02-06T19:00:00+09:00",
+      "date": "2026-02-06",
+      "league": "LCK",
+      "round": "LCK · 플레이-인",
+      "teams": [
+        "KT",
+        "DNF"
+      ],
+      "originalTeams": [
+        "KT",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115604876650880931",
+      "start": "2026-02-07T17:00:00+09:00",
+      "date": "2026-02-07",
+      "league": "LCK",
+      "round": "LCK · 플레이-인",
+      "teams": [
+        "DRX",
+        "DK"
+      ],
+      "originalTeams": [
+        "KRX",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115604876650946471",
+      "start": "2026-02-07T19:00:00+09:00",
+      "date": "2026-02-07",
+      "league": "LCK",
+      "round": "LCK · 플레이-인",
+      "teams": [
+        "NS",
+        "DNF"
+      ],
+      "originalTeams": [
+        "NS",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115604876650946475",
+      "start": "2026-02-08T17:00:00+09:00",
+      "date": "2026-02-08",
+      "league": "LCK",
+      "round": "LCK · 플레이-인",
+      "teams": [
+        "DRX",
+        "NS"
+      ],
+      "originalTeams": [
+        "KRX",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115604876650946481",
+      "start": "2026-02-12T17:00:00+09:00",
+      "date": "2026-02-12",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "BNK",
+        "DNF"
+      ],
+      "originalTeams": [
+        "BFX",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        2
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115604876650946487",
+      "start": "2026-02-13T17:00:00+09:00",
+      "date": "2026-02-13",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "DRX",
+        "DK"
+      ],
+      "originalTeams": [
+        "KRX",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115604876650946499",
+      "start": "2026-02-14T17:00:00+09:00",
+      "date": "2026-02-14",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "Gen.G",
+        "DK"
+      ],
+      "originalTeams": [
+        "GEN",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115604876650946493",
+      "start": "2026-02-15T17:00:00+09:00",
+      "date": "2026-02-15",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "T1",
+        "BNK"
+      ],
+      "originalTeams": [
+        "T1",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115604876650946505",
+      "start": "2026-02-19T17:00:00+09:00",
+      "date": "2026-02-19",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "DNF",
+        "DRX"
+      ],
+      "originalTeams": [
+        "DNS",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115604876650946517",
+      "start": "2026-02-20T17:00:00+09:00",
+      "date": "2026-02-20",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "DK",
+        "DNF"
+      ],
+      "originalTeams": [
+        "DK",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115604876650946511",
+      "start": "2026-02-21T17:00:00+09:00",
+      "date": "2026-02-21",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "BNK",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "BFX",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115604876650946523",
+      "start": "2026-02-22T17:00:00+09:00",
+      "date": "2026-02-22",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "T1",
+        "DK"
+      ],
+      "originalTeams": [
+        "T1",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115604876650946529",
+      "start": "2026-02-28T17:00:00+09:00",
+      "date": "2026-02-28",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "BNK",
+        "DK"
+      ],
+      "originalTeams": [
+        "BFX",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115604876650946535",
+      "start": "2026-03-01T17:00:00+09:00",
+      "date": "2026-03-01",
+      "league": "LCK",
+      "round": "LCK · 결승",
+      "teams": [
+        "BNK",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "BFX",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115548128962840607",
+      "start": "2026-04-01T17:00:00+09:00",
+      "date": "2026-04-01",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "BRO",
+        "HLE"
+      ],
+      "originalTeams": [
+        "BRO",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840651",
+      "start": "2026-04-01T19:00:00+09:00",
+      "date": "2026-04-01",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "KT",
+        "T1"
+      ],
+      "originalTeams": [
+        "KT",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906291",
+      "start": "2026-04-02T17:00:00+09:00",
+      "date": "2026-04-02",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "NS",
+        "DK"
+      ],
+      "originalTeams": [
+        "NS",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906247",
+      "start": "2026-04-02T19:00:00+09:00",
+      "date": "2026-04-02",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "DRX",
+        "DNF"
+      ],
+      "originalTeams": [
+        "KRX",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906275",
+      "start": "2026-04-03T17:00:00+09:00",
+      "date": "2026-04-03",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "KT",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "KT",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840667",
+      "start": "2026-04-03T19:00:00+09:00",
+      "date": "2026-04-03",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "BRO",
+        "BNK"
+      ],
+      "originalTeams": [
+        "BRO",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962578451",
+      "start": "2026-04-04T17:00:00+09:00",
+      "date": "2026-04-04",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "HLE",
+        "T1"
+      ],
+      "originalTeams": [
+        "HLE",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906295",
+      "start": "2026-04-04T19:00:00+09:00",
+      "date": "2026-04-04",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "DK",
+        "DRX"
+      ],
+      "originalTeams": [
+        "DK",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906243",
+      "start": "2026-04-05T17:00:00+09:00",
+      "date": "2026-04-05",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "NS",
+        "DNF"
+      ],
+      "originalTeams": [
+        "NS",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840671",
+      "start": "2026-04-05T19:00:00+09:00",
+      "date": "2026-04-05",
+      "league": "LCK",
+      "round": "LCK · 1주 차",
+      "teams": [
+        "Gen.G",
+        "BNK"
+      ],
+      "originalTeams": [
+        "GEN",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840615",
+      "start": "2026-04-08T17:00:00+09:00",
+      "date": "2026-04-08",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "HLE",
+        "DK"
+      ],
+      "originalTeams": [
+        "HLE",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840643",
+      "start": "2026-04-08T19:00:00+09:00",
+      "date": "2026-04-08",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "Gen.G",
+        "T1"
+      ],
+      "originalTeams": [
+        "GEN",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906267",
+      "start": "2026-04-09T17:00:00+09:00",
+      "date": "2026-04-09",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "DRX",
+        "BRO"
+      ],
+      "originalTeams": [
+        "KRX",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906299",
+      "start": "2026-04-09T19:00:00+09:00",
+      "date": "2026-04-09",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "NS",
+        "KT"
+      ],
+      "originalTeams": [
+        "NS",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840635",
+      "start": "2026-04-10T17:00:00+09:00",
+      "date": "2026-04-10",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "DNF",
+        "T1"
+      ],
+      "originalTeams": [
+        "DNS",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840599",
+      "start": "2026-04-10T19:00:00+09:00",
+      "date": "2026-04-10",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "BNK",
+        "HLE"
+      ],
+      "originalTeams": [
+        "BFX",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906307",
+      "start": "2026-04-11T17:00:00+09:00",
+      "date": "2026-04-11",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "DRX",
+        "NS"
+      ],
+      "originalTeams": [
+        "KRX",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906271",
+      "start": "2026-04-11T19:00:00+09:00",
+      "date": "2026-04-11",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "DK",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "DK",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840663",
+      "start": "2026-04-12T17:00:00+09:00",
+      "date": "2026-04-12",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "BNK",
+        "DNF"
+      ],
+      "originalTeams": [
+        "BFX",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906259",
+      "start": "2026-04-12T19:00:00+09:00",
+      "date": "2026-04-12",
+      "league": "LCK",
+      "round": "LCK · 2주 차",
+      "teams": [
+        "KT",
+        "BRO"
+      ],
+      "originalTeams": [
+        "KT",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906219",
+      "start": "2026-04-15T17:00:00+09:00",
+      "date": "2026-04-15",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "BNK",
+        "NS"
+      ],
+      "originalTeams": [
+        "BFX",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906287",
+      "start": "2026-04-15T19:00:00+09:00",
+      "date": "2026-04-15",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "DK",
+        "KT"
+      ],
+      "originalTeams": [
+        "DK",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906251",
+      "start": "2026-04-16T17:00:00+09:00",
+      "date": "2026-04-16",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "BRO",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "BRO",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840603",
+      "start": "2026-04-16T19:00:00+09:00",
+      "date": "2026-04-16",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "DNF",
+        "HLE"
+      ],
+      "originalTeams": [
+        "DNS",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906223",
+      "start": "2026-04-17T17:00:00+09:00",
+      "date": "2026-04-17",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "BNK",
+        "DRX"
+      ],
+      "originalTeams": [
+        "BFX",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840647",
+      "start": "2026-04-17T19:00:00+09:00",
+      "date": "2026-04-17",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "T1",
+        "DK"
+      ],
+      "originalTeams": [
+        "T1",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840611",
+      "start": "2026-04-18T17:00:00+09:00",
+      "date": "2026-04-18",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "Gen.G",
+        "HLE"
+      ],
+      "originalTeams": [
+        "GEN",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906239",
+      "start": "2026-04-18T19:00:00+09:00",
+      "date": "2026-04-18",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "DNF",
+        "KT"
+      ],
+      "originalTeams": [
+        "DNS",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906263",
+      "start": "2026-04-19T17:00:00+09:00",
+      "date": "2026-04-19",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "BRO",
+        "NS"
+      ],
+      "originalTeams": [
+        "BRO",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840659",
+      "start": "2026-04-19T19:00:00+09:00",
+      "date": "2026-04-19",
+      "league": "LCK",
+      "round": "LCK · 3주 차",
+      "teams": [
+        "T1",
+        "DRX"
+      ],
+      "originalTeams": [
+        "T1",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906303",
+      "start": "2026-04-22T17:00:00+09:00",
+      "date": "2026-04-22",
+      "league": "LCK",
+      "round": "LCK · 4주 차",
+      "teams": [
+        "DRX",
+        "KT"
+      ],
+      "originalTeams": [
+        "KRX",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840623",
+      "start": "2026-04-22T19:00:00+09:00",
+      "date": "2026-04-22",
+      "league": "LCK",
+      "round": "LCK · 4주 차",
+      "teams": [
+        "HLE",
+        "NS"
+      ],
+      "originalTeams": [
+        "HLE",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906255",
+      "start": "2026-04-23T17:00:00+09:00",
+      "date": "2026-04-23",
+      "league": "LCK",
+      "round": "LCK · 4주 차",
+      "teams": [
+        "BRO",
+        "DK"
+      ],
+      "originalTeams": [
+        "BRO",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906231",
+      "start": "2026-04-23T19:00:00+09:00",
+      "date": "2026-04-23",
+      "league": "LCK",
+      "round": "LCK · 4주 차",
+      "teams": [
+        "DNF",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "DNS",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906215",
+      "start": "2026-04-24T17:00:00+09:00",
+      "date": "2026-04-24",
+      "league": "LCK",
+      "round": "LCK · 4주 차",
+      "teams": [
+        "BNK",
+        "KT"
+      ],
+      "originalTeams": [
+        "BFX",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840627",
+      "start": "2026-04-24T19:00:00+09:00",
+      "date": "2026-04-24",
+      "league": "LCK",
+      "round": "LCK · 4주 차",
+      "teams": [
+        "DRX",
+        "HLE"
+      ],
+      "originalTeams": [
+        "KRX",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840639",
+      "start": "2026-04-25T17:00:00+09:00",
+      "date": "2026-04-25",
+      "league": "LCK",
+      "round": "LCK · 4주 차",
+      "teams": [
+        "BRO",
+        "T1"
+      ],
+      "originalTeams": [
+        "BRO",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906235",
+      "start": "2026-04-25T19:00:00+09:00",
+      "date": "2026-04-25",
+      "league": "LCK",
+      "round": "LCK · 4주 차",
+      "teams": [
+        "DK",
+        "DNF"
+      ],
+      "originalTeams": [
+        "DK",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840631",
+      "start": "2026-04-26T17:00:00+09:00",
+      "date": "2026-04-26",
+      "league": "LCK",
+      "round": "LCK · 4주 차",
+      "teams": [
+        "BNK",
+        "T1"
+      ],
+      "originalTeams": [
+        "BFX",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906279",
+      "start": "2026-04-26T19:00:00+09:00",
+      "date": "2026-04-26",
+      "league": "LCK",
+      "round": "LCK · 4주 차",
+      "teams": [
+        "NS",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "NS",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840655",
+      "start": "2026-04-29T17:00:00+09:00",
+      "date": "2026-04-29",
+      "league": "LCK",
+      "round": "LCK · 5주 차",
+      "teams": [
+        "NS",
+        "T1"
+      ],
+      "originalTeams": [
+        "NS",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840619",
+      "start": "2026-04-29T19:00:00+09:00",
+      "date": "2026-04-29",
+      "league": "LCK",
+      "round": "LCK · 5주 차",
+      "teams": [
+        "KT",
+        "HLE"
+      ],
+      "originalTeams": [
+        "KT",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906283",
+      "start": "2026-04-30T17:00:00+09:00",
+      "date": "2026-04-30",
+      "league": "LCK",
+      "round": "LCK · 5주 차",
+      "teams": [
+        "Gen.G",
+        "DRX"
+      ],
+      "originalTeams": [
+        "GEN",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962840675",
+      "start": "2026-04-30T19:00:00+09:00",
+      "date": "2026-04-30",
+      "league": "LCK",
+      "round": "LCK · 5주 차",
+      "teams": [
+        "BNK",
+        "DK"
+      ],
+      "originalTeams": [
+        "BFX",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906227",
+      "start": "2026-05-01T17:00:00+09:00",
+      "date": "2026-05-01",
+      "league": "LCK",
+      "round": "LCK · 5주 차",
+      "teams": [
+        "BRO",
+        "DNF"
+      ],
+      "originalTeams": [
+        "BRO",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906311",
+      "start": "2026-05-01T19:00:00+09:00",
+      "date": "2026-05-01",
+      "league": "LCK",
+      "round": "LCK · 5주 차",
+      "teams": [
+        "HLE",
+        "T1"
+      ],
+      "originalTeams": [
+        "HLE",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037523",
+      "start": "2026-05-02T17:00:00+09:00",
+      "date": "2026-05-02",
+      "league": "LCK",
+      "round": "LCK · 5주 차",
+      "teams": [
+        "DK",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "DK",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037559",
+      "start": "2026-05-02T19:00:00+09:00",
+      "date": "2026-05-02",
+      "league": "LCK",
+      "round": "LCK · 5주 차",
+      "teams": [
+        "DRX",
+        "NS"
+      ],
+      "originalTeams": [
+        "KRX",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037511",
+      "start": "2026-05-03T17:00:00+09:00",
+      "date": "2026-05-03",
+      "league": "LCK",
+      "round": "LCK · 5주 차",
+      "teams": [
+        "KT",
+        "BRO"
+      ],
+      "originalTeams": [
+        "KT",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971915",
+      "start": "2026-05-03T19:00:00+09:00",
+      "date": "2026-05-03",
+      "league": "LCK",
+      "round": "LCK · 5주 차",
+      "teams": [
+        "BNK",
+        "DNF"
+      ],
+      "originalTeams": [
+        "BFX",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037531",
+      "start": "2026-05-06T17:00:00+09:00",
+      "date": "2026-05-06",
+      "league": "LCK",
+      "round": "LCK · 6주 차",
+      "teams": [
+        "NS",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "NS",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971855",
+      "start": "2026-05-06T19:00:00+09:00",
+      "date": "2026-05-06",
+      "league": "LCK",
+      "round": "LCK · 6주 차",
+      "teams": [
+        "DNF",
+        "HLE"
+      ],
+      "originalTeams": [
+        "DNS",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037539",
+      "start": "2026-05-07T17:00:00+09:00",
+      "date": "2026-05-07",
+      "league": "LCK",
+      "round": "LCK · 6주 차",
+      "teams": [
+        "KT",
+        "DK"
+      ],
+      "originalTeams": [
+        "KT",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971919",
+      "start": "2026-05-07T19:00:00+09:00",
+      "date": "2026-05-07",
+      "league": "LCK",
+      "round": "LCK · 6주 차",
+      "teams": [
+        "BNK",
+        "BRO"
+      ],
+      "originalTeams": [
+        "BFX",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971887",
+      "start": "2026-05-08T17:00:00+09:00",
+      "date": "2026-05-08",
+      "league": "LCK",
+      "round": "LCK · 6주 차",
+      "teams": [
+        "T1",
+        "DNF"
+      ],
+      "originalTeams": [
+        "T1",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037535",
+      "start": "2026-05-08T19:00:00+09:00",
+      "date": "2026-05-08",
+      "league": "LCK",
+      "round": "LCK · 6주 차",
+      "teams": [
+        "Gen.G",
+        "DRX"
+      ],
+      "originalTeams": [
+        "GEN",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971931",
+      "start": "2026-05-09T17:00:00+09:00",
+      "date": "2026-05-09",
+      "league": "LCK",
+      "round": "LCK · 6주 차",
+      "teams": [
+        "KT",
+        "BNK"
+      ],
+      "originalTeams": [
+        "KT",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037515",
+      "start": "2026-05-09T19:00:00+09:00",
+      "date": "2026-05-09",
+      "league": "LCK",
+      "round": "LCK · 6주 차",
+      "teams": [
+        "BRO",
+        "NS"
+      ],
+      "originalTeams": [
+        "BRO",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971899",
+      "start": "2026-05-10T17:00:00+09:00",
+      "date": "2026-05-10",
+      "league": "LCK",
+      "round": "LCK · 6주 차",
+      "teams": [
+        "T1",
+        "DK"
+      ],
+      "originalTeams": [
+        "T1",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971879",
+      "start": "2026-05-10T19:00:00+09:00",
+      "date": "2026-05-10",
+      "league": "LCK",
+      "round": "LCK · 6주 차",
+      "teams": [
+        "DRX",
+        "HLE"
+      ],
+      "originalTeams": [
+        "KRX",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971907",
+      "start": "2026-05-13T17:00:00+09:00",
+      "date": "2026-05-13",
+      "league": "LCK",
+      "round": "LCK · 7주 차",
+      "teams": [
+        "T1",
+        "NS"
+      ],
+      "originalTeams": [
+        "T1",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971951",
+      "start": "2026-05-13T19:00:00+09:00",
+      "date": "2026-05-13",
+      "league": "LCK",
+      "round": "LCK · 7주 차",
+      "teams": [
+        "DK",
+        "DNF"
+      ],
+      "originalTeams": [
+        "DK",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971923",
+      "start": "2026-05-14T17:00:00+09:00",
+      "date": "2026-05-14",
+      "league": "LCK",
+      "round": "LCK · 7주 차",
+      "teams": [
+        "BNK",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "BFX",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037555",
+      "start": "2026-05-14T19:00:00+09:00",
+      "date": "2026-05-14",
+      "league": "LCK",
+      "round": "LCK · 7주 차",
+      "teams": [
+        "DRX",
+        "KT"
+      ],
+      "originalTeams": [
+        "KRX",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971867",
+      "start": "2026-05-15T17:00:00+09:00",
+      "date": "2026-05-15",
+      "league": "LCK",
+      "round": "LCK · 7주 차",
+      "teams": [
+        "HLE",
+        "DK"
+      ],
+      "originalTeams": [
+        "HLE",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971943",
+      "start": "2026-05-15T19:00:00+09:00",
+      "date": "2026-05-15",
+      "league": "LCK",
+      "round": "LCK · 7주 차",
+      "teams": [
+        "BRO",
+        "DNF"
+      ],
+      "originalTeams": [
+        "BRO",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971895",
+      "start": "2026-05-16T17:00:00+09:00",
+      "date": "2026-05-16",
+      "league": "LCK",
+      "round": "LCK · 7주 차",
+      "teams": [
+        "Gen.G",
+        "T1"
+      ],
+      "originalTeams": [
+        "GEN",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971935",
+      "start": "2026-05-16T19:00:00+09:00",
+      "date": "2026-05-16",
+      "league": "LCK",
+      "round": "LCK · 7주 차",
+      "teams": [
+        "BNK",
+        "NS"
+      ],
+      "originalTeams": [
+        "BFX",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971871",
+      "start": "2026-05-17T17:00:00+09:00",
+      "date": "2026-05-17",
+      "league": "LCK",
+      "round": "LCK · 7주 차",
+      "teams": [
+        "KT",
+        "HLE"
+      ],
+      "originalTeams": [
+        "KT",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037519",
+      "start": "2026-05-17T19:00:00+09:00",
+      "date": "2026-05-17",
+      "league": "LCK",
+      "round": "LCK · 7주 차",
+      "teams": [
+        "BRO",
+        "DRX"
+      ],
+      "originalTeams": [
+        "BRO",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971911",
+      "start": "2026-05-20T17:00:00+09:00",
+      "date": "2026-05-20",
+      "league": "LCK",
+      "round": "LCK · 8주 차",
+      "teams": [
+        "T1",
+        "DRX"
+      ],
+      "originalTeams": [
+        "T1",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037551",
+      "start": "2026-05-20T19:00:00+09:00",
+      "date": "2026-05-20",
+      "league": "LCK",
+      "round": "LCK · 8주 차",
+      "teams": [
+        "NS",
+        "KT"
+      ],
+      "originalTeams": [
+        "NS",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962906315",
+      "start": "2026-05-21T17:00:00+09:00",
+      "date": "2026-05-21",
+      "league": "LCK",
+      "round": "LCK · 8주 차",
+      "teams": [
+        "BNK",
+        "HLE"
+      ],
+      "originalTeams": [
+        "BFX",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037507",
+      "start": "2026-05-21T19:00:00+09:00",
+      "date": "2026-05-21",
+      "league": "LCK",
+      "round": "LCK · 8주 차",
+      "teams": [
+        "DK",
+        "BRO"
+      ],
+      "originalTeams": [
+        "DK",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971963",
+      "start": "2026-05-22T17:00:00+09:00",
+      "date": "2026-05-22",
+      "league": "LCK",
+      "round": "LCK · 8주 차",
+      "teams": [
+        "DNF",
+        "DRX"
+      ],
+      "originalTeams": [
+        "DNS",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037527",
+      "start": "2026-05-22T19:00:00+09:00",
+      "date": "2026-05-22",
+      "league": "LCK",
+      "round": "LCK · 8주 차",
+      "teams": [
+        "KT",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "KT",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971927",
+      "start": "2026-05-23T17:00:00+09:00",
+      "date": "2026-05-23",
+      "league": "LCK",
+      "round": "LCK · 8주 차",
+      "teams": [
+        "DK",
+        "BNK"
+      ],
+      "originalTeams": [
+        "DK",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971875",
+      "start": "2026-05-23T19:00:00+09:00",
+      "date": "2026-05-23",
+      "league": "LCK",
+      "round": "LCK · 8주 차",
+      "teams": [
+        "HLE",
+        "NS"
+      ],
+      "originalTeams": [
+        "HLE",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971947",
+      "start": "2026-05-24T17:00:00+09:00",
+      "date": "2026-05-24",
+      "league": "LCK",
+      "round": "LCK · 8주 차",
+      "teams": [
+        "Gen.G",
+        "DNF"
+      ],
+      "originalTeams": [
+        "GEN",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971891",
+      "start": "2026-05-24T19:00:00+09:00",
+      "date": "2026-05-24",
+      "league": "LCK",
+      "round": "LCK · 8주 차",
+      "teams": [
+        "T1",
+        "BRO"
+      ],
+      "originalTeams": [
+        "T1",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971863",
+      "start": "2026-05-27T17:00:00+09:00",
+      "date": "2026-05-27",
+      "league": "LCK",
+      "round": "LCK · 9주 차",
+      "teams": [
+        "Gen.G",
+        "HLE"
+      ],
+      "originalTeams": [
+        "GEN",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971939",
+      "start": "2026-05-27T19:00:00+09:00",
+      "date": "2026-05-27",
+      "league": "LCK",
+      "round": "LCK · 9주 차",
+      "teams": [
+        "BNK",
+        "DRX"
+      ],
+      "originalTeams": [
+        "BFX",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971959",
+      "start": "2026-05-28T17:00:00+09:00",
+      "date": "2026-05-28",
+      "league": "LCK",
+      "round": "LCK · 9주 차",
+      "teams": [
+        "DNF",
+        "NS"
+      ],
+      "originalTeams": [
+        "DNS",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971903",
+      "start": "2026-05-28T19:00:00+09:00",
+      "date": "2026-05-28",
+      "league": "LCK",
+      "round": "LCK · 9주 차",
+      "teams": [
+        "T1",
+        "KT"
+      ],
+      "originalTeams": [
+        "T1",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037547",
+      "start": "2026-05-29T17:00:00+09:00",
+      "date": "2026-05-29",
+      "league": "LCK",
+      "round": "LCK · 9주 차",
+      "teams": [
+        "DK",
+        "DRX"
+      ],
+      "originalTeams": [
+        "DK",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037503",
+      "start": "2026-05-29T19:00:00+09:00",
+      "date": "2026-05-29",
+      "league": "LCK",
+      "round": "LCK · 9주 차",
+      "teams": [
+        "Gen.G",
+        "BRO"
+      ],
+      "originalTeams": [
+        "GEN",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971955",
+      "start": "2026-05-30T17:00:00+09:00",
+      "date": "2026-05-30",
+      "league": "LCK",
+      "round": "LCK · 9주 차",
+      "teams": [
+        "KT",
+        "DNF"
+      ],
+      "originalTeams": [
+        "KT",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971883",
+      "start": "2026-05-30T19:00:00+09:00",
+      "date": "2026-05-30",
+      "league": "LCK",
+      "round": "LCK · 9주 차",
+      "teams": [
+        "BNK",
+        "T1"
+      ],
+      "originalTeams": [
+        "BFX",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128962971859",
+      "start": "2026-05-31T17:00:00+09:00",
+      "date": "2026-05-31",
+      "league": "LCK",
+      "round": "LCK · 9주 차",
+      "teams": [
+        "HLE",
+        "BRO"
+      ],
+      "originalTeams": [
+        "HLE",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037543",
+      "start": "2026-05-31T19:00:00+09:00",
+      "date": "2026-05-31",
+      "league": "LCK",
+      "round": "LCK · 9주 차",
+      "teams": [
+        "NS",
+        "DK"
+      ],
+      "originalTeams": [
+        "NS",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548128963037563",
+      "start": "2026-06-06T17:00:00+09:00",
+      "date": "2026-06-06",
+      "league": "LCK",
+      "round": "LCK · 토너먼트 스테이지",
+      "teams": [
+        "DK",
+        "BRO"
+      ],
+      "originalTeams": [
+        "DK",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115548128963037569",
+      "start": "2026-06-07T17:00:00+09:00",
+      "date": "2026-06-07",
+      "league": "LCK",
+      "round": "LCK · 토너먼트 스테이지",
+      "teams": [
+        "KT",
+        "DK"
+      ],
+      "originalTeams": [
+        "KT",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        2
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115548128963037575",
+      "start": "2026-06-12T17:00:00+09:00",
+      "date": "2026-06-12",
+      "league": "LCK",
+      "round": "LCK · 토너먼트 스테이지",
+      "teams": [
+        "HLE",
+        "T1"
+      ],
+      "originalTeams": [
+        "HLE",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115548128963037581",
+      "start": "2026-06-13T15:00:00+09:00",
+      "date": "2026-06-13",
+      "league": "LCK",
+      "round": "LCK · 토너먼트 스테이지",
+      "teams": [
+        "Gen.G",
+        "KT"
+      ],
+      "originalTeams": [
+        "GEN",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115548128963037587",
+      "start": "2026-06-14T15:00:00+09:00",
+      "date": "2026-06-14",
+      "league": "LCK",
+      "round": "LCK · 토너먼트 스테이지",
+      "teams": [
+        "T1",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "T1",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        2
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115548147900684661",
+      "start": "2026-07-29T17:00:00+09:00",
+      "date": "2026-07-29",
+      "league": "LCK",
+      "round": "LCK · 10주 차",
+      "teams": [
+        "DRX",
+        "NS"
+      ],
+      "originalTeams": [
+        "KRX",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900553461",
+      "start": "2026-07-29T19:00:00+09:00",
+      "date": "2026-07-29",
+      "league": "LCK",
+      "round": "LCK · 10주 차",
+      "teams": [
+        "T1",
+        "KT"
+      ],
+      "originalTeams": [
+        "T1",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684657",
+      "start": "2026-07-30T17:00:00+09:00",
+      "date": "2026-07-30",
+      "league": "LCK",
+      "round": "LCK · 10주 차",
+      "teams": [
+        "BNK",
+        "DNF"
+      ],
+      "originalTeams": [
+        "BFX",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900553453",
+      "start": "2026-07-30T19:00:00+09:00",
+      "date": "2026-07-30",
+      "league": "LCK",
+      "round": "LCK · 10주 차",
+      "teams": [
+        "HLE",
+        "DK"
+      ],
+      "originalTeams": [
+        "HLE",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900553457",
+      "start": "2026-07-31T17:00:00+09:00",
+      "date": "2026-07-31",
+      "league": "LCK",
+      "round": "LCK · 10주 차",
+      "teams": [
+        "Gen.G",
+        "T1"
+      ],
+      "originalTeams": [
+        "GEN",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684637",
+      "start": "2026-07-31T19:00:00+09:00",
+      "date": "2026-07-31",
+      "league": "LCK",
+      "round": "LCK · 10주 차",
+      "teams": [
+        "DRX",
+        "BRO"
+      ],
+      "originalTeams": [
+        "KRX",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684653",
+      "start": "2026-08-01T17:00:00+09:00",
+      "date": "2026-08-01",
+      "league": "LCK",
+      "round": "LCK · 10주 차",
+      "teams": [
+        "NS",
+        "BNK"
+      ],
+      "originalTeams": [
+        "NS",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900553473",
+      "start": "2026-08-01T19:00:00+09:00",
+      "date": "2026-08-01",
+      "league": "LCK",
+      "round": "LCK · 10주 차",
+      "teams": [
+        "Gen.G",
+        "DK"
+      ],
+      "originalTeams": [
+        "GEN",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684645",
+      "start": "2026-08-02T17:00:00+09:00",
+      "date": "2026-08-02",
+      "league": "LCK",
+      "round": "LCK · 10주 차",
+      "teams": [
+        "BRO",
+        "DNF"
+      ],
+      "originalTeams": [
+        "BRO",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900553449",
+      "start": "2026-08-02T19:00:00+09:00",
+      "date": "2026-08-02",
+      "league": "LCK",
+      "round": "LCK · 10주 차",
+      "teams": [
+        "HLE",
+        "KT"
+      ],
+      "originalTeams": [
+        "HLE",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684641",
+      "start": "2026-08-05T17:00:00+09:00",
+      "date": "2026-08-05",
+      "league": "LCK",
+      "round": "LCK · 11주 차",
+      "teams": [
+        "NS",
+        "BRO"
+      ],
+      "originalTeams": [
+        "NS",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900553445",
+      "start": "2026-08-05T19:00:00+09:00",
+      "date": "2026-08-05",
+      "league": "LCK",
+      "round": "LCK · 11주 차",
+      "teams": [
+        "Gen.G",
+        "HLE"
+      ],
+      "originalTeams": [
+        "GEN",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684665",
+      "start": "2026-08-06T17:00:00+09:00",
+      "date": "2026-08-06",
+      "league": "LCK",
+      "round": "LCK · 11주 차",
+      "teams": [
+        "DRX",
+        "DNF"
+      ],
+      "originalTeams": [
+        "KRX",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900553465",
+      "start": "2026-08-06T19:00:00+09:00",
+      "date": "2026-08-06",
+      "league": "LCK",
+      "round": "LCK · 11주 차",
+      "teams": [
+        "T1",
+        "DK"
+      ],
+      "originalTeams": [
+        "T1",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900553469",
+      "start": "2026-08-07T17:00:00+09:00",
+      "date": "2026-08-07",
+      "league": "LCK",
+      "round": "LCK · 11주 차",
+      "teams": [
+        "Gen.G",
+        "KT"
+      ],
+      "originalTeams": [
+        "GEN",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684633",
+      "start": "2026-08-07T19:00:00+09:00",
+      "date": "2026-08-07",
+      "league": "LCK",
+      "round": "LCK · 11주 차",
+      "teams": [
+        "BRO",
+        "BNK"
+      ],
+      "originalTeams": [
+        "BRO",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900487905",
+      "start": "2026-08-08T17:00:00+09:00",
+      "date": "2026-08-08",
+      "league": "LCK",
+      "round": "LCK · 11주 차",
+      "teams": [
+        "T1",
+        "HLE"
+      ],
+      "originalTeams": [
+        "T1",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684669",
+      "start": "2026-08-08T19:00:00+09:00",
+      "date": "2026-08-08",
+      "league": "LCK",
+      "round": "LCK · 11주 차",
+      "teams": [
+        "DNF",
+        "NS"
+      ],
+      "originalTeams": [
+        "DNS",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900553477",
+      "start": "2026-08-09T17:00:00+09:00",
+      "date": "2026-08-09",
+      "league": "LCK",
+      "round": "LCK · 11주 차",
+      "teams": [
+        "KT",
+        "DK"
+      ],
+      "originalTeams": [
+        "KT",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684649",
+      "start": "2026-08-09T19:00:00+09:00",
+      "date": "2026-08-09",
+      "league": "LCK",
+      "round": "LCK · 11주 차",
+      "teams": [
+        "BNK",
+        "DRX"
+      ],
+      "originalTeams": [
+        "BFX",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900750245",
+      "start": "2026-08-12T17:00:00+09:00",
+      "date": "2026-08-12",
+      "league": "LCK",
+      "round": "LCK · 12주 차",
+      "teams": [
+        "NS",
+        "DNF"
+      ],
+      "originalTeams": [
+        "NS",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684589",
+      "start": "2026-08-12T19:00:00+09:00",
+      "date": "2026-08-12",
+      "league": "LCK",
+      "round": "LCK · 12주 차",
+      "teams": [
+        "DK",
+        "KT"
+      ],
+      "originalTeams": [
+        "DK",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900750225",
+      "start": "2026-08-13T17:00:00+09:00",
+      "date": "2026-08-13",
+      "league": "LCK",
+      "round": "LCK · 12주 차",
+      "teams": [
+        "DRX",
+        "BNK"
+      ],
+      "originalTeams": [
+        "KRX",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900619021",
+      "start": "2026-08-13T19:00:00+09:00",
+      "date": "2026-08-13",
+      "league": "LCK",
+      "round": "LCK · 12주 차",
+      "teams": [
+        "HLE",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "HLE",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900619041",
+      "start": "2026-08-14T17:00:00+09:00",
+      "date": "2026-08-14",
+      "league": "LCK",
+      "round": "LCK · 12주 차",
+      "teams": [
+        "DK",
+        "T1"
+      ],
+      "originalTeams": [
+        "DK",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684681",
+      "start": "2026-08-14T19:00:00+09:00",
+      "date": "2026-08-14",
+      "league": "LCK",
+      "round": "LCK · 12주 차",
+      "teams": [
+        "BRO",
+        "NS"
+      ],
+      "originalTeams": [
+        "BRO",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900619025",
+      "start": "2026-08-15T17:00:00+09:00",
+      "date": "2026-08-15",
+      "league": "LCK",
+      "round": "LCK · 12주 차",
+      "teams": [
+        "KT",
+        "HLE"
+      ],
+      "originalTeams": [
+        "KT",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900750233",
+      "start": "2026-08-15T19:00:00+09:00",
+      "date": "2026-08-15",
+      "league": "LCK",
+      "round": "LCK · 12주 차",
+      "teams": [
+        "BNK",
+        "DNF"
+      ],
+      "originalTeams": [
+        "BFX",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900619033",
+      "start": "2026-08-16T17:00:00+09:00",
+      "date": "2026-08-16",
+      "league": "LCK",
+      "round": "LCK · 12주 차",
+      "teams": [
+        "Gen.G",
+        "T1"
+      ],
+      "originalTeams": [
+        "GEN",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684677",
+      "start": "2026-08-16T19:00:00+09:00",
+      "date": "2026-08-16",
+      "league": "LCK",
+      "round": "LCK · 12주 차",
+      "teams": [
+        "BRO",
+        "DRX"
+      ],
+      "originalTeams": [
+        "BRO",
+        "KRX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900619045",
+      "start": "2026-08-19T17:00:00+09:00",
+      "date": "2026-08-19",
+      "league": "LCK",
+      "round": "LCK · 13주 차",
+      "teams": [
+        "Gen.G",
+        "KT"
+      ],
+      "originalTeams": [
+        "GEN",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684685",
+      "start": "2026-08-19T19:00:00+09:00",
+      "date": "2026-08-19",
+      "league": "LCK",
+      "round": "LCK · 13주 차",
+      "teams": [
+        "DNF",
+        "BRO"
+      ],
+      "originalTeams": [
+        "DNS",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900619029",
+      "start": "2026-08-20T17:00:00+09:00",
+      "date": "2026-08-20",
+      "league": "LCK",
+      "round": "LCK · 13주 차",
+      "teams": [
+        "HLE",
+        "DK"
+      ],
+      "originalTeams": [
+        "HLE",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900750237",
+      "start": "2026-08-20T19:00:00+09:00",
+      "date": "2026-08-20",
+      "league": "LCK",
+      "round": "LCK · 13주 차",
+      "teams": [
+        "DRX",
+        "NS"
+      ],
+      "originalTeams": [
+        "KRX",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900684673",
+      "start": "2026-08-21T17:00:00+09:00",
+      "date": "2026-08-21",
+      "league": "LCK",
+      "round": "LCK · 13주 차",
+      "teams": [
+        "BNK",
+        "BRO"
+      ],
+      "originalTeams": [
+        "BFX",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900619037",
+      "start": "2026-08-21T19:00:00+09:00",
+      "date": "2026-08-21",
+      "league": "LCK",
+      "round": "LCK · 13주 차",
+      "teams": [
+        "T1",
+        "KT"
+      ],
+      "originalTeams": [
+        "T1",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900619049",
+      "start": "2026-08-22T17:00:00+09:00",
+      "date": "2026-08-22",
+      "league": "LCK",
+      "round": "LCK · 13주 차",
+      "teams": [
+        "Gen.G",
+        "DK"
+      ],
+      "originalTeams": [
+        "GEN",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900750241",
+      "start": "2026-08-22T19:00:00+09:00",
+      "date": "2026-08-22",
+      "league": "LCK",
+      "round": "LCK · 13주 차",
+      "teams": [
+        "DRX",
+        "DNF"
+      ],
+      "originalTeams": [
+        "KRX",
+        "DNS"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900553481",
+      "start": "2026-08-23T17:00:00+09:00",
+      "date": "2026-08-23",
+      "league": "LCK",
+      "round": "LCK · 13주 차",
+      "teams": [
+        "T1",
+        "HLE"
+      ],
+      "originalTeams": [
+        "T1",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115548147900750229",
+      "start": "2026-08-23T19:00:00+09:00",
+      "date": "2026-08-23",
+      "league": "LCK",
+      "round": "LCK · 13주 차",
+      "teams": [
+        "NS",
+        "BNK"
+      ],
+      "originalTeams": [
+        "NS",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "117030752644841571",
+      "start": "2026-08-26T17:00:00+09:00",
+      "date": "2026-08-26",
+      "league": "LCK",
+      "round": "LCK · 플레이-인",
+      "teams": [
+        "BRO",
+        "KT"
+      ],
+      "originalTeams": [
+        "BRO",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "117030752644841577",
+      "start": "2026-08-27T17:00:00+09:00",
+      "date": "2026-08-27",
+      "league": "LCK",
+      "round": "LCK · 플레이-인",
+      "teams": [
+        "BNK",
+        "NS"
+      ],
+      "originalTeams": [
+        "BFX",
+        "NS"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "117030752644841583",
+      "start": "2026-08-28T17:00:00+09:00",
+      "date": "2026-08-28",
+      "league": "LCK",
+      "round": "LCK · 플레이-인",
+      "teams": [
+        "BNK",
+        "BRO"
+      ],
+      "originalTeams": [
+        "BFX",
+        "BRO"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        2
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "117030752644841589",
+      "start": "2026-08-29T17:00:00+09:00",
+      "date": "2026-08-29",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "BNK",
+        "T1"
+      ],
+      "originalTeams": [
+        "BFX",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "117030752644841595",
+      "start": "2026-08-30T17:00:00+09:00",
+      "date": "2026-08-30",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "KT",
+        "DK"
+      ],
+      "originalTeams": [
+        "KT",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "117030752644841601",
+      "start": "2026-09-01T17:00:00+09:00",
+      "date": "2026-09-01",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "Gen.G",
+        "KT"
+      ],
+      "originalTeams": [
+        "GEN",
+        "KT"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "117030752644841607",
+      "start": "2026-09-02T17:00:00+09:00",
+      "date": "2026-09-02",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "T1",
+        "HLE"
+      ],
+      "originalTeams": [
+        "T1",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "117030752644841613",
+      "start": "2026-09-03T17:00:00+09:00",
+      "date": "2026-09-03",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "BNK",
+        "DK"
+      ],
+      "originalTeams": [
+        "BFX",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "117030752644841625",
+      "start": "2026-09-04T17:00:00+09:00",
+      "date": "2026-09-04",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "KT",
+        "DK"
+      ],
+      "originalTeams": [
+        "KT",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "117030752644841619",
+      "start": "2026-09-05T17:00:00+09:00",
+      "date": "2026-09-05",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "HLE",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "HLE",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "117030752644841631",
+      "start": "2026-09-06T17:00:00+09:00",
+      "date": "2026-09-06",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "DK",
+        "T1"
+      ],
+      "originalTeams": [
+        "DK",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "117030752644841637",
+      "start": "2026-09-12T14:00:00+09:00",
+      "date": "2026-09-12",
+      "league": "LCK",
+      "round": "LCK · 플레이오프",
+      "teams": [
+        "HLE",
+        "T1"
+      ],
+      "originalTeams": [
+        "HLE",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "117030752644841643",
+      "start": "2026-09-13T14:00:00+09:00",
+      "date": "2026-09-13",
+      "league": "LCK",
+      "round": "LCK · 결승",
+      "teams": [
+        "Gen.G",
+        "HLE"
+      ],
+      "originalTeams": [
+        "GEN",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    }
+  ],
+  "international": [
+    {
+      "id": "115570888977308363",
+      "start": "2026-03-16T22:00:00+09:00",
+      "date": "2026-03-16",
+      "league": "FST",
+      "round": "First Stand · 그룹",
+      "teams": [
+        "BNK",
+        "BLG"
+      ],
+      "originalTeams": [
+        "BFX",
+        "BLG"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570888977308369",
+      "start": "2026-03-17T03:00:00+09:00",
+      "date": "2026-03-17",
+      "league": "FST",
+      "round": "First Stand · 그룹",
+      "teams": [
+        "TSW",
+        "G2"
+      ],
+      "originalTeams": [
+        "TSW",
+        "G2"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570888977308393",
+      "start": "2026-03-17T22:00:00+09:00",
+      "date": "2026-03-17",
+      "league": "FST",
+      "round": "First Stand · 그룹",
+      "teams": [
+        "JDG",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "JDG",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570888977308399",
+      "start": "2026-03-18T03:00:00+09:00",
+      "date": "2026-03-18",
+      "league": "FST",
+      "round": "First Stand · 그룹",
+      "teams": [
+        "LYON",
+        "LOUD"
+      ],
+      "originalTeams": [
+        "LYON",
+        "LOUD"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        2
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570888977308375",
+      "start": "2026-03-18T22:00:00+09:00",
+      "date": "2026-03-18",
+      "league": "FST",
+      "round": "First Stand · 그룹",
+      "teams": [
+        "BLG",
+        "G2"
+      ],
+      "originalTeams": [
+        "BLG",
+        "G2"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115846976541810692",
+      "start": "2026-03-19T03:00:00+09:00",
+      "date": "2026-03-19",
+      "league": "FST",
+      "round": "First Stand · 그룹",
+      "teams": [
+        "TSW",
+        "BNK"
+      ],
+      "originalTeams": [
+        "TSW",
+        "BFX"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570888977308405",
+      "start": "2026-03-19T22:00:00+09:00",
+      "date": "2026-03-19",
+      "league": "FST",
+      "round": "First Stand · 그룹",
+      "teams": [
+        "LYON",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "LYON",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115846976541941770",
+      "start": "2026-03-20T03:00:00+09:00",
+      "date": "2026-03-20",
+      "league": "FST",
+      "round": "First Stand · 그룹",
+      "teams": [
+        "JDG",
+        "LOUD"
+      ],
+      "originalTeams": [
+        "JDG",
+        "LOUD"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570888977308387",
+      "start": "2026-03-20T22:00:00+09:00",
+      "date": "2026-03-20",
+      "league": "FST",
+      "round": "First Stand · 그룹",
+      "teams": [
+        "BNK",
+        "G2"
+      ],
+      "originalTeams": [
+        "BFX",
+        "G2"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570888977308417",
+      "start": "2026-03-21T03:00:00+09:00",
+      "date": "2026-03-21",
+      "league": "FST",
+      "round": "First Stand · 그룹",
+      "teams": [
+        "JDG",
+        "LYON"
+      ],
+      "originalTeams": [
+        "JDG",
+        "LYON"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570888977308429",
+      "start": "2026-03-21T22:00:00+09:00",
+      "date": "2026-03-21",
+      "league": "FST",
+      "round": "First Stand · 4강",
+      "teams": [
+        "G2",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "G2",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570888977308423",
+      "start": "2026-03-22T03:00:00+09:00",
+      "date": "2026-03-22",
+      "league": "FST",
+      "round": "First Stand · 4강",
+      "teams": [
+        "JDG",
+        "BLG"
+      ],
+      "originalTeams": [
+        "JDG",
+        "BLG"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570888977308435",
+      "start": "2026-03-22T22:00:00+09:00",
+      "date": "2026-03-22",
+      "league": "FST",
+      "round": "First Stand · 결승",
+      "teams": [
+        "G2",
+        "BLG"
+      ],
+      "originalTeams": [
+        "G2",
+        "BLG"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614497",
+      "start": "2026-06-28T12:00:00+09:00",
+      "date": "2026-06-28",
+      "league": "MSI",
+      "round": "MSI · 플레이-인 토너먼트 스테이지",
+      "teams": [
+        "T1",
+        "TLAW"
+      ],
+      "originalTeams": [
+        "T1",
+        "TLAW"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614503",
+      "start": "2026-06-28T17:00:00+09:00",
+      "date": "2026-06-28",
+      "league": "MSI",
+      "round": "MSI · 플레이-인 토너먼트 스테이지",
+      "teams": [
+        "DCG",
+        "KC"
+      ],
+      "originalTeams": [
+        "DCG",
+        "KC"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614509",
+      "start": "2026-06-29T12:00:00+09:00",
+      "date": "2026-06-29",
+      "league": "MSI",
+      "round": "MSI · 플레이-인 토너먼트 스테이지",
+      "teams": [
+        "T1",
+        "KC"
+      ],
+      "originalTeams": [
+        "T1",
+        "KC"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115846993721104369",
+      "start": "2026-06-29T17:00:00+09:00",
+      "date": "2026-06-29",
+      "league": "MSI",
+      "round": "MSI · 플레이-인 토너먼트 스테이지",
+      "teams": [
+        "TLAW",
+        "DCG"
+      ],
+      "originalTeams": [
+        "TLAW",
+        "DCG"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614521",
+      "start": "2026-06-30T17:00:00+09:00",
+      "date": "2026-06-30",
+      "league": "MSI",
+      "round": "MSI · 플레이-인 토너먼트 스테이지",
+      "teams": [
+        "TLAW",
+        "KC"
+      ],
+      "originalTeams": [
+        "TLAW",
+        "KC"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570969745329263",
+      "start": "2026-07-01T17:00:00+09:00",
+      "date": "2026-07-01",
+      "league": "MSI",
+      "round": "MSI · 플레이-인 토너먼트 스테이지",
+      "teams": [
+        "T1",
+        "TLAW"
+      ],
+      "originalTeams": [
+        "T1",
+        "TLAW"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614539",
+      "start": "2026-07-03T12:00:00+09:00",
+      "date": "2026-07-03",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "HLE",
+        "TSW"
+      ],
+      "originalTeams": [
+        "HLE",
+        "TSW"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614545",
+      "start": "2026-07-03T17:00:00+09:00",
+      "date": "2026-07-03",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "TES",
+        "G2"
+      ],
+      "originalTeams": [
+        "TES",
+        "G2"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614533",
+      "start": "2026-07-04T12:00:00+09:00",
+      "date": "2026-07-04",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "FUR",
+        "LYON"
+      ],
+      "originalTeams": [
+        "FUR",
+        "LYON"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614527",
+      "start": "2026-07-04T17:00:00+09:00",
+      "date": "2026-07-04",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "T1",
+        "BLG"
+      ],
+      "originalTeams": [
+        "T1",
+        "BLG"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614569",
+      "start": "2026-07-05T12:00:00+09:00",
+      "date": "2026-07-05",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "TSW",
+        "TES"
+      ],
+      "originalTeams": [
+        "TSW",
+        "TES"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614557",
+      "start": "2026-07-05T17:00:00+09:00",
+      "date": "2026-07-05",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "HLE",
+        "G2"
+      ],
+      "originalTeams": [
+        "HLE",
+        "G2"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614551",
+      "start": "2026-07-06T12:00:00+09:00",
+      "date": "2026-07-06",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "BLG",
+        "LYON"
+      ],
+      "originalTeams": [
+        "BLG",
+        "LYON"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614563",
+      "start": "2026-07-06T17:00:00+09:00",
+      "date": "2026-07-06",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "T1",
+        "FUR"
+      ],
+      "originalTeams": [
+        "T1",
+        "FUR"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614587",
+      "start": "2026-07-08T12:00:00+09:00",
+      "date": "2026-07-08",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "LYON",
+        "TSW"
+      ],
+      "originalTeams": [
+        "LYON",
+        "TSW"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614581",
+      "start": "2026-07-08T17:00:00+09:00",
+      "date": "2026-07-08",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "G2",
+        "T1"
+      ],
+      "originalTeams": [
+        "G2",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614575",
+      "start": "2026-07-09T17:00:00+09:00",
+      "date": "2026-07-09",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "BLG",
+        "HLE"
+      ],
+      "originalTeams": [
+        "BLG",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614593",
+      "start": "2026-07-10T17:00:00+09:00",
+      "date": "2026-07-10",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "G2",
+        "LYON"
+      ],
+      "originalTeams": [
+        "G2",
+        "LYON"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614599",
+      "start": "2026-07-11T17:00:00+09:00",
+      "date": "2026-07-11",
+      "league": "MSI",
+      "round": "MSI · 토너먼트 스테이지",
+      "teams": [
+        "LYON",
+        "HLE"
+      ],
+      "originalTeams": [
+        "LYON",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115570934355614605",
+      "start": "2026-07-12T15:00:00+09:00",
+      "date": "2026-07-12",
+      "league": "MSI",
+      "round": "MSI · 결승",
+      "teams": [
+        "BLG",
+        "HLE"
+      ],
+      "originalTeams": [
+        "BLG",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "116855104460702314",
+      "start": "2026-07-15T18:00:00+09:00",
+      "date": "2026-07-15",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "SEN",
+        "TS"
+      ],
+      "originalTeams": [
+        "SEN",
+        "TS"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "116855104460702316",
+      "start": "2026-07-15T18:00:00+09:00",
+      "date": "2026-07-15",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "Gen.G",
+        "KC"
+      ],
+      "originalTeams": [
+        "GEN",
+        "KC"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "116855104460702328",
+      "start": "2026-07-15T19:10:00+09:00",
+      "date": "2026-07-15",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "BLG",
+        "MKOI"
+      ],
+      "originalTeams": [
+        "BLG",
+        "MKOI"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "116855104460702330",
+      "start": "2026-07-15T19:10:00+09:00",
+      "date": "2026-07-15",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "GAM",
+        "T1"
+      ],
+      "originalTeams": [
+        "GAM",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "116855104460702300",
+      "start": "2026-07-15T20:20:00+09:00",
+      "date": "2026-07-15",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "FUR",
+        "G2"
+      ],
+      "originalTeams": [
+        "FUR",
+        "G2"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "116855104460702302",
+      "start": "2026-07-15T20:20:00+09:00",
+      "date": "2026-07-15",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "DK",
+        "AGAL"
+      ],
+      "originalTeams": [
+        "DK",
+        "AGAL"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "116855104460702342",
+      "start": "2026-07-15T21:30:00+09:00",
+      "date": "2026-07-15",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "ML",
+        "HLE"
+      ],
+      "originalTeams": [
+        "ML",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "116855104460702344",
+      "start": "2026-07-15T21:30:00+09:00",
+      "date": "2026-07-15",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "JDG",
+        "LYON"
+      ],
+      "originalTeams": [
+        "JDG",
+        "LYON"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "116855104460702320",
+      "start": "2026-07-15T23:25:00+09:00",
+      "date": "2026-07-15",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "KC",
+        "TS"
+      ],
+      "originalTeams": [
+        "KC",
+        "TS"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702334",
+      "start": "2026-07-15T23:25:00+09:00",
+      "date": "2026-07-15",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "GAM",
+        "MKOI"
+      ],
+      "originalTeams": [
+        "GAM",
+        "MKOI"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702306",
+      "start": "2026-07-16T01:55:00+09:00",
+      "date": "2026-07-16",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "FUR",
+        "DK"
+      ],
+      "originalTeams": [
+        "FUR",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702348",
+      "start": "2026-07-16T01:55:00+09:00",
+      "date": "2026-07-16",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "LYON",
+        "ML"
+      ],
+      "originalTeams": [
+        "LYON",
+        "ML"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702318",
+      "start": "2026-07-16T18:00:00+09:00",
+      "date": "2026-07-16",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "Gen.G",
+        "SEN"
+      ],
+      "originalTeams": [
+        "GEN",
+        "SEN"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "116855104460702332",
+      "start": "2026-07-16T18:00:00+09:00",
+      "date": "2026-07-16",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "T1",
+        "BLG"
+      ],
+      "originalTeams": [
+        "T1",
+        "BLG"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "116855104460702304",
+      "start": "2026-07-16T19:10:00+09:00",
+      "date": "2026-07-16",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "AGAL",
+        "G2"
+      ],
+      "originalTeams": [
+        "AGAL",
+        "G2"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "116855104460702346",
+      "start": "2026-07-16T19:10:00+09:00",
+      "date": "2026-07-16",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "JDG",
+        "HLE"
+      ],
+      "originalTeams": [
+        "JDG",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "116855104460702324",
+      "start": "2026-07-16T20:20:00+09:00",
+      "date": "2026-07-16",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "KC",
+        "SEN"
+      ],
+      "originalTeams": [
+        "KC",
+        "SEN"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702338",
+      "start": "2026-07-16T20:20:00+09:00",
+      "date": "2026-07-16",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "GAM",
+        "T1"
+      ],
+      "originalTeams": [
+        "GAM",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702310",
+      "start": "2026-07-16T22:50:00+09:00",
+      "date": "2026-07-16",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "DK",
+        "G2"
+      ],
+      "originalTeams": [
+        "DK",
+        "G2"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702352",
+      "start": "2026-07-16T22:50:00+09:00",
+      "date": "2026-07-16",
+      "league": "EWC",
+      "round": "Esports World Cup · 그룹",
+      "teams": [
+        "JDG",
+        "ML"
+      ],
+      "originalTeams": [
+        "JDG",
+        "ML"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702356",
+      "start": "2026-07-17T20:00:00+09:00",
+      "date": "2026-07-17",
+      "league": "EWC",
+      "round": "Esports World Cup · 8강",
+      "teams": [
+        "T1",
+        "HLE"
+      ],
+      "originalTeams": [
+        "T1",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702364",
+      "start": "2026-07-17T20:00:00+09:00",
+      "date": "2026-07-17",
+      "league": "EWC",
+      "round": "Esports World Cup · 8강",
+      "teams": [
+        "Gen.G",
+        "JDG"
+      ],
+      "originalTeams": [
+        "GEN",
+        "JDG"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702360",
+      "start": "2026-07-17T22:30:00+09:00",
+      "date": "2026-07-17",
+      "league": "EWC",
+      "round": "Esports World Cup · 8강",
+      "teams": [
+        "KC",
+        "AGAL"
+      ],
+      "originalTeams": [
+        "KC",
+        "AGAL"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702368",
+      "start": "2026-07-17T22:30:00+09:00",
+      "date": "2026-07-17",
+      "league": "EWC",
+      "round": "Esports World Cup · 8강",
+      "teams": [
+        "DK",
+        "BLG"
+      ],
+      "originalTeams": [
+        "DK",
+        "BLG"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702372",
+      "start": "2026-07-18T20:00:00+09:00",
+      "date": "2026-07-18",
+      "league": "EWC",
+      "round": "Esports World Cup · 4강",
+      "teams": [
+        "KC",
+        "T1"
+      ],
+      "originalTeams": [
+        "KC",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702376",
+      "start": "2026-07-18T22:30:00+09:00",
+      "date": "2026-07-18",
+      "league": "EWC",
+      "round": "Esports World Cup · 4강",
+      "teams": [
+        "Gen.G",
+        "DK"
+      ],
+      "originalTeams": [
+        "GEN",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702386",
+      "start": "2026-07-19T19:00:00+09:00",
+      "date": "2026-07-19",
+      "league": "EWC",
+      "round": "Esports World Cup · 결승",
+      "teams": [
+        "Gen.G",
+        "T1"
+      ],
+      "originalTeams": [
+        "GEN",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "116855104460702380",
+      "start": "2026-07-19T21:30:00+09:00",
+      "date": "2026-07-19",
+      "league": "EWC",
+      "round": "Esports World Cup · 결승",
+      "teams": [
+        "KC",
+        "DK"
+      ],
+      "originalTeams": [
+        "KC",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        3
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115660588583171786",
+      "start": "2026-10-16T03:00:00+09:00",
+      "date": "2026-10-16",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 플레이-인",
+      "teams": [
+        "KC",
+        "C9"
+      ],
+      "originalTeams": [
+        "KC",
+        "C9"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        2
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115660588583040710",
+      "start": "2026-10-16T08:00:00+09:00",
+      "date": "2026-10-16",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 플레이-인",
+      "teams": [
+        "MVK",
+        "FUR"
+      ],
+      "originalTeams": [
+        "MVK",
+        "FUR"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115660588583171790",
+      "start": "2026-10-17T03:00:00+09:00",
+      "date": "2026-10-17",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 플레이-인",
+      "teams": [
+        "KC",
+        "MVK"
+      ],
+      "originalTeams": [
+        "KC",
+        "MVK"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115660588583171794",
+      "start": "2026-10-17T08:00:00+09:00",
+      "date": "2026-10-17",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 플레이-인",
+      "teams": [
+        "FUR",
+        "C9"
+      ],
+      "originalTeams": [
+        "FUR",
+        "C9"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115660588583171798",
+      "start": "2026-10-18T03:00:00+09:00",
+      "date": "2026-10-18",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 플레이-인",
+      "teams": [
+        "MVK",
+        "FUR"
+      ],
+      "originalTeams": [
+        "MVK",
+        "FUR"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        1
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "116299649498303884",
+      "start": "2026-10-19T03:00:00+09:00",
+      "date": "2026-10-19",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 플레이-인",
+      "teams": [
+        "KC",
+        "MVK"
+      ],
+      "originalTeams": [
+        "KC",
+        "MVK"
+      ],
+      "completed": true,
+      "score": [
+        3,
+        0
+      ],
+      "bestOf": 5
+    },
+    {
+      "id": "115660540726095005",
+      "start": "2026-10-24T02:00:00+09:00",
+      "date": "2026-10-24",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "IG",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "IG",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095013",
+      "start": "2026-10-24T03:00:00+09:00",
+      "date": "2026-10-24",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "TES",
+        "HLE"
+      ],
+      "originalTeams": [
+        "TES",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095019",
+      "start": "2026-10-24T04:00:00+09:00",
+      "date": "2026-10-24",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "MKOI",
+        "BLG"
+      ],
+      "originalTeams": [
+        "MKOI",
+        "BLG"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095009",
+      "start": "2026-10-24T05:00:00+09:00",
+      "date": "2026-10-24",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "KC",
+        "AL"
+      ],
+      "originalTeams": [
+        "KC",
+        "AL"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095011",
+      "start": "2026-10-24T06:00:00+09:00",
+      "date": "2026-10-24",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "DK",
+        "G2"
+      ],
+      "originalTeams": [
+        "DK",
+        "G2"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095007",
+      "start": "2026-10-24T07:00:00+09:00",
+      "date": "2026-10-24",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "TLAW",
+        "CFO"
+      ],
+      "originalTeams": [
+        "TLAW",
+        "CFO"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095015",
+      "start": "2026-10-24T08:00:00+09:00",
+      "date": "2026-10-24",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "LOS",
+        "T1"
+      ],
+      "originalTeams": [
+        "LOS",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095017",
+      "start": "2026-10-24T09:00:00+09:00",
+      "date": "2026-10-24",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "LYON",
+        "TSW"
+      ],
+      "originalTeams": [
+        "LYON",
+        "TSW"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095029",
+      "start": "2026-10-25T02:00:00+09:00",
+      "date": "2026-10-25",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "TES",
+        "AL"
+      ],
+      "originalTeams": [
+        "TES",
+        "AL"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095021",
+      "start": "2026-10-25T03:00:00+09:00",
+      "date": "2026-10-25",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "MKOI",
+        "CFO"
+      ],
+      "originalTeams": [
+        "MKOI",
+        "CFO"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095031",
+      "start": "2026-10-25T04:00:00+09:00",
+      "date": "2026-10-25",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "LOS",
+        "G2"
+      ],
+      "originalTeams": [
+        "LOS",
+        "G2"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095023",
+      "start": "2026-10-25T05:00:00+09:00",
+      "date": "2026-10-25",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "KC",
+        "LYON"
+      ],
+      "originalTeams": [
+        "KC",
+        "LYON"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095033",
+      "start": "2026-10-25T06:00:00+09:00",
+      "date": "2026-10-25",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "TSW",
+        "IG"
+      ],
+      "originalTeams": [
+        "TSW",
+        "IG"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095025",
+      "start": "2026-10-25T07:00:00+09:00",
+      "date": "2026-10-25",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "HLE",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "HLE",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095027",
+      "start": "2026-10-25T08:00:00+09:00",
+      "date": "2026-10-25",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "DK",
+        "T1"
+      ],
+      "originalTeams": [
+        "DK",
+        "T1"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095035",
+      "start": "2026-10-25T09:00:00+09:00",
+      "date": "2026-10-25",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "TLAW",
+        "BLG"
+      ],
+      "originalTeams": [
+        "TLAW",
+        "BLG"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        1
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095045",
+      "start": "2026-10-26T02:00:00+09:00",
+      "date": "2026-10-26",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "IG",
+        "HLE"
+      ],
+      "originalTeams": [
+        "IG",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095047",
+      "start": "2026-10-26T03:00:00+09:00",
+      "date": "2026-10-26",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "TES",
+        "G2"
+      ],
+      "originalTeams": [
+        "TES",
+        "G2"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095037",
+      "start": "2026-10-26T04:00:00+09:00",
+      "date": "2026-10-26",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "MKOI",
+        "DK"
+      ],
+      "originalTeams": [
+        "MKOI",
+        "DK"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095041",
+      "start": "2026-10-26T07:00:00+09:00",
+      "date": "2026-10-26",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "LYON",
+        "Gen.G"
+      ],
+      "originalTeams": [
+        "LYON",
+        "GEN"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095049",
+      "start": "2026-10-27T02:00:00+09:00",
+      "date": "2026-10-27",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "T1",
+        "CFO"
+      ],
+      "originalTeams": [
+        "T1",
+        "CFO"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095051",
+      "start": "2026-10-27T03:00:00+09:00",
+      "date": "2026-10-27",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "BLG",
+        "KC"
+      ],
+      "originalTeams": [
+        "BLG",
+        "KC"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        0
+      ],
+      "bestOf": 1
+    },
+    {
+      "id": "115660540726095053",
+      "start": "2026-10-27T04:00:00+09:00",
+      "date": "2026-10-27",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "TSW",
+        "LOS"
+      ],
+      "originalTeams": [
+        "TSW",
+        "LOS"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095057",
+      "start": "2026-10-27T07:00:00+09:00",
+      "date": "2026-10-27",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "AL",
+        "TLAW"
+      ],
+      "originalTeams": [
+        "AL",
+        "TLAW"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095061",
+      "start": "2026-10-29T05:00:00+09:00",
+      "date": "2026-10-29",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "T1",
+        "MKOI"
+      ],
+      "originalTeams": [
+        "T1",
+        "MKOI"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095065",
+      "start": "2026-10-29T08:00:00+09:00",
+      "date": "2026-10-29",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "LYON",
+        "IG"
+      ],
+      "originalTeams": [
+        "LYON",
+        "IG"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095073",
+      "start": "2026-10-30T05:00:00+09:00",
+      "date": "2026-10-30",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "KC",
+        "CFO"
+      ],
+      "originalTeams": [
+        "KC",
+        "CFO"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        0
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095069",
+      "start": "2026-10-30T08:00:00+09:00",
+      "date": "2026-10-30",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "BLG",
+        "TES"
+      ],
+      "originalTeams": [
+        "BLG",
+        "TES"
+      ],
+      "completed": true,
+      "score": [
+        1,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095077",
+      "start": "2026-10-31T05:00:00+09:00",
+      "date": "2026-10-31",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "LOS",
+        "TLAW"
+      ],
+      "originalTeams": [
+        "LOS",
+        "TLAW"
+      ],
+      "completed": true,
+      "score": [
+        2,
+        1
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095081",
+      "start": "2026-10-31T08:00:00+09:00",
+      "date": "2026-10-31",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "G2",
+        "HLE"
+      ],
+      "originalTeams": [
+        "G2",
+        "HLE"
+      ],
+      "completed": true,
+      "score": [
+        0,
+        2
+      ],
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095085",
+      "start": "2026-11-01T02:00:00+09:00",
+      "date": "2026-11-01",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "MKOI",
+        "KC"
+      ],
+      "originalTeams": [
+        "MKOI",
+        "KC"
+      ],
+      "completed": false,
+      "score": null,
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095089",
+      "start": "2026-11-01T05:00:00+09:00",
+      "date": "2026-11-01",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "LOS",
+        "LYON"
+      ],
+      "originalTeams": [
+        "LOS",
+        "LYON"
+      ],
+      "completed": false,
+      "score": null,
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095093",
+      "start": "2026-11-01T08:00:00+09:00",
+      "date": "2026-11-01",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 스위스",
+      "teams": [
+        "HLE",
+        "BLG"
+      ],
+      "originalTeams": [
+        "HLE",
+        "BLG"
+      ],
+      "completed": false,
+      "score": null,
+      "bestOf": 3
+    },
+    {
+      "id": "115660540726095097",
+      "start": "2026-11-04T07:00:00+09:00",
+      "date": "2026-11-04",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 8강",
+      "teams": [
+        "TBD",
+        "TBD"
+      ],
+      "originalTeams": [
+        "TBD",
+        "TBD"
+      ],
+      "completed": false,
+      "score": null,
+      "bestOf": 5
+    },
+    {
+      "id": "115660540726095103",
+      "start": "2026-11-05T07:00:00+09:00",
+      "date": "2026-11-05",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 8강",
+      "teams": [
+        "TBD",
+        "TBD"
+      ],
+      "originalTeams": [
+        "TBD",
+        "TBD"
+      ],
+      "completed": false,
+      "score": null,
+      "bestOf": 5
+    },
+    {
+      "id": "115660540726095109",
+      "start": "2026-11-06T07:00:00+09:00",
+      "date": "2026-11-06",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 8강",
+      "teams": [
+        "TBD",
+        "TBD"
+      ],
+      "originalTeams": [
+        "TBD",
+        "TBD"
+      ],
+      "completed": false,
+      "score": null,
+      "bestOf": 5
+    },
+    {
+      "id": "115660540726095115",
+      "start": "2026-11-07T07:00:00+09:00",
+      "date": "2026-11-07",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 8강",
+      "teams": [
+        "TBD",
+        "TBD"
+      ],
+      "originalTeams": [
+        "TBD",
+        "TBD"
+      ],
+      "completed": false,
+      "score": null,
+      "bestOf": 5
+    },
+    {
+      "id": "115660540726095121",
+      "start": "2026-11-08T07:00:00+09:00",
+      "date": "2026-11-08",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 4강",
+      "teams": [
+        "TBD",
+        "TBD"
+      ],
+      "originalTeams": [
+        "TBD",
+        "TBD"
+      ],
+      "completed": false,
+      "score": null,
+      "bestOf": 5
+    },
+    {
+      "id": "115660540726095127",
+      "start": "2026-11-09T07:00:00+09:00",
+      "date": "2026-11-09",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 4강",
+      "teams": [
+        "TBD",
+        "TBD"
+      ],
+      "originalTeams": [
+        "TBD",
+        "TBD"
+      ],
+      "completed": false,
+      "score": null,
+      "bestOf": 5
+    },
+    {
+      "id": "115660540726095133",
+      "start": "2026-11-15T04:00:00+09:00",
+      "date": "2026-11-15",
+      "league": "Worlds",
+      "round": "월드 챔피언십 · 결승",
+      "teams": [
+        "TBD",
+        "TBD"
+      ],
+      "originalTeams": [
+        "TBD",
+        "TBD"
+      ],
+      "completed": false,
+      "score": null,
+      "bestOf": 5
+    }
+  ],
+  "teamAssessment": [
+    {
+      "name": "T1",
+      "elo": 1615,
+      "played": 39,
+      "wins": 25,
+      "losses": 14,
+      "setWins": 65,
+      "setLosses": 44,
+      "latestMatch": "2026-09-12",
+      "power": 81
+    },
+    {
+      "name": "Gen.G",
+      "elo": 1752,
+      "played": 39,
+      "wins": 31,
+      "losses": 8,
+      "setWins": 75,
+      "setLosses": 26,
+      "latestMatch": "2026-09-13",
+      "power": 90
+    },
+    {
+      "name": "HLE",
+      "elo": 1665,
+      "played": 36,
+      "wins": 24,
+      "losses": 12,
+      "setWins": 59,
+      "setLosses": 40,
+      "latestMatch": "2026-09-13",
+      "power": 84
+    },
+    {
+      "name": "DK",
+      "elo": 1623,
+      "played": 43,
+      "wins": 27,
+      "losses": 16,
+      "setWins": 66,
+      "setLosses": 55,
+      "latestMatch": "2026-09-06",
+      "power": 81
+    },
+    {
+      "name": "KT",
+      "elo": 1529,
+      "played": 38,
+      "wins": 20,
+      "losses": 18,
+      "setWins": 50,
+      "setLosses": 52,
+      "latestMatch": "2026-09-04",
+      "power": 75
+    },
+    {
+      "name": "BNK",
+      "elo": 1434,
+      "played": 40,
+      "wins": 18,
+      "losses": 22,
+      "setWins": 52,
+      "setLosses": 59,
+      "latestMatch": "2026-09-03",
+      "power": 69
+    },
+    {
+      "name": "DRX",
+      "elo": 1307,
+      "played": 36,
+      "wins": 11,
+      "losses": 25,
+      "setWins": 37,
+      "setLosses": 59,
+      "latestMatch": "2026-08-22",
+      "power": 60
+    },
+    {
+      "name": "NS",
+      "elo": 1378,
+      "played": 34,
+      "wins": 12,
+      "losses": 22,
+      "setWins": 34,
+      "setLosses": 52,
+      "latestMatch": "2026-08-27",
+      "power": 65
+    },
+    {
+      "name": "DNF",
+      "elo": 1344,
+      "played": 36,
+      "wins": 10,
+      "losses": 26,
+      "setWins": 28,
+      "setLosses": 60,
+      "latestMatch": "2026-08-22",
+      "power": 63
+    },
+    {
+      "name": "BRO",
+      "elo": 1355,
+      "played": 35,
+      "wins": 10,
+      "losses": 25,
+      "setWins": 37,
+      "setLosses": 56,
+      "latestMatch": "2026-08-28",
+      "power": 63
+    }
+  ],
+  "assessmentMethod": "2026 완료 LCK 시리즈를 시간순으로 Elo(시작1500, K32, 세트차 가중1+0.15×차이)로 계산하고, 73+(Elo−1500)/15를55~95로 제한합니다. 공식 팀 평점이 아닌 게임용 환산입니다. 성향은 별도 작성한 게임 설정입니다."
+}

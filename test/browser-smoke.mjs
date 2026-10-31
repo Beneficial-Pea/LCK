@@ -42,7 +42,6 @@ try {
   await slotForm.locator('[name="name"]').fill('김테스트');
   await slotForm.locator('[name="nickname"]').fill('Replay');
   await slotForm.locator('[name="age"]').fill('22');
-  await slotForm.locator('[name="team"]').selectOption('T1');
   await slotForm.locator('[name="position"]').selectOption('MID');
   await slotForm.locator('[name="mainChampion"]').fill('아리');
   await slotForm.locator('[name="pool"]').fill('아리, 아지르, 오리아나, 사일러스, 갈리오');
@@ -54,10 +53,16 @@ try {
   await action('open-create').click();
   const createForm = page.locator('[data-form="create-room"]');
   await createForm.waitFor();
+  if (await createForm.locator('[name="year"]').count()) await createForm.locator('[name="year"]').selectOption('2025');
   if (await createForm.locator('[name="name"]').count()) await createForm.locator('[name="name"]').fill('브라우저 검증 시즌');
   if (await createForm.locator('[name="seed"]').count()) await createForm.locator('[name="seed"]').fill('browser-qa');
   await createForm.locator('button[type="submit"]').click();
   await createForm.waitFor({ state: 'detached' });
+  await page.locator('.assembly-header').waitFor();
+  await action('lobby-ready').click();
+  await action('lobby-prepare').click();
+  await action('choose-team', '[data-team="T1"]').click();
+  await action('lobby-start').click();
   await page.locator('.season-strip').waitFor();
   let session = await state();
   const code = session.rooms[0].code;
