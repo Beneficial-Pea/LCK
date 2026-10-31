@@ -135,6 +135,9 @@ test('character selection, shared readiness, host team selection and cosmetic sc
       assert.equal(room.players.find(p => p.userId === lateId).character.team, 'HLE');
       assert.equal((await late.request('/api/session')).data.slots[0].team, null);
       assert.equal((await host.request(`${route}/team`, 'POST', { team: 'T1' })).status, 409);
+      assert.equal((await host.request(`${route}/action`, 'POST', { turn: room.season.turn, action: 'rest' })).status, 409);
+      assert.equal((await friend.request(`${route}/cup-draft`, 'POST', {turn:room.season.turn,pickNumber:1,remaining:true})).status,403);
+      const drafted=await host.request(`${route}/cup-draft`, 'POST', {turn:room.season.turn,pickNumber:1,remaining:true});assert.equal(drafted.status,200);assert.deepEqual(drafted.data.room.season.cupDraft.groups.map(g=>g.length),[5,5]);assert.equal(drafted.data.room.season.turn,room.season.turn);
       assert.equal((await host.request(`${route}/action`, 'POST', { turn: room.season.turn, action: 'rest' })).status, 200);
     });
 

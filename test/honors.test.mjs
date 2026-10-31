@@ -49,14 +49,14 @@ test('multi-kills require consecutive real kills within the timer and never chan
 });
 test('backgrounds have small server-owned bonuses and previous All-Pro is separate from current trophies',()=>{
  assert.equal(normalizeBackground(undefined),'none');assert.throws(()=>normalizeBackground('champion'),/배경/);
- assert.equal(CHARACTER_BACKGROUNDS.length,28);assert.equal(new Set(CHARACTER_BACKGROUNDS.map(b=>b.id)).size,28);
+ assert.equal(CHARACTER_BACKGROUNDS.length,29);assert.equal(new Set(CHARACTER_BACKGROUNDS.map(b=>b.id)).size,29);
  const patterns=new Set();
  for(const b of CHARACTER_BACKGROUNDS){const stats=startingStats(b.id);assert.equal(Object.keys(stats).length,6);assert(Object.values(stats).every(v=>v>=65&&v<=67));assert.deepEqual(stats,startingStats(b.id));
   assert(Object.values(stats).reduce((n,v)=>n+v-65,0)<=6);patterns.add(JSON.stringify(stats));assert.equal(normalizeBackground(b.id),b.id);
   assert(backgroundIntro({nickname:'CustomPlayer',background:b.id}).includes('CustomPlayer'));assert(!backgroundIntro({nickname:'CustomPlayer',background:b.id}).includes('{nickname}'));
   if(b.id!=='none')assert(backgroundReactions(b.id,'CustomPlayer').every(line=>line.includes('CustomPlayer')));
  }
- assert.equal(patterns.size,28);
+ assert.equal(patterns.size,29);
  assert.equal(startingStats('veteran').communication,67);assert.equal(startingStats('former_all_pro').mechanics,66);
  assert(backgroundPreview(CHARACTER_BACKGROUNDS,'former_all_pro').includes('올프로'));assert(!backgroundPreview(CHARACTER_BACKGROUNDS,'none').includes('+0'));
  const s={year:2026,results:[]};assert.equal(Object.keys(ensureAwards(s).ledger).length,0);assert.equal(s.awards.ceremony,null);

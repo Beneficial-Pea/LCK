@@ -23,6 +23,7 @@ export function renderSeasonAwards(room){
 }
 export function renderCupProgress(room){
  const s=room.season,t=s.tournaments,groups=t?.cupGroups;if(s.year!==2026||!groups)return '';
+ if(['scheduled','drafting'].includes(s.cupDraft?.status))return `<section class="panel section-gap" data-cup-progress><div class="panel-header"><h2>LCK CUP · 미디어데이 그룹 지명</h2><span class="tag">그룹 편성 중 · ${s.cupDraft.picks.length}/8 지명</span></div><div class="panel-body"><p class="note">10개 팀 중 대표 2팀이 번갈아 8팀을 지명합니다. 아직 그룹 배틀은 시작하지 않았습니다.</p><div class="cup-group-grid">${groups.map((teams,i)=>`<section><h3>${i===0?'바론 그룹':'장로 그룹'}</h3><p>${teams.map(e).join(' · ')}</p><p class="note">${5-teams.length}자리 지명 대기</p></section>`).join('')}</div><p class="note">5팀씩 확정된 뒤 그룹 순위표를 표시합니다. 그룹 배틀에서는 바론과 장로 소속 팀이 맞붙습니다.</p></div></section>`;
  const matches=s.schedule||[],ids=t.fixtureIds||{};
  const names=(values)=>values?.length?values.map(e).join(' · '):'그룹 배틀 종료 후 확정';
  const stageTeams=key=>[...new Set(matches.filter(m=>(ids[key]||[]).includes(m.id)&&m.teamA&&m.teamB).flatMap(m=>[m.teamA,m.teamB]))];

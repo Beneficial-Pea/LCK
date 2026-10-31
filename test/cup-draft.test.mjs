@@ -6,7 +6,7 @@ test('media day randomizes captains reproducibly and drafts ten unique teams int
  const make=seed=>createSeason({year:2026,seed,team:'T1'}),s=make('draft-test'),d=s.cupDraft;
  assert.deepEqual(d,make('draft-test').cupDraft);assert.notEqual(d.previous.champion,d.previous.runnerUp);
  assert.ok(new Set(Array.from({length:12},(_,i)=>make('draft-'+i).cupDraft.previous.champion)).size>1);
- assert.throws(()=>pickCupTeam(s),/미디어데이/);s.date=d.date;
+ s.date='2026-01-11';assert.throws(()=>pickCupTeam(s),/미디어데이/);s.date=d.date;
  assert.throws(()=>pickCupTeam(s,d.previous.champion),/지명되지/);
  const source=s.schedule.filter(m=>m.id.startsWith('cup-group-')).map(m=>[m.date,m.bestOf,m.sourceTeams]);
  assert.equal(currentCupCaptain(s),d.previous.champion);pickCupTeam(s,d.remaining[0]);completeCupDraft(s);

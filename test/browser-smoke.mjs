@@ -60,7 +60,7 @@ try {
   await slotForm.locator('[name="style"]').selectOption('균형 운영');
   assert.equal(await slotForm.locator('[name="mainChampion"]').inputValue(),'아리');
 
-  assert.equal(await slotForm.locator('[name="background"] option').count(),28);
+  assert.equal(await slotForm.locator('[name="background"] option').count(),29);
   assert.equal(await slotForm.locator('[name="background"] optgroup').count(),4);
   await slotForm.locator('[name="background"]').selectOption('signature_specialist');
   assert((await page.locator('[data-background-preview]').textContent()).includes('주력 챔피언'));
@@ -92,7 +92,11 @@ try {
   await action('lobby-prepare').click();
   await action('choose-team', '[data-team="T1"]').click();
   await action('lobby-start').click();
+  await page.locator('[data-cup-media]').waitFor();
+  assert.equal(await page.locator('.training-grid').count(),0);
+  await action('cup-draft-auto').click();
   await page.locator('.season-strip').waitFor();
+  checks.push('preseason media day drafts ten teams before training starts');
   let session = await state();
   const code = session.rooms[0].code;
   let room = (await getRoom(code)).room;
@@ -142,7 +146,8 @@ try {
   for (let attempts = 0; attempts < 12; attempts++) {
     room = (await getRoom(code)).room;
     if (room.season.schedule.some(m => m.date === room.season.date && m.status === 'scheduled' && own(m))) break;
-    if(room.clubSchedule.some(e=>e.date===room.season.date&&e.status==='scheduled')){
+    const scrim=room.scrimSchedule?.find(e=>e.date===room.season.date&&e.status==='scheduled');if(scrim)await request(`/api/rooms/${code}/scrim`,{turn:room.season.turn,id:scrim.id,focus:'balanced'});
+    if(room.clubSchedule.some(e=>e.date===room.season.date&&e.status==='scheduled')||scrim){
       await request(`/api/rooms/${code}/action`,{turn:room.season.turn,action:'rest'});
       await request(`/api/rooms/${code}/settle`,{turn:room.season.turn});
     }else await request(`/api/rooms/${code}/auto`, { turn: room.season.turn, action: 'analysis' });
@@ -163,6 +168,7 @@ try {
   while (room.broadcast && Date.now() < broadcastDeadline) {
     await page.waitForTimeout(300);
     room = (await getRoom(code)).room;
+    if(room.broadcast?.intermission){const p=room.broadcast.intermission;await request(`/api/rooms/${code}/set-strategy`,{turn:room.season.turn,matchId:p.matchId,nextSet:p.nextSet,strategy:'balanced'});}
   }
   assert(!room.broadcast, 'The shared live broadcast must finish before archived replay is checked');
   const match = room.season.results.find(m => own(m));
@@ -245,10 +251,12 @@ try {
     await peer.locator('[data-action="choose-action"][data-id="rest"]').click();
     await peer.locator('[data-action="submit-action"]').click();
     await page.waitForFunction(() => !document.querySelector('[data-action="settle"]').disabled);
+    const sharedBefore=(await getRoom(code)).room,practice=sharedBefore.scrimSchedule?.find(e=>e.date===sharedBefore.season.date&&e.status==='scheduled');if(practice)await request(`/api/rooms/${code}/scrim`,{turn:sharedBefore.season.turn,id:practice.id,focus:'balanced'});
     const priorTurn = (await getRoom(code)).room.season.turn;
     const settleResponse = page.waitForResponse(response => response.url().endsWith('/settle') && response.status() === 200);
     await action('settle').click(); await settleResponse;
     room = (await getRoom(code)).room;
+    for(let step=0;room.broadcast&&step<40;step++){if(room.broadcast.intermission){const p=room.broadcast.intermission;await request(`/api/rooms/${code}/set-strategy`,{turn:room.season.turn,...p,strategy:'balanced'});}await page.waitForTimeout(150);room=(await getRoom(code)).room;}
     assert.equal(room.season.turn, priorTurn + 1);
     await peer.waitForFunction(date => document.querySelector('.strip-value')?.textContent?.includes(date.replaceAll('-', '.')), room.season.date);
     const peerRoom = (await (await friend.request.get(`/api/rooms/${code}`)).json()).room;
@@ -266,7 +274,7 @@ try {
   await page.screenshot({ path: new URL('home-mobile.png', output).pathname, fullPage: true });
   checks.push('390px mobile screens fit without horizontal page overflow');
   room=(await getRoom(code)).room;
-  for(let i=0;i<80&&room.season.date<'2026-03-03';i++)room=(await request(`/api/rooms/${code}/settle`,{turn:room.season.turn,npcTakeover:true})).room;
+  for(let i=0;i<80&&room.season.date<'2026-03-03';i++){const practice=room.scrimSchedule?.find(e=>e.date===room.season.date&&e.status==='scheduled');if(practice)await request(`/api/rooms/${code}/scrim`,{turn:room.season.turn,id:practice.id,focus:'balanced'});room=(await request(`/api/rooms/${code}/settle`,{turn:room.season.turn,npcTakeover:true})).room;}
   assert.equal(room.season.date,'2026-03-03');const vacationStats=structuredClone(room.players[0].character.stats);
   await page.reload();await page.locator('.vacation-panel').waitFor();await assertFits('mobile vacation');
   assert.equal(await page.locator('[data-action=choose-action]').count(),0);assert.equal(await page.locator('[data-action=life-answer]').count(),0);

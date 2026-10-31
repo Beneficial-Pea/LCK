@@ -1,3 +1,6 @@
+import {scrimSchedule,todayScrim,playScrim} from './lib/scrims.mjs';
+import {INTERVIEW_CHOICES,answerInterview} from './lib/pom-interviews.mjs';
+import {seasonShared} from './lib/season.mjs';
 import {listNotices,saveNotice,deleteNotice} from './lib/notices.mjs';
 import { ensureCupDraft, currentCupCaptain, pickCupTeam, completeCupDraft } from './lib/cup-draft.mjs';
 import { Accounts } from './lib/accounts.mjs';
@@ -18,7 +21,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { Store } from './lib/store.mjs';
 import { normalizePortrait } from './lib/portrait.mjs';
 import { applyWorldEffects } from './lib/world-events.mjs';
-import { beginLiveMatch, advanceLiveMatch, getLiveBroadcast } from './lib/live-match.mjs';
+import { beginLiveMatch, advanceLiveMatch, getLiveBroadcast, resumeLiveMatch } from './lib/live-match.mjs';
 import { hasNicknameCollision, ensureRosterNicknames, normalizeNickname } from './lib/nicknames.mjs';
 import { getTeamNpcPower, getBalanceReport, applyTeamNpcPreset } from './lib/balance.mjs';
 import { TEAM_PROFILES, TEAM_PROFILE_BASIS, defaultOpponentSettings } from './lib/team-profiles.mjs';
@@ -83,11 +86,11 @@ function progressRoom(room) {
 }
 
 function roomView(room, userId) {
-  const view = clone(room);
-  delete view.liveMatch;
+  const view = clone(Object.fromEntries(Object.entries(room).filter(([key])=>key!=='liveMatch')));
   if(Array.isArray(view.season.rules))view.season.rules=view.season.rules.map(rule=>typeof rule==='string'?rule.replace('밴은 팀당 3개로 간소화했습니다.','매 세트 양 팀이 각각 챔피언 5개를 밴합니다.'):rule);
   view.broadcast = getLiveBroadcast(room);
   view.clubSchedule = clubSchedule(room);
+  view.scrimSchedule=scrimSchedule(room);view.interviewChoices=INTERVIEW_CHOICES;
   view.vacation=vacationFor(room.season);view.vacationWindows=vacationWindows(room.season);
   view.me = userId;
   view.balance = getBalanceReport(room);
@@ -253,8 +256,7 @@ async function api(req, res, url) {
   if (method === 'GET') {
     const room = roomFor(code, user.id);
     if (operation === 'export') {
-      const saved = clone(room);
-      delete saved.liveMatch;
+      const saved = clone(Object.fromEntries(Object.entries(room).filter(([key])=>key!=='liveMatch')));
       saved.broadcast = getLiveBroadcast(room);
       for (const player of saved.players) { delete player.character.avatarSource; delete player.character.avatarCrop; }
       return { exportedAt: new Date().toISOString(), format: 'first-team-season-v1', room: { ...saved, messages: undefined }, notice: '현재 서버의 시즌 기록 내보내기. 개인 메시지와 편집용 원본 사진은 포함하지 않습니다. 초대코드는 서버에 종속됩니다.' };
@@ -304,7 +306,7 @@ async function api(req, res, url) {
         room.lobby.status = 'started';
         room.lobby.startedAt = new Date().toISOString();
         if (room.season.draft) room.season.draft = false;
-        systemMessage(room, '전원 준비 완료. 시즌을 시작합니다. 빈 포지션은 NPC가 맡으며 게임 날짜는 그대로 유지됩니다.');
+        systemMessage(room, room.season.year===2026&&['scheduled','drafting'].includes(room.season.cupDraft?.status)?'전원 준비 완료. 시즌 전 미디어데이에서 바론·장로 그룹을 먼저 편성합니다. 지명이 끝나면 첫 준비 일정으로 넘어갑니다.':'전원 준비 완료. 시즌을 시작합니다. 빈 포지션은 NPC가 맡으며 게임 날짜는 그대로 유지됩니다.');
         break;
       }
       case 'demacia-decline': {
@@ -336,7 +338,20 @@ async function api(req, res, url) {
         else pickCupTeam(room.season);
         break;
       }
+      case 'set-strategy': {
+        ensureStarted(room);ensureHost(room,user);ensureTurn(room,body);
+        extra.strategy=resumeLiveMatch(room,body,pending=>settleDay(pending,{npcTakeover:room.liveMatch.summary.npcTakeover===true}));break;
+      }
+      case 'scrim': {
+        ensureStarted(room);ensureNoBroadcast(room);ensureHost(room,user);ensureTurn(room,body);
+        extra.scrim=playScrim(room,body.id,body.focus,seasonShared.teamProfile);break;
+      }
+      case 'pom-interview': {
+        ensureStarted(room);ensureNoBroadcast(room);ensureTurn(room,body);
+        extra.interview=answerInterview(room,body.id,body.choice,user.id);break;
+      }
       case 'action': {
+        if(room.lobby?.requireTeamSelection&&['scheduled','drafting'].includes(room.season.cupDraft?.status))fail(409,'시즌 전 미디어데이에서 그룹 지명을 먼저 완료해 주세요.');
         ensureStarted(room);if(vacationFor(room.season))fail(409,'선수단 휴가 중입니다. 행동 선택 없이 휴가를 넘겨주세요.');
         ensureNoBroadcast(room);
         ensureTurn(room, body);
@@ -354,13 +369,15 @@ async function api(req, res, url) {
         ensureStarted(room);
         ensureNoBroadcast(room);
         ensureHost(room, user); ensureTurn(room, body);
+        if(room.lobby?.requireTeamSelection&&['scheduled','drafting'].includes(room.season.cupDraft?.status))fail(409,'시즌 전 미디어데이에서 그룹 지명을 먼저 완료해 주세요.');
+        if(todayScrim(room))fail(409,'오늘의 상세 스크림을 먼저 진행해 주세요.');
         const missing = vacationFor(room.season)?[]:room.players.filter(p => room.submissions[p.userId]?.turn !== room.season.turn);
         if (missing.length && body.npcTakeover !== true) fail(409, '아직 행동을 제출하지 않은 선수가 있습니다. 기다리거나 NPC 대행을 명시적으로 선택하세요.');
         const playedDate = room.season.date;
         if (body.live === true) {
           const pending = clone(room);
-          const summary = settleDay(pending, { npcTakeover: body.npcTakeover === true });
-          const live = beginLiveMatch(room, pending, summary, { stepMs: Number(process.env.LIVE_STEP_MS) || 1400 });
+          const summary = settleDay(pending, { npcTakeover: body.npcTakeover === true });summary.npcTakeover=body.npcTakeover===true;
+          const live = beginLiveMatch(room, pending, summary, { interactive:room.season.year===2026, stepMs: Number(process.env.LIVE_STEP_MS) || 1400 });
           if (live) {
             extra.summary = { date: summary.date, turn: summary.turn, live: true, matches: [...room.liveMatch.gameIds] };
           } else {
@@ -381,17 +398,16 @@ async function api(req, res, url) {
         let days = 0;const decisions=[];
         for (let i = 0; i < 7 && !room.season.finished; i++) {
           const ownGame = room.season.schedule.some(g => g.date === room.season.date && g.status === 'scheduled' && [g.teamA, g.teamB].includes(room.season.team));
-          if (ownGame||vacationFor(room.season)) break;
-          if(room.season.cupDraft?.date===room.season.date&&['scheduled','drafting'].includes(room.season.cupDraft.status))break;
-          if(clubSchedule(room).some(event=>event.date===room.season.date&&event.status==='scheduled'))break;
+          if(ownGame||todayScrim(room))break;
+          if(vacationFor(room.season)){settleDay(room);days++;continue;}
           const decision=choosePreparation(room,me,ACTIONS);
           decisions.push(rememberPreparation(room.season,me,decision));
           room.submissions[user.id] = { turn: room.season.turn, action:decision.action,autoReason:decision.reason };
           settleDay(room, { npcTakeover: false }); days++;
         }
-        if (!days) fail(409, '오늘은 우리 팀 경기·고정 활동 또는 휴가가 있습니다. 오늘 일정에서 직접 진행해 주세요.');
+        if (!days) fail(409, '오늘은 우리 팀 경기 또는 상세 스크림이 있습니다. 오늘 일정에서 직접 진행해 주세요.');
         extra.days = days;extra.decisions=decisions;
-        systemMessage(room, `자동 준비 ${days}일. 매일 선수 상태와 다음 경기를 보고 훈련·회복을 선택했습니다. 우리 팀 경기·고정 활동 전에는 멈춥니다.`);
+        systemMessage(room, `자동 준비 ${days}일. 매일 선수 상태와 다음 경기를 보고 훈련·회복을 선택했습니다. 구단 행사와 휴가는 자동으로 넘기며, 우리 팀 경기·상세 스크림 전에는 멈춥니다.`);
         break;
       }
       case 'location': {
@@ -481,6 +497,8 @@ const server = http.createServer(async (req, res) => {
     files['/world-events.css'] = ['world-events.css', 'text/css'];
     files['/auth.js']=['auth.js','text/javascript'];
     files['/auth.css']=['auth.css','text/css'];
+    files['/training.js']=['training.js','text/javascript'];
+    files['/training.css']=['training.css','text/css'];
     files['/notices.js']=['notices.js','text/javascript'];
     files['/notices.css']=['notices.css','text/css'];
     files['/cup-draft.js']=['cup-draft.js','text/javascript'];

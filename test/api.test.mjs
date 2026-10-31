@@ -109,6 +109,7 @@ test('room seeds are random and client-independent, shared by peers, and stable 
   const route='/api/rooms/'+first.code;
   const joined=await peer.request('/api/rooms/join','POST',{slot:0,code:first.code});assert.equal(joined.data.room.season.seed,first.season.seed);
   let room=first;while(room.season.date<'2026-01-17'){
+   const practice=room.scrimSchedule?.find(e=>e.date===room.season.date&&e.status==='scheduled');if(practice){assert.equal((await host.request(route+'/scrim','POST',{turn:room.season.turn,id:practice.id,focus:'balanced'})).status,200);}
    const settled=await host.request(route+'/settle','POST',{turn:room.season.turn,npcTakeover:true});assert.equal(settled.status,200);room=settled.data.room;
   }
   assert(room.season.results.length>=2);assert.equal(new Set(room.season.results.map(m=>m.result.seed)).size,room.season.results.length);
@@ -122,24 +123,16 @@ test('room seeds are random and client-independent, shared by peers, and stable 
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
 
-test('2026 team activities stop automatic skipping and persist exactly once across restarts',async()=>{
+test('2026 auto preparation passes club events and stops only at own games or detailed scrims',async()=>{
  const temp=await mkdtemp(path.join(tmpdir(),'club-api-')),dataFile=path.join(temp,'game.sqlite'),server={base:''};let running;
  try{
-  running=await launch(dataFile);server.base=running.base;const user=actor(server);
-  await user.request('/api/session');await user.request('/api/slots/0','PUT',{character:character('MID','ClubPlayer')});
-  const meta=await user.request('/api/meta');assert.deepEqual(meta.data.availableSeasons.map(s=>s.year),[2026]);
-  let response=await user.request('/api/rooms','POST',{slot:0,year:2026,seed:'club-api'});assert.equal(response.status,200);
-  const route='/api/rooms/'+response.data.room.code;
-  response=await user.request(route+'/auto','POST',{turn:1,action:'rest'});assert.equal(response.status,200);assert.equal(response.data.days,1);assert.equal(response.data.decisions.length,1);assert.notEqual(response.data.decisions[0].action,'rest');assert(response.data.decisions[0].reason);assert(response.data.room.season.history.some(h=>h.autoReason));
-  let r=response.data.room;const event=r.clubSchedule.find(e=>e.date===r.season.date);assert(event);
-  const refused=await user.request(route+'/auto','POST',{turn:r.season.turn,action:'rest'});assert.equal(refused.status,409);
-  await user.request(route+'/action','POST',{turn:r.season.turn,action:'rest'});
-  response=await user.request(route+'/settle','POST',{turn:r.season.turn});assert.equal(response.status,200);
-  r=response.data.room;assert.equal(r.season.clubDiary.filter(e=>e.id===event.id).length,1);
-  assert.equal(r.clubSchedule.find(e=>e.id===event.id).status,'completed');
-  await running.stop();running=await launch(dataFile);server.base=running.base;
-  const restored=(await user.request(route)).data.room;assert.deepEqual(restored.season.clubDiary,r.season.clubDiary);
-  assert.equal(restored.season.turn,r.season.turn);
+  running=await launch(dataFile);server.base=running.base;const user=actor(server);await user.request('/api/slots/0','PUT',{character:character('MID','ClubPlayer')});
+  let response=await user.request('/api/rooms','POST',{slot:0,year:2026});const route='/api/rooms/'+response.data.room.code;
+  response=await user.request(route+'/auto','POST',{turn:1});assert.equal(response.status,200);assert(response.data.days>=2);assert(response.data.decisions.length);assert(response.data.decisions[0].reason);
+  const r=response.data.room;assert(r.season.clubDiary.length);assert.equal(r.season.cupDraft.status,'completed');assert.equal(new Set(r.season.clubDiary.map(e=>e.id)).size,r.season.clubDiary.length);
+  assert(r.season.schedule.some(m=>m.date===r.season.date&&m.status==='scheduled'&&[m.teamA,m.teamB].includes(r.season.team))||r.scrimSchedule.some(e=>e.date===r.season.date&&e.status==='scheduled'));
+  assert.equal((await user.request(route+'/auto','POST',{turn:r.season.turn})).status,409);
+  await running.stop();running=await launch(dataFile);server.base=running.base;const restored=(await user.request(route)).data.room;assert.deepEqual(restored.season.clubDiary,r.season.clubDiary);assert.equal(restored.season.turn,r.season.turn);
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
 
@@ -173,7 +166,7 @@ test('Demacia invitations enforce host authority and persist refusal; own games 
   assert.equal(live.data.room.broadcast.stage,'데마시아컵');assert.equal(live.data.room.season.date,'2026-10-03');assert(!live.data.room.liveMatch);
   assert.equal(live.data.room.season.demacia.online.reduce((n,r)=>n+r.wins,0),0,'Upcoming online results stay private');
   let after;
-  for(let i=0;i<100;i++){await new Promise(r=>setTimeout(r,30));after=(await host.request(liveRoute)).data.room;if(!after.broadcast)break;}
+  for(let i=0;i<100;i++){await new Promise(r=>setTimeout(r,30));after=(await host.request(liveRoute)).data.room;if(after.broadcast?.intermission){const p=after.broadcast.intermission;await host.request(liveRoute+'/set-strategy','POST',{turn:after.season.turn,...p,strategy:'balanced'});}if(!after.broadcast)break;}
   assert(!after.broadcast);assert.equal(after.season.date,'2026-10-04');assert.equal(after.season.turn,266);
   assert.equal(after.season.results.filter(m=>m.id.startsWith('demacia-')).length,6);
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
@@ -210,7 +203,7 @@ test('vacations skip shared days without choices and the selected Gen.G still pl
   const live=await host.request(route+'/settle','POST',{turn:r.season.turn,live:true});assert.equal(live.status,200);assert.equal(live.data.room.broadcast.stage,'EWC 한국 예선');assert.equal(live.data.room.broadcast.bestOf,5);
   assert(!live.data.room.season.results.some(m=>m.id===qualification.id),'The qualification winner is not public before the live match finishes');
   let completed;
-  for(let i=0;i<200;i++){await new Promise(r=>setTimeout(r,15));completed=(await host.request(route)).data.room;if(!completed.broadcast)break;}
+  for(let i=0;i<200;i++){await new Promise(r=>setTimeout(r,15));completed=(await host.request(route)).data.room;if(completed.broadcast?.intermission){const p=completed.broadcast.intermission;await host.request(route+'/set-strategy','POST',{turn:completed.season.turn,...p,strategy:'balanced'});}if(!completed.broadcast)break;}
   assert(!completed.broadcast);assert.equal(completed.season.date,'2026-05-26');assert.equal(completed.season.qualifications.ewc.status,'qualified');assert(completed.season.qualifications.ewc.teams.includes('Gen.G'));
   assert.deepEqual(completed.season.ewc.r1Standings,r1);assert.deepEqual(completed.season.ewc.previousChampion,background);
   await running.stop();await start();assert.deepEqual((await host.request(route)).data.room.season.ewc.previousChampion,background);
@@ -444,4 +437,44 @@ test('notices require login to read and admin permissions to publish, edit and d
   assert.equal((await member.request('/api/notices')).data.notices.length,2);
   for(const asset of ['/notices.js','/notices.css'])assert.equal((await fetch(server.base+asset)).status,200);
  }finally{await server?.stop();await rm(temp,{recursive:true,force:true});}
+});
+
+test('detailed practice blocks skip, uses host choices and persists separately from official results',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'scrim-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
+ try{
+  running=await launch(file);server.base=running.base;const host=actor(server),peer=actor(server);await host.request('/api/slots/0','PUT',{character:character('MID','ScrimHost')});await peer.request('/api/slots/0','PUT',{character:character('JGL','ScrimPeer')});
+  let r=(await host.request('/api/rooms','POST',{slot:0,year:2026})).data.room;const route='/api/rooms/'+r.code;
+  await host.request(route+'/cup-draft','POST',{turn:r.season.turn,pickNumber:1,remaining:true});r=(await host.request(route)).data.room;const event=r.scrimSchedule.find(e=>e.status==='scheduled');assert(event);
+  await running.stop();let db=new Store(file);const saved=db.room(r.code);saved.season.date=event.date;db.saveRoom(saved);db.close();running=await launch(file);server.base=running.base;
+  r=(await host.request(route)).data.room;assert.equal(r.scrimSchedule.find(e=>e.id===event.id).date,event.date);
+  assert.equal((await host.request(route+'/auto','POST',{turn:r.season.turn})).status,409);
+  assert.equal((await host.request(route+'/settle','POST',{turn:r.season.turn,npcTakeover:true})).status,409);
+  await peer.request('/api/rooms/join','POST',{slot:0,code:r.code});assert.equal((await peer.request(route+'/scrim','POST',{turn:r.season.turn,id:event.id,focus:'early'})).status,403);
+  assert.equal((await host.request(route+'/scrim','POST',{turn:r.season.turn,id:event.id,focus:'bad'})).status,400);
+  const result=await host.request(route+'/scrim','POST',{turn:r.season.turn,id:event.id,focus:'teamfight'});assert.equal(result.status,200);assert.equal(result.data.room.season.results.length,r.season.results.length);assert.equal(result.data.room.season.scrimDiary.length,1);assert.equal(result.data.room.season.turn,r.season.turn);
+  assert.equal((await host.request(route+'/scrim','POST',{turn:r.season.turn,id:event.id,focus:'side'})).status,409);
+  await running.stop();running=await launch(file);server.base=running.base;assert.deepEqual((await host.request(route)).data.room.season.scrimDiary,result.data.room.season.scrimDiary);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});
+
+test('shared live strategy requires host and POM interviews require the awarded player',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'strategy-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
+ try{
+  running=await launch(file,{LIVE_STEP_MS:'1'});server.base=running.base;const host=actor(server),peer=actor(server);await host.request('/api/slots/0','PUT',{character:character('MID','StrategyHost')});await peer.request('/api/slots/0','PUT',{character:character('JGL','StrategyPeer')});
+  let room=(await host.request('/api/rooms','POST',{slot:0,year:2026})).data.room;const route='/api/rooms/'+room.code;
+  await host.request(route+'/cup-draft','POST',{turn:1,pickNumber:1,remaining:true});await peer.request('/api/rooms/join','POST',{slot:0,code:room.code});
+  await running.stop();const db=new Store(file),r=db.room(room.code);
+  r.season.interviews=[{id:'fixture-interview',status:'pending',userId:r.hostId,team:r.season.team,nickname:'StrategyHost',date:r.season.date,matchId:'fixture',question:'오늘 경기 소감은?'}];db.saveRoom(r);db.close();running=await launch(file,{LIVE_STEP_MS:'1'});server.base=running.base;
+  assert.equal((await peer.request(route+'/pom-interview','POST',{turn:1,id:'fixture-interview',choice:'team'})).status,403);
+  assert.equal((await host.request(route+'/pom-interview','POST',{turn:1,id:'fixture-interview',choice:'bad'})).status,400);
+  assert.equal((await host.request(route+'/pom-interview','POST',{turn:1,id:'fixture-interview',choice:'review'})).status,200);
+  assert.equal((await host.request(route+'/pom-interview','POST',{turn:1,id:'fixture-interview',choice:'team'})).status,409);
+  await running.stop();const data=new Store(file),prepared=data.room(room.code);for(let i=0;i<10&&!prepared.season.schedule.some(m=>m.date===prepared.season.date&&m.status==='scheduled'&&[m.teamA,m.teamB].includes(prepared.season.team));i++)settleDay(prepared,{npcTakeover:true});data.saveRoom(prepared);data.close();running=await launch(file,{LIVE_STEP_MS:'1'});server.base=running.base;
+  const started=await host.request(route+'/settle','POST',{turn:prepared.season.turn,npcTakeover:true,live:true});assert.equal(started.status,200);
+  for(let i=0;i<30;i++){room=(await host.request(route)).data.room;if(room.broadcast?.intermission)break;await new Promise(r=>setTimeout(r,10));}
+  const pause=room.broadcast?.intermission;assert(pause);const request={turn:room.season.turn,...pause,strategy:'side'};
+  assert.equal((await peer.request(route+'/set-strategy','POST',request)).status,403);assert.equal((await host.request(route+'/set-strategy','POST',{...request,nextSet:99})).status,409);
+  const resumed=await host.request(route+'/set-strategy','POST',request);assert.equal(resumed.status,200);assert.equal(resumed.data.room.season.date,prepared.season.date);assert(!resumed.data.room.liveMatch);assert(!JSON.stringify(resumed.data.room.broadcast).includes('pendingRoom'));
+  assert.equal((await host.request(route+'/set-strategy','POST',request)).status,409);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
