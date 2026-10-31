@@ -478,3 +478,25 @@ test('shared live strategy requires host and POM interviews require the awarded 
   assert.equal((await host.request(route+'/set-strategy','POST',request)).status,409);
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
+
+test('host reset restarts only its room, keeps accounts, slots, party and chat, and rejects stale confirmations',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'room-reset-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
+ try{
+  running=await launch(file);server.base=running.base;const host=actor(server),peer=actor(server),outsider=actor(server);
+  await host.request('/api/slots/0','PUT',{character:{...character('MID','ResetHost'),background:'franchise_star'}});await peer.request('/api/slots/0','PUT',{character:character('JGL','ResetPeer')});await outsider.request('/api/session');
+  const slotBefore=(await host.request('/api/session')).data.slots;
+  let room=(await host.request('/api/rooms','POST',{slot:0,year:2026})).data.room;const route='/api/rooms/'+room.code,other=(await host.request('/api/rooms','POST',{slot:0,year:2026})).data.room;
+  await peer.request('/api/rooms/join','POST',{slot:0,code:room.code});await host.request(route+'/chat','POST',{channel:'owner',text:'초기화 후에도 남길 대화'});
+  await running.stop();const db=new Store(file),changed=db.room(room.code);changed.season.date='2026-01-20';changed.season.turn=9;changed.season.history.push({text:'old season history'});changed.season.scrimDiary=[{id:'old-practice'}];changed.season.interviews=[{id:'old-interview'}];changed.players[0].character.stats.macro=95;changed.players[0].character.fatigue=77;changed.submissions[changed.hostId]={turn:9,action:'mechanics'};db.saveRoom(changed);db.close();running=await launch(file);server.base=running.base;
+  room=(await host.request(route)).data.room;const confirm={seasonId:room.season.id,turn:room.season.turn,confirmation:'초기화'};
+  assert.equal((await outsider.request(route+'/reset','POST',confirm)).status,403);assert.equal((await peer.request(route+'/reset','POST',confirm)).status,403);
+  assert.equal((await host.request(route+'/reset','POST',{...confirm,confirmation:''})).status,400);assert.equal((await host.request(route+'/reset','POST',{...confirm,turn:1})).status,409);assert.equal((await host.request(route+'/reset','POST',{...confirm,seasonId:'old-season'})).status,409);
+  assert.equal((await host.request(route)).data.room.season.id,room.season.id);
+  const result=await host.request(route+'/reset','POST',confirm);assert.equal(result.status,200);const reset=result.data.room;
+  assert.equal(reset.code,room.code);assert.equal(reset.hostId,room.hostId);assert.deepEqual(reset.players.map(p=>p.userId),room.players.map(p=>p.userId));assert.deepEqual(reset.players.map(p=>p.character.id),room.players.map(p=>p.character.id));assert.equal(reset.players[0].character.stats.macro,67);assert.equal(reset.players[0].character.fatigue,10);assert(reset.players.every(p=>p.character.team===null));
+  assert.notEqual(reset.season.id,room.season.id);assert.notEqual(reset.season.seed,room.season.seed);assert.equal(reset.season.date,'2026-01-12');assert.equal(reset.season.turn,1);assert.equal(reset.season.results.length,0);assert.equal(reset.season.team,null);assert.equal(reset.season.draft,true);assert(!reset.season.scrimDiary);assert(!reset.season.interviews);assert.deepEqual(reset.submissions,{});assert.equal(reset.lobby.status,'waiting');assert.deepEqual(reset.lobby.ready,{});assert(reset.messages.some(m=>m.text==='초기화 후에도 남길 대화'));
+  assert.deepEqual((await host.request('/api/session')).data.slots,slotBefore);assert.equal((await host.request('/api/rooms/'+other.code)).data.room.season.id,other.season.id);assert.equal((await host.request(route+'/reset','POST',confirm)).status,409);
+  await running.stop();running=await launch(file);server.base=running.base;assert.equal((await peer.request(route)).data.room.season.id,reset.season.id);
+  const left=await host.request(route+'/leave','POST',{});assert.equal(left.status,200);assert.equal((await host.request(route)).status,403);const remains=(await peer.request(route)).data.room;assert.equal(remains.hostId,remains.players[0].userId);assert.equal(remains.players.length,1);assert.equal(remains.season.id,reset.season.id);assert.deepEqual((await host.request('/api/session')).data.slots,slotBefore);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});

@@ -1,3 +1,5 @@
+import {resetRoomSeason} from './lib/room-reset.mjs';
+import {dayActivity} from './lib/day-schedule.mjs';
 import {scrimSchedule,todayScrim,playScrim} from './lib/scrims.mjs';
 import {INTERVIEW_CHOICES,answerInterview} from './lib/pom-interviews.mjs';
 import {seasonShared} from './lib/season.mjs';
@@ -90,6 +92,7 @@ function roomView(room, userId) {
   if(Array.isArray(view.season.rules))view.season.rules=view.season.rules.map(rule=>typeof rule==='string'?rule.replace('밴은 팀당 3개로 간소화했습니다.','매 세트 양 팀이 각각 챔피언 5개를 밴합니다.'):rule);
   view.broadcast = getLiveBroadcast(room);
   view.clubSchedule = clubSchedule(room);
+  view.dayActivity=dayActivity(room);
   view.scrimSchedule=scrimSchedule(room);view.interviewChoices=INTERVIEW_CHOICES;
   view.vacation=vacationFor(room.season);view.vacationWindows=vacationWindows(room.season);
   view.me = userId;
@@ -128,6 +131,7 @@ function ensureAllReady(room) {
   if (missing.length) fail(409, `${missing.map(p => p.character.nickname).join(', ')}의 준비를 기다리고 있습니다.`);
 }
 function ensureTurn(room, body) {
+  if(body.seasonId&&body.seasonId!==room.season.id)fail(409,'시즌이 변경됐습니다. 현재 방을 새로 확인해 주세요.');
   if (Number(body.turn) !== room.season.turn) fail(409, '이전 턴의 요청입니다. 현재 날짜를 확인하고 다시 제출하세요.');
   if (room.season.finished) fail(409, '종료된 시즌입니다. 기록을 열람하거나 새 시즌을 만드세요.');
 }
@@ -371,7 +375,7 @@ async function api(req, res, url) {
         ensureHost(room, user); ensureTurn(room, body);
         if(room.lobby?.requireTeamSelection&&['scheduled','drafting'].includes(room.season.cupDraft?.status))fail(409,'시즌 전 미디어데이에서 그룹 지명을 먼저 완료해 주세요.');
         if(todayScrim(room))fail(409,'오늘의 상세 스크림을 먼저 진행해 주세요.');
-        const missing = vacationFor(room.season)?[]:room.players.filter(p => room.submissions[p.userId]?.turn !== room.season.turn);
+        const missing = vacationFor(room.season)||dayActivity(room)?[]:room.players.filter(p => room.submissions[p.userId]?.turn !== room.season.turn);
         if (missing.length && body.npcTakeover !== true) fail(409, '아직 행동을 제출하지 않은 선수가 있습니다. 기다리거나 NPC 대행을 명시적으로 선택하세요.');
         const playedDate = room.season.date;
         if (body.live === true) {
@@ -448,6 +452,12 @@ async function api(req, res, url) {
         if (!room.players.some(p => p.userId === body.userId)) fail(400, '참가한 선수를 선택하세요.');
         room.hostId = body.userId; systemMessage(room, '방장 권한이 이전되었습니다.');
         break;
+      }
+      case 'reset': {
+        ensureHost(room,user);ensureNoBroadcast(room);
+        if(body.seasonId!==room.season.id||Number(body.turn)!==room.season.turn)fail(409,'방의 시즌이나 날짜가 변경됐습니다. 다시 확인해 주세요.');
+        if(body.confirmation!=='초기화')fail(400,'초기화하려면 확인란에 초기화를 입력해 주세요.');
+        resetRoomSeason(room);systemMessage(room,'방장이 이 방의 시즌 진행과 선수 성장을 초기화했습니다. 참가자와 채팅은 유지되며, 준비 완료 후 팀 선택과 시즌 전 미디어데이부터 다시 시작합니다.');break;
       }
       case 'leave': {
         room.players = room.players.filter(p => p.userId !== user.id);

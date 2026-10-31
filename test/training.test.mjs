@@ -41,3 +41,10 @@ test('POM interviews belong to the selected player, reward once and resolve skip
  queueInterview(room,{...match,id:'next'},result);expireInterviews(room);assert(room.season.interviews.at(-1).automatic);
  queueInterview(room,{...match,id:'npc'},{pom:{team:'KT',playerId:'npc',nickname:'Opponent',position:'TOP'}});assert.equal(room.season.interviews.at(-1).status,'answered');assert.equal(room.season.interviews.at(-1).userId,null);
 });
+
+test('match and scrim days settle without generic preparation actions or hidden training benefits',()=>{
+ const room=make('dedicated-days');completeCupDraft(room.season);
+ const practice=scrimSchedule(room)[0];room.season.date=practice.date;playScrim(room,practice.id,'side',seasonShared.teamProfile);const before=room.players[0].character.stats.mechanics;room.submissions={u:{turn:room.season.turn,action:'mechanics'}};
+ let summary=settleDay(room);assert.deepEqual(summary.actions,[]);assert.equal(room.players[0].character.stats.mechanics,before);
+ const game=room.season.schedule.find(m=>m.status==='scheduled'&&[m.teamA,m.teamB].includes('T1'));room.season.date=game.date;room.submissions={};summary=settleDay(room);assert(summary.matches.includes(game.id));assert.deepEqual(summary.actions,[]);assert.equal(room.players[0].character.stats.mechanics,before);
+});

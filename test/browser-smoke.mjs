@@ -156,7 +156,7 @@ try {
   assert(room.season.schedule.some(m => m.date === room.season.date && m.status === 'scheduled' && own(m)), 'first own game reached');
   await page.reload();
   await page.locator('.season-strip').waitFor();
-  await action('submit-action').click();
+  assert.equal(await page.locator('[data-action="submit-action"],[data-action="choose-action"]').count(),0);
   await page.waitForFunction(() => !document.querySelector('[data-action="settle"]')?.disabled);
   const settled = page.waitForResponse(response => response.url().endsWith('/settle') && response.status() === 200);
   await action('settle').click(); await settled;
@@ -244,14 +244,16 @@ try {
     peer.on('pageerror', error => errors.push(error.message));
     await peer.goto('/'); await peer.locator('.season-strip').waitFor();
     await nav('home');
-    await page.waitForFunction(() => document.querySelectorAll('.submit-chip').length === 2);
-    await action('submit-action').click();
-    await page.waitForFunction(() => [...document.querySelectorAll('.submit-chip')].some(c => c.classList.contains('done')));
-    assert(await action('settle').isDisabled(), 'host waits for second player');
-    await peer.locator('[data-action="choose-action"][data-id="rest"]').click();
-    await peer.locator('[data-action="submit-action"]').click();
+    const sharedBefore=(await getRoom(code)).room;
+    if(sharedBefore.dayActivity){
+      assert.equal(await page.locator('[data-action="submit-action"],[data-action="choose-action"]').count(),0);
+      const practice=sharedBefore.scrimSchedule?.find(e=>e.date===sharedBefore.season.date&&e.status==='scheduled');if(practice){await request(`/api/rooms/${code}/scrim`,{turn:sharedBefore.season.turn,id:practice.id,focus:'balanced'});await page.reload();await page.locator('.season-strip').waitFor();}
+    }else{
+      await page.waitForFunction(() => document.querySelectorAll('.submit-chip').length === 2);
+      await action('submit-action').click();await page.waitForFunction(() => [...document.querySelectorAll('.submit-chip')].some(c => c.classList.contains('done')));assert(await action('settle').isDisabled(), 'host waits for second player');
+      await peer.locator('[data-action="choose-action"][data-id="rest"]').click();await peer.locator('[data-action="submit-action"]').click();
+    }
     await page.waitForFunction(() => !document.querySelector('[data-action="settle"]').disabled);
-    const sharedBefore=(await getRoom(code)).room,practice=sharedBefore.scrimSchedule?.find(e=>e.date===sharedBefore.season.date&&e.status==='scheduled');if(practice)await request(`/api/rooms/${code}/scrim`,{turn:sharedBefore.season.turn,id:practice.id,focus:'balanced'});
     const priorTurn = (await getRoom(code)).room.season.turn;
     const settleResponse = page.waitForResponse(response => response.url().endsWith('/settle') && response.status() === 200);
     await action('settle').click(); await settleResponse;
