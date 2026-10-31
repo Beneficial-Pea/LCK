@@ -1,3 +1,4 @@
+import { answerDailyLife } from './lib/daily-life.mjs';
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -284,6 +285,10 @@ async function api(req, res, url) {
         if (room.season.draft) room.season.draft = false;
         systemMessage(room, '전원 준비 완료. 시즌을 시작합니다. 빈 포지션은 NPC가 맡으며 게임 날짜는 그대로 유지됩니다.');
         break;
+      }
+      case 'life': {
+        ensureStarted(room);ensureNoBroadcast(room);
+        extra.interaction=answerDailyLife(room,user.id,body.entryId,body.choice);break;
       }
       case 'portrait': {
         if (!Object.hasOwn(body, 'avatar')) fail(400, '변경하거나 삭제할 사진을 지정하세요.');

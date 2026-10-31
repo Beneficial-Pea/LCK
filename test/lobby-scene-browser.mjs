@@ -88,9 +88,11 @@ try {
   assert.equal((await contexts[0].request.post(`/api/rooms/${code}/action`, { data: { turn, action: 'rest' } })).status(), 409);
   assert.equal((await contexts[0].request.post(`/api/rooms/${code}/prepare`, { data: {} })).status(), 409);
   assert.equal((await contexts[1].request.post(`/api/rooms/${code}/team`, { data: { team: 'T1' } })).status(), 403);
-  await host.locator('[data-form="lobby-chat"] [name="text"]').fill('모두 준비하면 출발해요');
-  await host.locator('[data-form="lobby-chat"] [type="submit"]').click();
+  for(const p of [host,peer]){await p.locator('[data-owner-toggle]').click();await p.locator('[data-dock-channel=owner]').click();}
+  await host.locator('[data-form="owner-dock"] [name="text"]').fill('모두 준비하면 출발해요');
+  await host.locator('[data-form="owner-dock"] [type="submit"]').click();
   await peer.getByText('모두 준비하면 출발해요', { exact: true }).waitFor();
+  for(const p of [host,peer])await p.locator('[data-owner-toggle]').click();
   checks.push('Real shared waiting room blocks gameplay/early prepare; owner chat synchronizes');
 
   await action(host, 'lobby-ready').click();await action(peer, 'lobby-ready').click();

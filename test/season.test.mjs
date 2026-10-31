@@ -41,7 +41,7 @@ test('training grows distinct stats; fatigue limits growth, temporary duo stays 
   advance(fatigueRoom, 'mechanics'); assert.ok(fatigueRoom.players[0].character.stats.mechanics < room.players[0].character.stats.mechanics);
   advance(room, 'duo'); assert.equal(room.players[0].duoId, null);
   assert.equal(room.season.relationships[0].targetId, 'temporary-npc');
-  assert.ok(room.season.history[0].text.includes('해제'));
+  assert.ok(room.season.history.find(e=>e.type==='action').text.includes('해제'));
   assert.equal(getRoster(room).length, 5); assert.deepEqual(getRoster(room).map(p => p.position), POSITIONS);
   assert.equal(getRoster(room).filter(p => !p.npc).length, 1);
 });

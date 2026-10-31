@@ -114,7 +114,9 @@ try {
   await action('all-events').click();
   await page.locator('.scoreboard').waitFor();
   assert((await page.locator('.event-list').textContent()).includes('퍼스트 킬'));
-  assert((await page.locator('.reaction-list').textContent()).includes('퍼블'));
+  const shownReactions=await page.locator('.reaction-list .reaction p').allTextContents();
+  const recordedReactions=new Set(match.result.sets[0].events.flatMap(event=>event.reactions));
+  assert(shownReactions.length>0 && shownReactions.every(text=>recordedReactions.has(text)), 'Replay comments match the actual recorded scenes');
   assert.equal(await page.locator('.scoreboard tbody tr').count(), 10);
   checks.push('game settled; replay advances scenes, first blood and matching reactions; ten KDA rows');
   await page.screenshot({ path: new URL('match-desktop.png', output).pathname, fullPage: true });
@@ -127,16 +129,31 @@ try {
   await action('calendar-today').click();
   checks.push('calendar date detail and month navigation');
 
-  await nav('chat');
-  await page.locator('[data-form="chat"] [name="text"]').fill('브라우저 검증 팀 메시지');
-  await page.locator('[data-form="chat"] button[type="submit"]').click();
-  await page.getByText('브라우저 검증 팀 메시지', { exact: true }).waitFor();
-  await nav('owner');
-  assert.equal(await page.locator('#owner-dock').getByText('브라우저 검증 팀 메시지', { exact: true }).count(), 0);
-  await page.locator('[data-form="owner-dock"] [name="text"]').fill('오너 일정 조율 메시지');
-  await page.locator('[data-form="owner-dock"] button[type="submit"]').click();
-  await page.getByText('오너 일정 조율 메시지', { exact: true }).waitFor();
+  if(!await page.locator('#owner-dock-text').count())await page.locator('[data-owner-toggle]').click();
+  await page.locator('[data-dock-channel="team"]').click();
+  await page.locator('#owner-dock-text').fill('브라우저 검증 팀 메시지');
+  await page.locator('[data-form="owner-dock"] [type="submit"]').click();
+  await page.locator('.owner-dock-log').getByText('브라우저 검증 팀 메시지',{exact:true}).waitFor();
+  await page.locator('[data-dock-channel="owner"]').click();
+  assert.equal(await page.locator('#owner-dock').getByText('브라우저 검증 팀 메시지',{exact:true}).count(),0);
+  await page.locator('#owner-dock-text').fill('오너 일정 조율 메시지');
+  await page.locator('[data-form="owner-dock"] [type="submit"]').click();
+  await page.locator('.owner-dock-log').getByText('오너 일정 조율 메시지',{exact:true}).waitFor();
   checks.push('team and owner chat are distinct');
+  await page.locator('#owner-dock-text').fill('오너 초안 보존');
+  await page.locator('[data-dock-channel="team"]').click();
+  await page.locator('#owner-dock-text').fill('팀 초안 보존');
+  await page.locator('[data-owner-toggle]').click();
+  assert.equal(await page.locator('#owner-dock-text').count(),0);
+  await nav('dorm');
+  await page.locator('[data-owner-toggle]').click();
+  assert.equal(await page.locator('#owner-dock-text').inputValue(),'팀 초안 보존');
+  await page.locator('[data-dock-channel="owner"]').click();
+  assert.equal(await page.locator('#owner-dock-text').inputValue(),'오너 초안 보존');
+  await nav('home');
+  assert.equal(await page.locator('#owner-dock-text').inputValue(),'오너 초안 보존');
+  await page.locator('[data-owner-toggle]').click();
+  checks.push('folding, navigation and channel switching preserve separate chat drafts');
 
   await page.reload(); await page.locator('.season-strip').waitFor();
   assert.equal((await getRoom(code)).room.season.turn, room.season.turn);
@@ -174,7 +191,7 @@ try {
 
   await assertFits('desktop home');
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const view of ['home', 'match', 'calendar', 'roster', 'dorm', 'chat']) {
+  for (const view of ['home', 'match', 'calendar', 'roster', 'dorm']) {
     await nav(view); await assertFits(`mobile ${view}`);
   }
   await nav('home');
