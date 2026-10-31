@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { once } from 'node:events';
 import { Store } from '../lib/store.mjs';
 import { updateDemacia } from '../lib/demacia.mjs';
+import { settleDay } from '../lib/season.mjs';
+import { qualifierNodes } from '../lib/ewc.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -112,6 +114,44 @@ test('Demacia invitations enforce host authority and persist refusal; own games 
   for(let i=0;i<100;i++){await new Promise(r=>setTimeout(r,30));after=(await host.request(liveRoute)).data.room;if(!after.broadcast)break;}
   assert(!after.broadcast);assert.equal(after.season.date,'2026-10-04');assert.equal(after.season.turn,266);
   assert.equal(after.season.results.filter(m=>m.id.startsWith('demacia-')).length,6);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});
+
+test('vacations skip shared days without choices and the selected Gen.G still plays a live Road to EWC qualification match',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'ewc-vac-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
+ const start=async()=>{running=await launch(file,{LIVE_STEP_MS:'10'});server.base=running.base;};
+ try{
+  await start();const host=actor(server),peer=actor(server);await host.request('/api/session');await peer.request('/api/session');
+  await host.request('/api/slots/0','PUT',{character:{...character('MID','RoadHost'),team:'Gen.G'}});await peer.request('/api/slots/0','PUT',{character:{...character('JGL','RoadPeer'),team:'Gen.G'}});
+  const teams=['T1','Gen.G','HLE','DK','KT','BNK','DRX','NS','DNF','BRO'];
+  const created=(await host.request('/api/rooms','POST',{slot:0,year:2026,seed:'ewc-strong-api',npcPower:95,difficulty:'easy',opponents:teams.map(name=>({name,power:35,style:'균형 운영'}))})).data.room;
+  await peer.request('/api/rooms/join','POST',{slot:0,code:created.code});await running.stop();
+  const db=new Store(file),r=db.room(created.code);
+  for(const p of r.players)for(const key of Object.keys(p.character.stats))p.character.stats[key]=95;
+  while(r.season.date<'2026-03-03')settleDay(r,{npcTakeover:true});
+  const holiday=structuredClone(r);holiday.code='VACAA001';holiday.id+='-holiday';db.saveRoom(holiday);
+  while(r.season.date<'2026-05-25')settleDay(r,{npcTakeover:true});
+  const n=qualifierNodes(r.season),qualification=r.season.schedule.find(m=>m.id==='ewc-kr-'+n.upperFinal);
+  assert([qualification.teamA,qualification.teamB].includes('Gen.G'),'The selected club reaches the BO5 fixture');
+  const background=structuredClone(r.season.ewc.previousChampion),r1=structuredClone(r.season.ewc.r1Standings);assert.notEqual(background.team,'Gen.G');db.saveRoom(r);db.close();await start();
+  const vacationRoute='/api/rooms/'+holiday.code;
+  assert.equal((await host.request(vacationRoute)).data.room.vacation.remainingDays,5);
+  assert.equal((await host.request(vacationRoute+'/action','POST',{turn:holiday.season.turn,action:'mechanics'})).status,409);
+  assert.equal((await host.request(vacationRoute+'/life','POST',{entryId:'x',choice:'join'})).status,409);
+  assert.equal((await peer.request(vacationRoute+'/vacation','POST',{turn:holiday.season.turn,untilEnd:true})).status,403);
+  const skipped=await host.request(vacationRoute+'/vacation','POST',{turn:holiday.season.turn,untilEnd:true});assert.equal(skipped.status,200);assert.equal(skipped.data.days,5);
+  const after=skipped.data.room;assert.equal(after.season.date,'2026-03-08');assert.equal(after.vacation,null);assert.equal(after.season.vacations.entries.length,10);
+  assert.deepEqual(after.players.map(p=>p.character.stats),holiday.players.map(p=>p.character.stats));
+  assert.equal((await host.request(vacationRoute+'/vacation','POST',{turn:holiday.season.turn,untilEnd:true})).status,409);
+  const route='/api/rooms/'+r.code;const before=(await host.request(route)).data.room;assert.deepEqual(before.season.ewc.previousChampion,background);assert(before.season.ewc.qualifierTeams.includes('Gen.G'));
+  for(const user of [host,peer])assert.equal((await user.request(route+'/action','POST',{turn:r.season.turn,action:'rest'})).status,200);
+  const live=await host.request(route+'/settle','POST',{turn:r.season.turn,live:true});assert.equal(live.status,200);assert.equal(live.data.room.broadcast.stage,'EWC 한국 예선');assert.equal(live.data.room.broadcast.bestOf,5);
+  assert(!live.data.room.season.results.some(m=>m.id===qualification.id),'The qualification winner is not public before the live match finishes');
+  let completed;
+  for(let i=0;i<200;i++){await new Promise(r=>setTimeout(r,15));completed=(await host.request(route)).data.room;if(!completed.broadcast)break;}
+  assert(!completed.broadcast);assert.equal(completed.season.date,'2026-05-26');assert.equal(completed.season.qualifications.ewc.status,'qualified');assert(completed.season.qualifications.ewc.teams.includes('Gen.G'));
+  assert.deepEqual(completed.season.ewc.r1Standings,r1);assert.deepEqual(completed.season.ewc.previousChampion,background);
+  await running.stop();await start();assert.deepEqual((await host.request(route)).data.room.season.ewc.previousChampion,background);
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
 

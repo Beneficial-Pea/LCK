@@ -2,7 +2,7 @@
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const stats = { mechanics: '피지컬', laning: '라인전', macro: '운영', communication: '소통', mental: '멘탈', mastery: '숙련도' };
 const positions = { TOP: '탑', JGL: '정글', MID: '미드', ADC: '원딜', SUP: '서포터' };
-const types = { 'champion-nerf': '챔피언 너프', 'champion-buff': '챔피언 상향', injury: '컨디션 사건', 'team-synergy': '팀워크', 'npc-incident': '가상 선수 사건' };
+const types = { 'champion-nerf': '챔피언 너프', 'champion-buff': '챔피언 상향', injury: '컨디션 사건', 'team-synergy': '팀워크', 'npc-incident': '선수단 이슈' };
 const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
 const formatted = value => String(Math.round(number(value) * 10) / 10);
 const signed = value => `${number(value) > 0 ? '+' : ''}${formatted(value)}`;
@@ -30,20 +30,24 @@ function affectsUs(room, event) {
   return remainingDays(event, number(room?.season?.turn)) > 0 && event.scope === 'champion' && event.champion && roster.some(character => character.mainChampion === event.champion);
 }
 
+function worldStoryText(value){
+ return String(value||'').replace(' 실제 패치 뉴스가 아닌 가상 시즌 사건이다.','').replace(' 가상 시즌 사건이다.','').replace(' 실존 선수의 실제 논란이나 뉴스가 아니다.','').replace('의 가상 선수 ','의 선수 ').replace(' · 가상 인터뷰 해프닝',' · 인터뷰 해프닝');
+}
+
 function scopeText(event) {
   if (event.scope === 'champion' && event.champion) return `${event.champion} 시그니처 선수 전원`;
   if (event.scope === 'team') {
     const teams = [...new Set((event.targets || []).map(target => target.team).filter(Boolean))];
     return `${event.team || teams.join(', ') || '해당 팀'} 선수단`;
   }
-  if (event.type === 'npc-incident') return '가상 NPC 선수';
+  if (event.type === 'npc-incident') return '해당 선수';
   return '해당 선수';
 }
 
 function renderTargets(event) {
   const targets = Array.isArray(event.targets) ? event.targets : [];
   if (!targets.length) return '<p class="world-news-target-note">조건에 맞는 선수에게 경기 판정 효과가 적용됩니다.</p>';
-  return `<details class="world-news-targets"${targets.length <= 2 ? ' open' : ''}><summary>영향 선수 ${targets.length}명 <span>소속·능력치 확인</span></summary><ul>${targets.map(target => `<li><span class="world-news-player"><strong>${escape(target.nickname || '가상 선수')}</strong><small>${escape(target.team || '소속 미정')} · ${escape(positions[target.position] || target.position || '')}</small></span><span class="world-news-target-change">${escape(changeText(target.statChanges || event.statChanges) || '경기 상태 변화')}</span></li>`).join('')}</ul></details>`;
+  return `<details class="world-news-targets"${targets.length <= 2 ? ' open' : ''}><summary>영향 선수 ${targets.length}명 <span>소속·능력치 확인</span></summary><ul>${targets.map(target => `<li><span class="world-news-player"><strong>${escape(target.nickname || '선수')}</strong><small>${escape(target.team || '소속 미정')} · ${escape(positions[target.position] || target.position || '')}</small></span><span class="world-news-target-change">${escape(changeText(target.statChanges || event.statChanges) || '경기 상태 변화')}</span></li>`).join('')}</ul></details>`;
 }
 
 export function renderWorldEvents(room, { limit = 6 } = {}) {
@@ -56,13 +60,13 @@ export function renderWorldEvents(room, { limit = 6 } = {}) {
   const activeIds = new Set((world.activeEffects || []).filter(effect => number(effect.expiresTurn) > turn).map(eventId));
   for (const event of all) if (remainingDays(event, turn) > 0) activeIds.add(event.id);
   const header = `<div class="panel-header world-news-header"><div><span class="eyebrow">LEAGUE WIRE</span><h2>리그 소식 · 랜덤 이벤트</h2></div><span class="tag ${activeIds.size ? 'purple' : ''}">진행 효과 ${activeIds.size}건</span></div>`;
-  const intro = '<p class="world-news-intro">게임 안에서 생성된 가상 소식입니다. 우리 팀과 상대 팀에 같은 규칙을 적용하며, 실제 패치나 실존 선수 보도가 아닙니다.</p>';
+  const intro = '';
   const feed = shown.length ? `<div class="world-news-feed">${shown.map(event => {
     const days = remainingDays(event, turn), active = days > 0;
     const positive = changes(event.statChanges).some(([, delta]) => number(delta) > 0);
     const negative = changes(event.statChanges).some(([, delta]) => number(delta) < 0);
     const tone = negative ? 'negative' : positive ? 'positive' : 'neutral';
-    return `<article class="world-news-item ${tone}${active ? '' : ' is-ended'}" data-world-event="${escape(event.id)}"><div class="world-news-meta"><time>${escape(String(event.date || '').replaceAll('-', '.'))}</time><span class="world-news-kind">${escape(types[event.type] || '시즌 사건')}</span>${affectsUs(room, event) ? '<span class="world-news-ours">우리 팀 영향</span>' : '<span class="world-news-league">다른 팀 소식</span>'}<span class="world-news-duration">${active ? `${days}일 남음` : '효과 종료'}</span></div><h3>${escape(event.title || '리그 소식')}</h3><p class="world-news-summary">${escape(event.summary || '')}</p><div class="world-news-impact"><span>${escape(scopeText(event))}</span><strong>${escape(changeText(event.statChanges) || '상태 변화')}</strong><small>${number(event.durationDays)}일간 · ${event.expiresDate ? `${escape(String(event.expiresDate).replaceAll('-', '.'))} 종료` : `턴 ${number(event.expiresTurn)} 종료`}</small></div>${renderTargets(event)}</article>`;
+    return `<article class="world-news-item ${tone}${active ? '' : ' is-ended'}" data-world-event="${escape(event.id)}"><div class="world-news-meta"><time>${escape(String(event.date || '').replaceAll('-', '.'))}</time><span class="world-news-kind">${escape(types[event.type] || '시즌 사건')}</span>${affectsUs(room, event) ? '<span class="world-news-ours">우리 팀 영향</span>' : '<span class="world-news-league">다른 팀 소식</span>'}<span class="world-news-duration">${active ? `${days}일 남음` : '효과 종료'}</span></div><h3>${escape(worldStoryText(event.title||'리그 소식'))}</h3><p class="world-news-summary">${escape(worldStoryText(event.summary))}</p><div class="world-news-impact"><span>${escape(scopeText(event))}</span><strong>${escape(changeText(event.statChanges) || '상태 변화')}</strong><small>${number(event.durationDays)}일간 · ${event.expiresDate ? `${escape(String(event.expiresDate).replaceAll('-', '.'))} 종료` : `턴 ${number(event.expiresTurn)} 종료`}</small></div>${renderTargets(event)}</article>`;
   }).join('')}</div>` : '<div class="world-news-empty"><span aria-hidden="true">◇</span><strong>아직 기록된 리그 소식이 없습니다.</strong><p>하루를 정산하면 패치와 선수단 사건이 무작위로 발생합니다.<br>챔피언 너프는 같은 시그니처를 쓰는 상대 선수에게도 적용됩니다.</p></div>';
   const footer = `<div class="panel-footer world-news-footer">${shown.length ? `최근 ${shown.length}건 · 누적 ${all.length}건. ` : ''}일시적 효과는 기본 성장 능력치와 별도로 적용되고 기간이 끝나면 해제됩니다.</div>`;
   return `<section class="panel world-news" data-world-events aria-label="리그 랜덤 이벤트">${header}${intro}${feed}${footer}</section>`;

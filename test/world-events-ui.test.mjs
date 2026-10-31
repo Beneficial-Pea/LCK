@@ -16,7 +16,7 @@ const room = turn => ({ season: { team: 'T1', turn, worldEvents: { events: [even
 test('world feed shows league-wide signature effects, affected players and actual duration', () => {
   const html = renderWorldEvents(room(21));
   for (const text of ['리그 소식', '아리 시그니처 선수 전원', '인트', 'Gen.G Comma', '라인전 -1', '13일 남음', '우리 팀 영향', '진행 효과 1건']) assert(html.includes(text), text);
-  assert(html.includes('실제 패치나 실존 선수 보도가 아닙니다'));
+  assert(!html.includes('실제 패치나 실존 선수 보도가 아닙니다'));assert(!html.includes('게임 안에서 생성된 가상 소식'));
   assert(!html.includes('<button'), 'No dead interaction controls');
   const expired = renderWorldEvents(room(34));
   assert(expired.includes('효과 종료'));assert(expired.includes('진행 효과 0건'));
@@ -32,6 +32,12 @@ test('feed escapes all source labels and never invents an event when history is 
   assert(!empty.includes('data-world-event='));
 });
 
+test('old saved news loses only the disclosure sentence while preserving its effect and target',()=>{
+ const r=room(21);r.season.worldEvents.events[0]={...event,summary:'아리 시그니처 선수에게 라인전 −1이 적용된다. 실제 패치 뉴스가 아닌 가상 시즌 사건이다.'};
+ const before=structuredClone(r),html=renderWorldEvents(r);
+ assert(html.includes('아리 시그니처 선수에게 라인전 −1이 적용된다.'));assert(!html.includes('실제 패치 뉴스가 아닌'));assert(html.includes('13일 남음'));assert(html.includes('인트'));assert.deepEqual(r,before);
+});
+
 test('player panel uses effective values without changing the base stats', () => {
   const character = { stats: { laning: 65, macro: 72 }, effectiveStats: { laning: 64, macro: 72 }, eventEffects: [{ id: event.id, title: '아리 너프', statChanges: { laning: -1 }, remainingDays: 13 }] };
   const before = structuredClone(character);
@@ -44,7 +50,7 @@ test('player panel uses effective values without changing the base stats', () =>
   assert.equal(renderEventEffects({ ...character, eventEffects: [{ ...character.eventEffects[0], remainingDays: 0 }] }), '');
 });
 
-test('new signature players get an own-team badge and synthetic incidents are clearly marked', () => {
+test('new signature players get an own-team badge and incidents retain scope without immersion-breaking disclaimers', () => {
   const r = room(22);r.season.worldEvents.events = [{ ...event, targets: [event.targets[1]] }];
   assert(renderWorldEvents(r).includes('우리 팀 영향'));
   const lateJoin = room(35);lateJoin.season.worldEvents.events = [{ ...event, targets: [event.targets[1]] }];
@@ -52,5 +58,5 @@ test('new signature players get an own-team badge and synthetic incidents are cl
   assert(renderWorldEvents(room(35)).includes('우리 팀 영향'), 'Historical own-team targets remain identified after expiry');
   r.season.worldEvents.events = [{ ...event, type: 'npc-incident', scope: 'player', champion: null, title: '가상 선수 인터뷰 면담', targets: [event.targets[1]] }];
   const html = renderWorldEvents(r);
-  assert(html.includes('가상 선수 사건'));assert(html.includes('가상 NPC 선수'));assert(html.includes('다른 팀 소식'));
+  assert(html.includes('선수단 이슈'));assert(html.includes('해당 선수'));assert(html.includes('다른 팀 소식'));
 });

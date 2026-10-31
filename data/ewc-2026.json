@@ -1,0 +1,199 @@
+{
+  "source": {
+    "basis": "User-provided EWC 2026 qualification and format excerpts and Korea qualifier poster",
+    "korea": "https://namu.wiki/w/Esports%20World%20Cup%202026/%EB%A6%AC%EA%B7%B8%20%EC%98%A4%EB%B8%8C%20%EB%A0%88%EC%A0%84%EB%93%9C/%EC%A7%80%EC%97%AD%EC%98%88%EC%84%A0/Korea",
+    "directFetchVerified": false
+  },
+  "defendingChampion": "Gen.G",
+  "qualifierStart": "2026-05-04",
+  "qualifierEnd": "2026-05-26",
+  "qualifierSeats": 2,
+  "qualifierSchedule": [
+    {
+      "number": 1,
+      "date": "2026-05-04",
+      "round": "플레이인 · 하위 2팀",
+      "bestOf": 3,
+      "dateBasis": "game-assigned"
+    },
+    {
+      "number": 2,
+      "date": "2026-05-05",
+      "round": "승자조 1R · 1",
+      "bestOf": 3,
+      "dateBasis": "game-assigned"
+    },
+    {
+      "number": 3,
+      "date": "2026-05-05",
+      "round": "승자조 1R · 2",
+      "bestOf": 3,
+      "dateBasis": "game-assigned"
+    },
+    {
+      "number": 4,
+      "date": "2026-05-11",
+      "round": "승자조 1R · 3",
+      "bestOf": 3,
+      "dateBasis": "game-assigned"
+    },
+    {
+      "number": 5,
+      "date": "2026-05-11",
+      "round": "승자조 1R · 4",
+      "bestOf": 3,
+      "dateBasis": "game-assigned"
+    },
+    {
+      "number": 6,
+      "date": "2026-05-12",
+      "round": "승자조 2R · 1",
+      "bestOf": 3,
+      "dateBasis": "game-assigned"
+    },
+    {
+      "number": 7,
+      "date": "2026-05-12",
+      "round": "패자조 1R · 1",
+      "bestOf": 3,
+      "dateBasis": "game-assigned"
+    },
+    {
+      "number": 8,
+      "date": "2026-05-18",
+      "round": "승자조 2R · 2",
+      "bestOf": 3,
+      "dateBasis": "game-assigned"
+    },
+    {
+      "number": 9,
+      "date": "2026-05-18",
+      "round": "패자조 1R · 2",
+      "bestOf": 3,
+      "dateBasis": "game-assigned"
+    },
+    {
+      "number": 10,
+      "date": "2026-05-19",
+      "round": "패자조 2R · 1",
+      "bestOf": 3,
+      "dateBasis": "game-assigned"
+    },
+    {
+      "number": 11,
+      "date": "2026-05-19",
+      "round": "패자조 2R · 2",
+      "bestOf": 3,
+      "dateBasis": "game-assigned"
+    },
+    {
+      "number": 12,
+      "date": "2026-05-25",
+      "round": "승자조 결승 · 1시드 결정전",
+      "bestOf": 5,
+      "dateBasis": "user-provided-result-date"
+    },
+    {
+      "number": 13,
+      "date": "2026-05-25",
+      "round": "패자조 3R",
+      "bestOf": 3,
+      "dateBasis": "game-assigned"
+    },
+    {
+      "number": 14,
+      "date": "2026-05-26",
+      "round": "패자조 결승 · 2시드 결정전",
+      "bestOf": 5,
+      "dateBasis": "user-provided-result-date"
+    }
+  ],
+  "foreignSlots": {
+    "LCP1": {
+      "team": "TS",
+      "region": "LCP",
+      "route": "스플릿 우승"
+    },
+    "LEC1": {
+      "team": "G2",
+      "region": "LEC",
+      "route": "스플릿 우승"
+    },
+    "LPL1": {
+      "team": "BLG",
+      "region": "LPL",
+      "route": "스플릿 우승"
+    },
+    "CN1": {
+      "team": "AL",
+      "region": "LPL",
+      "route": "중국 예선 1위"
+    },
+    "LCS1": {
+      "team": "LYON",
+      "region": "LCS",
+      "route": "스플릿 우승"
+    },
+    "APAC1": {
+      "team": "GAM",
+      "region": "LCP",
+      "route": "APAC 예선 승계"
+    },
+    "CN2": {
+      "team": "JDG",
+      "region": "LPL",
+      "route": "중국 예선 2위"
+    },
+    "EMEA1": {
+      "team": "KC",
+      "region": "LEC",
+      "route": "EMEA 예선"
+    },
+    "CBLOL1": {
+      "team": "FUR",
+      "region": "CBLOL",
+      "route": "스플릿 우승"
+    },
+    "EMEA2": {
+      "team": "MKOI",
+      "region": "LEC",
+      "route": "EMEA 예선 승계"
+    },
+    "NA1": {
+      "team": "SEN",
+      "region": "LCS",
+      "route": "북미 예선 우승"
+    },
+    "SA1": {
+      "team": "LOS",
+      "region": "CBLOL",
+      "route": "남미 예선 우승"
+    }
+  },
+  "gameHistory": {
+    "fictional": true,
+    "lckChampionChance": 0.5,
+    "foreignCandidates": [
+      {
+        "team": "TES",
+        "region": "LPL"
+      },
+      {
+        "team": "FNC",
+        "region": "LEC"
+      },
+      {
+        "team": "CFO",
+        "region": "LCP"
+      },
+      {
+        "team": "FLY",
+        "region": "LCS"
+      },
+      {
+        "team": "PNG",
+        "region": "CBLOL"
+      }
+    ]
+  }
+}

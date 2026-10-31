@@ -71,6 +71,11 @@ try {
   assert.equal(room.players.length, 1);
   assert.equal(room.roster.length, 5);
   checks.push('room created with four NPC roster positions');
+  assert.equal(await page.locator('[data-my-stats] [data-my-stat]').count(),6);
+  const myStatsBefore=room.players[0].character.stats;
+  assert.equal(await page.locator('[data-my-stat=macro] strong').textContent(),Number(room.players[0].character.effectiveStats?.macro??myStatsBefore.macro).toFixed(1));
+  assert(room.season.ewc.qualifierTeams.includes('T1'));assert.notEqual(room.season.ewc.previousChampion.team,'T1');
+  checks.push('own six abilities are visible above actions and selected team always enters Road to EWC');
 
   await action('choose-action', '[data-id="analysis"]').click();
   assert((await page.locator('[data-team-news] .news-declaration').textContent()).includes('상대 분석'));
@@ -83,6 +88,8 @@ try {
   await page.waitForFunction(() => document.querySelector('.strip-value')?.textContent?.includes('2026.01.13'));
   room = (await getRoom(code)).room;
   assert.equal(room.season.turn, 2);
+  await page.waitForFunction(value=>document.querySelector('[data-my-stat=macro] strong')?.textContent===value,Number(room.players[0].character.effectiveStats?.macro??room.players[0].character.stats.macro).toFixed(1));
+  assert(room.players[0].character.stats.macro>myStatsBefore.macro);
   assert((await page.locator('[data-team-news-log]').textContent()).includes('상대 분석'));
   assert.equal(await page.locator('[data-activity-log]').count(),0);
   checks.push('news sits beside action choices, reflects submitted action, then displays settlement records');
@@ -92,7 +99,7 @@ try {
   assert((await page.locator('.today-title').textContent()).includes(firstActivity.title));
   assert((await context.request.get('/crest.svg')).ok());
   assert.equal(await page.locator('.brand-mark img').first().getAttribute('src'),'/crest.svg');
-  await nav('calendar');assert.equal(await page.locator('.demacia-panel').count(),1);await action('select-date',`[data-date="${firstActivity.date}"]`).click();
+  await nav('calendar');assert.equal(await page.locator('.demacia-panel').count(),1);assert.equal(await page.locator('.ewc-panel').count(),1);await action('select-date',`[data-date="${firstActivity.date}"]`).click();
   assert((await page.locator('.day-detail').textContent()).includes(firstActivity.title));
   await nav('home');
   checks.push('2026-only room creation, original club crest and scheduled team activities in home/calendar');
@@ -224,6 +231,18 @@ try {
   await nav('home');
   await page.screenshot({ path: new URL('home-mobile.png', output).pathname, fullPage: true });
   checks.push('390px mobile screens fit without horizontal page overflow');
+  room=(await getRoom(code)).room;
+  for(let i=0;i<80&&room.season.date<'2026-03-03';i++)room=(await request(`/api/rooms/${code}/settle`,{turn:room.season.turn,npcTakeover:true})).room;
+  assert.equal(room.season.date,'2026-03-03');const vacationStats=structuredClone(room.players[0].character.stats);
+  await page.reload();await page.locator('.vacation-panel').waitFor();await assertFits('mobile vacation');
+  assert.equal(await page.locator('[data-action=choose-action]').count(),0);assert.equal(await page.locator('[data-action=life-answer]').count(),0);
+  assert(!(await page.locator('[data-world-events]').textContent()).includes('실제 패치나 실존 선수 보도가 아닙니다'));
+  await page.screenshot({path:new URL('vacation-mobile.png',output).pathname,fullPage:true});
+  await action('vacation-day').click();await page.waitForFunction(()=>document.querySelector('.strip-value')?.textContent.includes('2026.03.04'));
+  await action('vacation-end').click();await page.waitForFunction(()=>document.querySelector('.strip-value')?.textContent.includes('2026.03.08'));
+  room=(await getRoom(code)).room;assert.equal(room.vacation,null);assert.deepEqual(room.players[0].character.stats,vacationStats);
+  assert.equal(await page.locator('[data-action=choose-action]').count(),7);assert.equal(await page.locator('[data-my-stats] [data-my-stat]').count(),6);
+  checks.push('vacation removes training/dialogue choices, skips one day or remaining break, preserves abilities and returns to normal training');
   assert.deepEqual(errors, [], 'browser JS errors');
   console.log(JSON.stringify({ status: 'passed', code, checks, browserErrors: errors, screenshots: output.pathname }, null, 2));
 } finally {

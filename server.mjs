@@ -1,3 +1,5 @@
+import { vacationFor, vacationWindows } from './lib/vacations.mjs';
+import { ensureEwc, updateEwc } from './lib/ewc.mjs';
 import { ensureDemacia, updateDemacia, declineDemacia } from './lib/demacia.mjs';
 import { answerDailyLife } from './lib/daily-life.mjs';
 import { clubSchedule } from './lib/club-schedule.mjs';
@@ -71,7 +73,7 @@ function roomFor(code, userId) {
   const room = store.room(code.toUpperCase());
   if (!room) fail(404, '초대코드에 해당하는 방이 없습니다.');
   if (!room.players.some(p => p.userId === userId)) fail(403, '참가한 방만 조회하거나 진행할 수 있습니다.');
-  if(!room.liveMatch&&ensureDemacia(room.season)){updateDemacia(room.season);room.revision++;store.saveRoom(room);}
+  if(!room.liveMatch){const demaciaChanged=ensureDemacia(room.season),ewcChanged=ensureEwc(room.season);if(demaciaChanged||ewcChanged){updateDemacia(room.season);updateEwc(room.season);room.revision++;store.saveRoom(room);}}
   progressRoom(room);
   return room;
 }
@@ -88,6 +90,7 @@ function roomView(room, userId) {
   delete view.liveMatch;
   view.broadcast = getLiveBroadcast(room);
   view.clubSchedule = clubSchedule(room);
+  view.vacation=vacationFor(room.season);view.vacationWindows=vacationWindows(room.season);
   view.me = userId;
   view.balance = getBalanceReport(room);
   view.messages = store.messages(room.code, userId);
@@ -295,7 +298,7 @@ async function api(req, res, url) {
         declineDemacia(room.season,room.season.team);break;
       }
       case 'life': {
-        ensureStarted(room);ensureNoBroadcast(room);
+        ensureStarted(room);ensureNoBroadcast(room);if(vacationFor(room.season))fail(409,'휴가 중에는 대화 선택 없이 일상을 보냅니다.');
         extra.interaction=answerDailyLife(room,user.id,body.entryId,body.choice);break;
       }
       case 'portrait': {
@@ -310,17 +313,24 @@ async function api(req, res, url) {
         break;
       }
       case 'action': {
-        ensureStarted(room);
+        ensureStarted(room);if(vacationFor(room.season))fail(409,'선수단 휴가 중입니다. 행동 선택 없이 휴가를 넘겨주세요.');
         ensureNoBroadcast(room);
         ensureTurn(room, body);
         room.submissions[user.id] = { turn: room.season.turn, action: actionId(body), target: clean(body.target, 80) || null };
         break;
       }
+      case 'vacation': {
+        ensureStarted(room);ensureNoBroadcast(room);ensureHost(room,user);ensureTurn(room,body);
+        const holiday=vacationFor(room.season);if(!holiday)fail(409,'현재는 휴가 기간이 아닙니다.');
+        const start=room.season.date;let days=0;
+        do{extra.summary=settleDay(room);days++;}while(body.untilEnd===true&&days<32&&vacationFor(room.season)?.id===holiday.id&&!room.season.finished);
+        extra.days=days;systemMessage(room,`${start}부터 휴가 ${days}일을 보냈습니다. 현재 일정 ${room.season.date}.`);break;
+      }
       case 'settle': {
         ensureStarted(room);
         ensureNoBroadcast(room);
         ensureHost(room, user); ensureTurn(room, body);
-        const missing = room.players.filter(p => room.submissions[p.userId]?.turn !== room.season.turn);
+        const missing = vacationFor(room.season)?[]:room.players.filter(p => room.submissions[p.userId]?.turn !== room.season.turn);
         if (missing.length && body.npcTakeover !== true) fail(409, '아직 행동을 제출하지 않은 선수가 있습니다. 기다리거나 NPC 대행을 명시적으로 선택하세요.');
         const playedDate = room.season.date;
         if (body.live === true) {
@@ -348,12 +358,12 @@ async function api(req, res, url) {
         let days = 0;
         for (let i = 0; i < 7 && !room.season.finished; i++) {
           const ownGame = room.season.schedule.some(g => g.date === room.season.date && g.status === 'scheduled' && [g.teamA, g.teamB].includes(room.season.team));
-          if (ownGame) break;
+          if (ownGame||vacationFor(room.season)) break;
           if(clubSchedule(room).some(event=>event.date===room.season.date&&event.status==='scheduled'))break;
           room.submissions[user.id] = { turn: room.season.turn, action };
           settleDay(room, { npcTakeover: false }); days++;
         }
-        if (!days) fail(409, '오늘은 우리 팀 경기 또는 고정 활동이 있습니다. 준비 행동을 제출한 뒤 직접 정산하세요.');
+        if (!days) fail(409, '오늘은 우리 팀 경기·고정 활동 또는 휴가가 있습니다. 준비 행동을 제출한 뒤 직접 정산하세요.');
         extra.days = days;
         systemMessage(room, `혼자 플레이 자동 진행 ${days}일. 선택한 준비 행동을 반복했고 우리 팀 경기·고정 활동 전에는 멈춥니다.`);
         break;
@@ -434,6 +444,8 @@ const server = http.createServer(async (req, res) => {
     files['/world-events.js'] = ['world-events.js', 'text/javascript'];
     files['/world-events.css'] = ['world-events.css', 'text/css'];
     files['/match-feed.js'] = ['match-feed.js','text/javascript'];
+    files['/vacations.js'] = ['vacations.js','text/javascript'];
+    files['/ewc.js'] = ['ewc.js','text/javascript'];
     files['/demacia.js'] = ['demacia.js','text/javascript'];
     files['/crest.svg'] = ['crest.svg', 'image/svg+xml'];
     const entry = files[url.pathname];
