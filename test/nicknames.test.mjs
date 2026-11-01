@@ -76,3 +76,13 @@ test('human nickname duplicate checks normalize width, case, whitespace and invi
   assert(!hasNicknameCollision(players, ''));
   assert.equal(TEAMS.length * positions.length, 50);
 });
+
+test('all overseas slots use short aliases distinct from every LCK slot and human nickname',async()=>{
+ const {INTERNATIONAL_NPC_TEAMS}=await import('../lib/nicknames.mjs');
+ const room=roomFor([human('Aeris')]);
+ const overseas=INTERNATIONAL_NPC_TEAMS.flatMap(team=>positions.map(position=>({id:`npc:${team}:${position}`,team,position,npc:true})));
+ const all=[...activeRoster(room),...ensureRosterNicknames(room,overseas)];
+ assert.equal(new Set(all.map(p=>normalizeNickname(p.nickname))).size,all.length);
+ for(const p of ensureRosterNicknames(room,overseas)){assert(p.nickname.length<=12);assert(!/(Top|Jungle|Mid|Carry|Support)/.test(p.nickname));}
+ assert.notEqual(npcNickname('JDG','TOP'),'AsterJDGTop');
+});

@@ -1,3 +1,4 @@
+import {renderTournamentReward} from './tournament-rewards.js';
 import {renderLifeEvent,renderLifePending,dailyEffectsText} from './life-events.js';
 import {renderStrategyBreak,renderScrims,renderDedicatedDay} from './training.js';
 import {renderNotices} from './notices.js';
@@ -44,6 +45,15 @@ try{const saved=JSON.parse(localStorage.getItem('first-team.life-dismissed')||'[
 function pendingLifeEvent(){const room=state.room;if(!room||waitingRoom(room)||room.broadcast||room.vacation||room.season.finished||room.season.draft||['scheduled','drafting'].includes(room.season.cupDraft?.status))return null;return room.season.dailyLife?.entries.find(x=>x.userId===state.session?.user.id&&!x.answer&&x.turn===room.season.turn-1)||null;}
 function lifeEventKey(entry){return `${state.room.code}:${state.room.season.id}:${state.session.user.id}:${entry.id}`;}
 function maybeOpenLifeEvent(){if(state.modal||!['home','dorm'].includes(state.view))return false;const entry=pendingLifeEvent();if(!entry||dismissedLifeEvents.has(lifeEventKey(entry)))return false;state.modal={kind:'life-event',entryId:entry.id,seasonId:state.room.season.id,turn:state.room.season.turn,key:lifeEventKey(entry)};return true;}
+const seenTournamentRewards=new Set();
+try{const saved=JSON.parse(localStorage.getItem('first-team.title-seen')||'[]');if(Array.isArray(saved))for(const key of saved.slice(-200))if(typeof key==='string')seenTournamentRewards.add(key);}catch{}
+function tournamentRewardKey(reward){return `${state.room.code}:${state.room.season.id}:${state.session.user.id}:${reward.id}`;}
+function maybeOpenTournamentReward(){
+ if(state.modal||!state.room||waitingRoom()||state.room.broadcast)return false;
+ const reward=state.room.season.tournamentRewards?.find(r=>r.players.some(p=>p.userId===state.session.user.id)&&!seenTournamentRewards.has(tournamentRewardKey(r)));
+ if(!reward)return false;state.modal={kind:'tournament-reward',rewardId:reward.id,key:tournamentRewardKey(reward)};return true;
+}
+function renderTournamentResults(){return (state.room.season.tournamentRewards||[]).filter(r=>r.players.some(p=>p.userId===state.session.user.id)).slice(-3).reverse().map(r=>`<div class="notice section-gap"><div class="row between"><strong>${e(r.tournament)} · ${r.placement==='champion'?'우승':'준우승'}</strong><button class="button small" data-action="tournament-reward" data-id="${e(r.id)}">성적 보상 보기</button></div></div>`).join('');}
 let roomPollTimer;
 let toastTimer, playbackTimer, sceneMoveTimer, sceneMoveVersion=0, pendingSceneMove=null, portraitDrag=null, lastRoomPoll=0, roomPollInFlight=false;
 
@@ -268,10 +278,10 @@ function render() {
   }
   if(state.view==='match'){const list=$('#event-list');if(list)list.scrollTop=!eventPosition||eventPosition.follow?list.scrollHeight:eventPosition.top;}
  }
- if(state.view==='home'&&room&&!waitingRoom(room))$('.season-strip')?.insertAdjacentHTML('afterend',renderCupMedia(room,host())+renderMyStats()+renderLifePending(pendingLifeEvent())+renderScrims(room,host()));
+ if(state.view==='home'&&room&&!waitingRoom(room))$('.season-strip')?.insertAdjacentHTML('afterend',renderCupMedia(room,host())+renderMyStats()+renderTournamentResults()+renderLifePending(pendingLifeEvent())+renderScrims(room,host()));
  if(state.room&&!waitingRoom()&&['home','dorm'].includes(state.view)&&!(['scheduled','drafting'].includes(state.room.season.cupDraft?.status)))$('#main-content').insertAdjacentHTML('beforeend',renderClubAgenda()+renderDailyStories());
  refreshOwnerDock();
- maybeOpenLifeEvent();
+ if(!maybeOpenTournamentReward())maybeOpenLifeEvent();
  renderModal();
  if(['chat','owner'].includes(state.view)){const list=$('.chat-messages');if(list)list.scrollTop=list.scrollHeight;}if(state.view==='lobby'&&waitingRoom()){const list=$('.assembly-messages');if(list)list.scrollTop=list.scrollHeight;}
 }
@@ -445,11 +455,15 @@ function openModal(kind, data={}) {
  }
  renderModal();setTimeout(()=>$('#modal-root input:not([type=hidden]), #modal-root select')?.focus(),70);
 }
-function closeModal() {if(state.modal?.kind==='life-event'){dismissedLifeEvents.add(state.modal.key);while(dismissedLifeEvents.size>200)dismissedLifeEvents.delete(dismissedLifeEvents.values().next().value);try{localStorage.setItem('first-team.life-dismissed',JSON.stringify([...dismissedLifeEvents]));}catch{}}portraitDrag=null;state.modal=null;$('#modal-root').innerHTML='';}
+function closeModal() {if(state.modal?.kind==='tournament-reward'){seenTournamentRewards.add(state.modal.key);while(seenTournamentRewards.size>200)seenTournamentRewards.delete(seenTournamentRewards.values().next().value);try{localStorage.setItem('first-team.title-seen',JSON.stringify([...seenTournamentRewards]));}catch{}}if(state.modal?.kind==='life-event'){dismissedLifeEvents.add(state.modal.key);while(dismissedLifeEvents.size>200)dismissedLifeEvents.delete(dismissedLifeEvents.values().next().value);try{localStorage.setItem('first-team.life-dismissed',JSON.stringify([...dismissedLifeEvents]));}catch{}}portraitDrag=null;state.modal=null;$('#modal-root').innerHTML='';}
 function renderModal() {
  const modal=state.modal;if(!modal){$('#modal-root').innerHTML='';return;}
  let title='',description='',body='',footer='',wide=false,form='';
- if(modal.kind==='life-event'){
+ if(modal.kind==='tournament-reward'){
+  const reward=state.room?.season.tournamentRewards?.find(r=>r.id===modal.rewardId&&r.players.some(p=>p.userId===state.session.user.id));
+  if(!reward||tournamentRewardKey(reward)!==modal.key){closeModal();return;}
+  title=reward.placement==='champion'?'대회 우승':'대회 준우승';description='대회 최종 성적 · 선수단 보상';body=renderTournamentReward(reward,state.session.user.id);footer='<button class="button primary" type="button" data-action="close-modal">확인</button>';
+ }else if(modal.kind==='life-event'){
   const entry=state.room?.season.dailyLife?.entries.find(x=>x.id===modal.entryId&&x.userId===state.session.user.id);title='일상 사건';description='선택에 따른 능력치와 선수 상태 변화';
   const active=!!entry&&!entry.answer&&!state.room.season.finished&&entry.turn===state.room.season.turn-1&&!state.room.broadcast&&!state.room.vacation;body=renderLifeEvent(entry,active);footer=`<button class="button primary" type="button" data-action="close-modal">${entry?.answer?'확인':'닫기'}</button>`;
  }else if(modal.kind==='slot') {
@@ -604,6 +618,7 @@ document.addEventListener('click', async ev=>{
   if(action==='select-date'){state.selectedDate=button.dataset.date;render();return;}
   if(action==='vacation-day'||action==='vacation-end'){const result=await roomCommand('vacation',{turn:state.room.season.turn,untilEnd:action==='vacation-end'});toast(`휴가 ${result.days}일을 보냈습니다.`);return;}
   if(action==='demacia-decline'){openModal('demacia-decline');return;}
+  if(action==='tournament-reward'){const reward=state.room.season.tournamentRewards?.find(r=>r.id===button.dataset.id&&r.players.some(p=>p.userId===state.session.user.id));if(reward)openModal('tournament-reward',{rewardId:reward.id,key:tournamentRewardKey(reward)});return;}
   if(action==='life-open'){const entry=state.room.season.dailyLife?.entries.find(x=>x.id===button.dataset.entry&&x.userId===state.session.user.id);if(entry)openModal('life-event',{entryId:entry.id,seasonId:state.room.season.id,turn:state.room.season.turn,key:lifeEventKey(entry)});return;}
   if(action==='life-answer'){state.busy=true;button.disabled=true;const modal=state.modal;await roomCommand('life',{seasonId:modal?.seasonId||state.room.season.id,turn:modal?.turn??state.room.season.turn,entryId:button.dataset.entry,choice:button.dataset.choice});state.busy=false;render();return;}
   if(action==='chat-channel'){state.chat=button.dataset.channel;state.dmTo=button.dataset.to||'';render();return;}
