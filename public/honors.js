@@ -1,5 +1,5 @@
 import {cupDraftSummary} from './cup-draft.js';
-import { renderActiveTournament, resolvedSlotTeam } from './tournament-board.js';
+import { renderActiveTournament, activeTournamentState, resolvedSlotTeam } from './tournament-board.js';
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const positions={TOP:'탑',JGL:'정글',MID:'미드',ADC:'원딜',SUP:'서포터'};
 const statNames={mechanics:'피지컬',laning:'라인전',macro:'운영',communication:'소통',mental:'멘탈',mastery:'숙련도'};
@@ -92,9 +92,15 @@ export function renderDomesticBracket(room,key){
  }).join('')}</div></div>${!playin&&matches.at(-1)?.result?`<p class="domestic-champion">${e(cup?'LCK CUP':'LCK')} 우승 · <strong>${e(matches.at(-1).result.winner)}</strong></p>`:''}</div></section>`;
 }
 
-export function renderLckStandings(room,regularTable){
- const s=room.season,active=renderActiveTournament(room);
- if(active)return active;
+export function renderTournamentStandings(room,{currentOnly=false}={}){
+ const s=room.season,active=activeTournamentState(room);
+ if(active)return currentOnly&&!active.ready?'':renderActiveTournament(room,{resolvedOnly:currentOnly});
+ const offseason='<div class="notice section-gap" data-tournament-offseason>현재는 대회 진행 기간이 아닙니다.</div>';
+ if(currentOnly&&s.year===2026&&!((s.date>='2026-01-14'&&s.date<='2026-03-01')||(s.date>='2026-08-26'&&s.date<='2026-09-13')))return offseason;
+ if(currentOnly&&s.year===2026){
+  const key=s.date<'2026-04-01'?(s.flags?.cupPlayoffSeeded?'cupPlayoffs':s.flags?.cupSeeded?'cupPlayin':'cupGroup'):(s.flags?.playoffSeeded?'playoffs':'playin');
+  const ids=s.tournaments?.fixtureIds?.[key]||[];if(!ids.some(id=>{const m=s.schedule.find(m=>m.id===id);return m?.teamA&&m?.teamB;}))return '';
+ }
  if(s.year===2026){
   if(s.date<'2026-04-01'){
    if(s.flags?.cupPlayoffSeeded)return renderDomesticBracket(room,'cupPlayoffs');
@@ -103,7 +109,13 @@ export function renderLckStandings(room,regularTable){
   }
   if(s.date>='2026-08-24'&&s.flags?.playinSeeded)return renderDomesticBracket(room,s.flags?.playoffSeeded?'playoffs':'playin');
  }
- return `<section class="panel" data-lck-stage="regular"><div class="panel-header"><h2>LCK 순위</h2><span class="eyebrow">REGULAR SEASON</span></div>${regularTable}</section>`;
+ return currentOnly?offseason:'';
+}
+export function renderLeagueStandings(room,regularTable){
+ return `<section class="panel" data-lck-stage="regular"><div class="panel-header"><h2>LCK 정규시즌 순위</h2><span class="eyebrow">REGULAR SEASON</span></div>${regularTable}</section>`;
+}
+export function renderLckStandings(room,regularTable){
+ return renderTournamentStandings(room)||renderLeagueStandings(room,regularTable);
 }
 
 export function renderReadiness(c,{open=false}={}){

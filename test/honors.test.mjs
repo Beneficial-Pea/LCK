@@ -5,7 +5,7 @@ import { annotateMultiKills, selectPom } from '../lib/match-honors.mjs';
 import { CHARACTER_BACKGROUNDS, startingStats, normalizeBackground, backgroundIntro, backgroundReactions } from '../lib/backgrounds.mjs';
 import { recordMatchAwards, publishSeasonAwards, ensureAwards } from '../lib/player-awards.mjs';
 import { createSeason, settleDay } from '../lib/season.mjs';
-import { renderCupProgress, renderPomCard, renderSeasonAwards, backgroundPreview, renderLckStandings, renderDomesticBracket, renderReadiness, domesticAdvancements } from '../public/honors.js';
+import { renderCupProgress, renderPomCard, renderSeasonAwards, backgroundPreview, renderLckStandings, renderLeagueStandings, renderTournamentStandings, renderDomesticBracket, renderReadiness, domesticAdvancements } from '../public/honors.js';
 import { tournamentBoards, renderBracketBoard, renderActiveTournament } from '../public/tournament-board.js';
 import { readinessFor } from '../lib/readiness.mjs';
 import { renderMatchText } from '../public/match-feed.js';
@@ -142,4 +142,14 @@ test('regular POM standings hide zero awards and include a player after their fi
  room.season.awards.ledger.a.regular.pom=1;html=renderSeasonAwards(room);assert(html.includes('NoRegularPOM'));
  room.season.awards.ledger.a.regular.pom=0;room.season.awards.ledger.b.regular.pom=0;assert(renderSeasonAwards(room).includes('정규시즌 POM을 1회 이상 수상한 선수가 아직 없습니다.'));
  room.season.awards.ledger=Object.fromEntries(Array.from({length:25},(_,i)=>{const name='Award'+String(i).padStart(2,'0');return [name,player(name,1)];}));assert(renderSeasonAwards(room).includes('Award24'),'Every awarded player appears even beyond the former twenty-row limit');
+});
+
+test('league tables remain accessible during EWC; tournament tabs distinguish offseason from unseeded brackets',()=>{
+ const room={season:createSeason({year:2026,team:'T1',seed:'split-rank-tabs'})};
+ assert(renderTournamentStandings(room,{currentOnly:true}).includes('data-tournament-offseason'));
+ room.season.date='2026-07-15';assert.equal(renderTournamentStandings(room,{currentOnly:true}),'');
+ assert(renderLeagueStandings(room,'LEAGUE-TABLE').includes('LEAGUE-TABLE'));assert(!renderLeagueStandings(room,'LEAGUE-TABLE').includes('data-active-tournament'));
+ const id=room.season.tournaments.fixtureIds.ewc[0],match=room.season.schedule.find(m=>m.id===id);Object.assign(match,{teamA:'T1',teamB:'G2',status:'scheduled'});
+ const html=renderTournamentStandings(room,{currentOnly:true});assert(html.includes('data-active-tournament="ewc"'));assert(!html.includes('data-tournament-board="ewcGroup1"'));assert(!html.includes('LEAGUE-TABLE'));assert(!html.includes('아직 대진이 확정되지 않았습니다'));
+ room.season.date='2026-07-20';assert(renderTournamentStandings(room,{currentOnly:true}).includes('data-tournament-offseason'));
 });

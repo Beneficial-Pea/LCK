@@ -120,13 +120,18 @@ export function renderBracketBoard(room,board){
  }).join('')}</div></div></section>`;
 }
 
-export function renderActiveTournament(room){
- const s=room.season;if(s.year!==2026)return '';
+export function activeTournamentState(room){
+ const s=room.season;if(s.year!==2026)return null;
  const ranges=[['ewcRoad','2026-05-04','2026-05-26'],['road','2026-06-06','2026-06-14'],['fst','2026-03-16','2026-03-22'],['msiPlayin','2026-06-28','2026-07-01'],['msiMain','2026-07-02','2026-07-12'],['ewc','2026-07-15','2026-07-19'],['worldsPlayin','2026-10-16','2026-10-19'],['worldsSwiss','2026-10-20','2026-11-03'],['worldsKnockout','2026-11-04','2026-11-15'],['demacia','2026-10-03','2026-10-17']];
  const active=ranges.filter(([,from,to])=>s.date>=from&&s.date<=to);
- if(!active.length)return '';
+ if(!active.length)return null;
  if(active.length>1&&s.qualifications.demacia?.teams?.includes(s.team))active.sort((a,b)=>Number(b[0]==='demacia')-Number(a[0]==='demacia'));
  const key=active[0][0],boards=tournamentBoards(room).filter(b=>key==='ewc'?s.date<='2026-07-16'?b.key.startsWith('ewcGroup'):b.key==='ewcPlayoffs':key==='demacia'?b.key===(s.date>='2026-10-12'?'demaciaKnockout':'demaciaOnline'):b.key===key);
- if(!boards.some(b=>b.ids.length))return '';
+ const ready=boards.some(b=>b.ids.some(id=>{const m=s.schedule.find(m=>m.id===id);return m?.teamA&&m?.teamB;}));
+ return {key,boards,ready};
+}
+export function renderActiveTournament(room,{resolvedOnly=false}={}){
+ const active=activeTournamentState(room);if(!active)return '';
+ const {key}=active;const boards=resolvedOnly?active.boards.filter(b=>b.ids.some(id=>{const m=room.season.schedule.find(m=>m.id===id);return m?.teamA&&m?.teamB;})):active.boards;if(!boards.some(b=>b.ids.length))return '';
  return `<section class="panel active-tournament-panel" data-active-tournament="${e(key)}"><div class="panel-header"><h2>대회 대진 · 진출 현황</h2><span class="tag purple">${e(key.startsWith('worlds')?'WORLDS':key==='ewc'?'EWC':key==='fst'?'FIRST STAND':key.startsWith('msi')?'MSI':key==='road'?'ROAD TO MSI':key==='ewcRoad'?'ROAD TO EWC':'DEMACIA CUP')}</span></div><div class="panel-body"><p class="note">연결선을 따라 다음 라운드로 이동합니다. 주황선은 패자조 경로입니다. 가로로 밀어 전체 대진을 볼 수 있습니다.</p>${boards.map(b=>renderBracketBoard(room,b)).join('')}</div></section>`;
 }
