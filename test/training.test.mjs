@@ -13,9 +13,11 @@ test('interactive series pause at every set boundary and apply plans without rew
  ready(room);const date=room.season.date,turn=room.season.turn,pending=structuredClone(room),summary=settleDay(pending);assert(beginLiveMatch(room,pending,summary,{now:1000,stepMs:1,interactive:true}));
  advanceLiveMatch(room,100000);let b=getLiveBroadcast(room);assert(b.intermission);assert.equal(b.sets.length,1);assert.equal(b.sets[0].completed,true);assert.equal(room.season.turn,turn);assert(!JSON.stringify(b).includes('pendingRoom'));assert(!b.pom);
  assert.equal(advanceLiveMatch(room,200000).changed,false);
+ const storedSet=room.liveMatch.pendingRoom.season.results.find(m=>m.id===b.matchId).result.sets[0];storedSet.events[0].text='배포 이전에 기록된 상황';storedSet.events[0].casting='배포 이전의 해설';storedSet.events[0].reactions=['배포 이전에 공개된 댓글'];
  const old=structuredClone(room.liveMatch.pendingRoom.season.results.find(m=>m.id===b.matchId).result.sets[0]);
  assert.throws(()=>resumeLiveMatch(room,{matchId:b.matchId,nextSet:99,strategy:'early'},r=>settleDay(r)),e=>e.status===409);
  assert.throws(()=>resumeLiveMatch(room,{...b.intermission,strategy:'invalid'},r=>settleDay(r)),e=>e.status===400);
+ const corrupted=structuredClone(room);corrupted.liveMatch.pendingRoom.season.results.find(m=>m.id===b.matchId).result.sets[0].killsA++;assert.throws(()=>resumeLiveMatch(corrupted,{...b.intermission,strategy:'early'},r=>settleDay(r)),/공개된 세트/);
  resumeLiveMatch(room,{...b.intermission,strategy:'early'},r=>settleDay(r),{now:200000});
  let game=room.liveMatch.pendingRoom.season.results.find(m=>m.id===b.matchId);assert.deepEqual(game.result.sets[0],old);assert.equal(game.result.sets[1].strategy[game.teamA==='T1'?'teamA':'teamB'],'초반 주도권');
  let attempts=0;while(room.liveMatch&&attempts++<6){advanceLiveMatch(room,300000+attempts*100000);b=getLiveBroadcast(room);if(b?.intermission)resumeLiveMatch(room,{...b.intermission,strategy:'teamfight'},r=>settleDay(r),{now:300000+attempts*100000});}
