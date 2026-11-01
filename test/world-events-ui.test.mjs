@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { renderWorldEvents, renderEventEffects, effectiveStat } from '../public/world-events.js';
+import { renderWorldEvents, renderEventEffects, effectiveStat, pendingWorldEvents, renderWorldEventPopup } from '../public/world-events.js';
 
 const event = {
   id: 'patch-1', date: '2026-03-01', turn: 20, type: 'champion-nerf', title: '아리 너프',
@@ -17,7 +17,7 @@ test('world feed shows league-wide signature effects, affected players and actua
   const html = renderWorldEvents(room(21));
   for (const text of ['리그 소식', '아리 시그니처 선수 전원', '인트', 'Gen.G Comma', '라인전 -1', '13일 남음', '우리 팀 영향', '진행 효과 1건']) assert(html.includes(text), text);
   assert(!html.includes('실제 패치나 실존 선수 보도가 아닙니다'));assert(!html.includes('게임 안에서 생성된 가상 소식'));
-  assert(!html.includes('<button'), 'No dead interaction controls');
+  assert(html.includes('data-action="world-event-open"'));
   const expired = renderWorldEvents(room(34));
   assert(expired.includes('효과 종료'));assert(expired.includes('진행 효과 0건'));
 });
@@ -59,4 +59,13 @@ test('new signature players get an own-team badge and incidents retain scope wit
   r.season.worldEvents.events = [{ ...event, type: 'npc-incident', scope: 'player', champion: null, title: '가상 선수 인터뷰 면담', targets: [event.targets[1]] }];
   const html = renderWorldEvents(r);
   assert(html.includes('선수단 이슈'));assert(html.includes('해당 선수'));assert(html.includes('다른 팀 소식'));
+});
+
+test('team-news popups require an actually affected own player including NPCs and show target-specific deltas',()=>{
+ const ours={...event,id:'ours',targets:[{id:'npc:T1:JGL',team:'T1',nickname:'Vektor',position:'JGL',statChanges:{laning:-1}}]};
+ const foreign={...event,id:'foreign',targets:[{id:'other',team:'Gen.G',nickname:'Neven',position:'MID',statChanges:{laning:-2}}]};
+ const r={season:{team:'T1',turn:21,worldEvents:{events:[foreign,ours]}},roster:[{id:'npc:T1:JGL',npc:true,team:'T1',nickname:'Vektor',position:'JGL',eventEffects:[{id:'ours',statChanges:{laning:-1},remainingDays:13}]}]};
+ assert.deepEqual(pendingWorldEvents(r).map(e=>e.id),['ours']);const html=renderWorldEventPopup(r,ours);assert(html.includes('Vektor'));assert(html.includes('라인전 -1'));assert(html.includes('13일 남음'));assert(!html.includes('Neven'));
+ r.roster[0].eventEffects=[];assert.deepEqual(pendingWorldEvents(r),[]);
+ r.roster[0].eventEffects=[{id:'ours',statChanges:{laning:-1},remainingDays:13}];r.season.turn=34;assert.deepEqual(pendingWorldEvents(r),[]);
 });

@@ -424,7 +424,7 @@ test('notices require login to read and admin permissions to publish, edit and d
   server=await launch(file);assert.equal((await fetch(server.base+'/api/notices')).status,401);
   const admin=actor(server),member=actor(server);await admin.request('/api/session');await member.request('/api/session');
   const adminId=(await admin.request('/api/session')).data.user.id,db=new Store(file);db.db.prepare("UPDATE accounts SET role='admin' WHERE user_id=?").run(adminId);db.close();
-  const original=(await member.request('/api/notices')).data.notices;assert.equal(original.length,3);
+  const original=(await member.request('/api/notices')).data.notices;assert.equal(original.length,4);
   const input={title:'점검 공지',body:'<script>alert(1)</script>\n안내 둘째 줄',category:'점검',pinned:true};
   assert.equal((await member.request('/api/notices','POST',input)).status,403);
   assert.equal((await admin.request('/api/notices','POST',{...input,title:' '})).status,400);
@@ -435,7 +435,7 @@ test('notices require login to read and admin permissions to publish, edit and d
   result=await admin.request(route,'PUT',edit);assert.equal(result.status,200);assert.equal(result.data.notice.revision,2);
   assert.equal((await admin.request(route,'PUT',edit)).status,409);assert.equal((await admin.request(route,'DELETE',{revision:1})).status,409);
   assert.equal((await admin.request(route,'DELETE',{revision:2})).status,200);
-  assert.equal((await member.request('/api/notices')).data.notices.length,3);
+  assert.equal((await member.request('/api/notices')).data.notices.length,4);
   for(const asset of ['/notices.js','/notices.css'])assert.equal((await fetch(server.base+asset)).status,200);
  }finally{await server?.stop();await rm(temp,{recursive:true,force:true});}
 });

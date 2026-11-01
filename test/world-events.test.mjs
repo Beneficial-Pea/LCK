@@ -23,7 +23,7 @@ const candidatesFor = room => getWorldCandidates(room, getRoster(room));
 const ahriNerf = room => applyWorldEvent(room, { type: 'champion-nerf', champion: '아리', durationDays: 14 }, candidatesFor(room));
 const nextDate = (date, days) => new Date(Date.parse(date + 'T00:00:00Z') + days * 86400000).toISOString().slice(0, 10);
 
-test('a signature-champion nerf affects friendly and opposing players by exactly one lane point', () => {
+test('a signature-champion nerf affects friendly and opposing players by two signature points or one champion-pool point', () => {
   const room = roomFor(), all = candidatesFor(room);
   assert.equal(all.filter(player => player.team === 'T1').length, 5, 'human roster slots must replace their NPC candidates');
   const original = structuredClone(all);
@@ -36,12 +36,12 @@ test('a signature-champion nerf affects friendly and opposing players by exactly
   for (let i = 0; i < decorated.length; i++) {
     const player = decorated[i], before = original[i];
     assert.deepEqual(player.stats, before.stats, 'base abilities remain a separate training record');
-    assert.equal(player.effectiveStats.laning, before.stats.laning - Number(before.mainChampion === '아리'));
+    assert.equal(player.effectiveStats.laning, before.stats.laning - (before.mainChampion==='아리'?2:(before.pool||[]).includes('아리')?1:0));
     if (before.mainChampion === '아리') assert.equal(player.eventEffects[0].remainingDays, 14);
   }
   assert.deepEqual(all, original, 'decoration must not mutate persistent profiles');
   const lateEntrant = { ...room.players[0].character, id: 'late-player', nickname: '새 참가자', team: 'KT' };
-  assert.equal(applyWorldEffects(room, [lateEntrant])[0].effectiveStats.laning, 64, 'global patches also affect later eligible players');
+  assert.equal(applyWorldEffects(room, [lateEntrant])[0].effectiveStats.laning, 63, 'global patches also affect later eligible players');
 });
 
 test('generated roster NPCs keep their event effects across fresh roster construction', () => {
@@ -64,7 +64,7 @@ test('temporary adaptation expires without undoing intervening training growth',
   room.players[0].character.stats.laning = 67.5;
   room.season.turn = event.expiresTurn - 1;
   let player = applyWorldEffects(room, [room.players[0].character])[0];
-  assert.equal(player.effectiveStats.laning, 66.5); assert.equal(player.eventEffects[0].remainingDays, 1);
+  assert.equal(player.effectiveStats.laning, 65.5); assert.equal(player.eventEffects[0].remainingDays, 1);
   room.season.turn = event.expiresTurn;
   player = applyWorldEffects(room, [room.players[0].character])[0];
   assert.equal(player.effectiveStats.laning, 67.5); assert.equal(player.stats.laning, 67.5);
@@ -150,4 +150,13 @@ test('waiting and completed seasons do not roll new events and long ledgers stay
   assert(room.season.worldEvents.events.length <= 120);
   assert(room.season.worldEvents.activeEffects.length <= 60);
   assert.equal(new Set(room.season.worldEvents.events.map(event => event.id)).size, room.season.worldEvents.events.length);
+});
+
+test('champion pools broaden patch targets without stacking signature and pool penalties, and legacy effects retain their rules',()=>{
+ const r=roomFor(),c=r.players[0].character;const primary={...structuredClone(c),id:'pool-player',mainChampion:'오리아나',pool:['아리','아지르'],team:'KT'};
+ const unaffected={...structuredClone(c),id:'unaffected',mainChampion:'진',pool:['진','애쉬'],team:'KT'};
+ const event=applyWorldEvent(r,{type:'champion-nerf',champion:'아리'},[c,primary,unaffected]);assert.equal(event.targets.length,2);
+ assert.deepEqual(event.targets.map(t=>t.statChanges.laning),[-2,-1]);const adjusted=applyWorldEffects(r,[c,primary,unaffected]);assert.deepEqual(adjusted.map(p=>p.effectiveStats.laning),[63,64,65]);
+ assert.deepEqual(adjusted.map(p=>p.stats.laning),[65,65,65]);assert.deepEqual(adjusted.map(p=>p.eventEffects[0]?.statChanges.laning),[-2,-1,undefined]);
+ const old=roomFor();old.season.worldPatchPolicyVersions={[old.season.turn]:1};applyWorldEvent(old,{type:'champion-nerf',champion:'아리'},[c,primary]);assert.deepEqual(applyWorldEffects(old,[c,primary]).map(p=>p.effectiveStats.laning),[64,65]);
 });

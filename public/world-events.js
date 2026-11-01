@@ -20,14 +20,14 @@ function remainingDays(event, turn) {
   return Math.max(0, number(expiry) - turn);
 }
 
-function affectsUs(room, event) {
+export function affectsUs(room, event) {
   const team = room?.season?.team;
   if (!team) return false;
   if ((event.targets || []).some(target => target.team === team)) return true;
   const roster = room.roster || room.players?.map(player => player.character) || [];
   if (roster.some(character => character.eventEffects?.some(effect => eventId(effect) === event.id && number(effect.remainingDays) > 0))) return true;
   // A patch also affects a newly joined signature player while it is active.
-  return remainingDays(event, number(room?.season?.turn)) > 0 && event.scope === 'champion' && event.champion && roster.some(character => character.mainChampion === event.champion);
+  return remainingDays(event, number(room?.season?.turn)) > 0 && event.scope === 'champion' && event.champion && roster.some(character => character.mainChampion === event.champion||event.championPolicy==='pool-v2'&&(character.pool||[]).includes(event.champion));
 }
 
 function worldStoryText(value){
@@ -35,7 +35,7 @@ function worldStoryText(value){
 }
 
 function scopeText(event) {
-  if (event.scope === 'champion' && event.champion) return `${event.champion} 시그니처 선수 전원`;
+  if (event.scope === 'champion' && event.champion) return `${event.champion} ${event.championPolicy==='pool-v2'?'시그니처·주력 챔피언 풀':'시그니처'} 선수 전원`;
   if (event.scope === 'team') {
     const teams = [...new Set((event.targets || []).map(target => target.team).filter(Boolean))];
     return `${event.team || teams.join(', ') || '해당 팀'} 선수단`;
@@ -66,7 +66,7 @@ export function renderWorldEvents(room, { limit = 6 } = {}) {
     const positive = changes(event.statChanges).some(([, delta]) => number(delta) > 0);
     const negative = changes(event.statChanges).some(([, delta]) => number(delta) < 0);
     const tone = negative ? 'negative' : positive ? 'positive' : 'neutral';
-    return `<article class="world-news-item ${tone}${active ? '' : ' is-ended'}" data-world-event="${escape(event.id)}"><div class="world-news-meta"><time>${escape(String(event.date || '').replaceAll('-', '.'))}</time><span class="world-news-kind">${escape(types[event.type] || '시즌 사건')}</span>${affectsUs(room, event) ? '<span class="world-news-ours">우리 팀 영향</span>' : '<span class="world-news-league">다른 팀 소식</span>'}<span class="world-news-duration">${active ? `${days}일 남음` : '효과 종료'}</span></div><h3>${escape(worldStoryText(event.title||'리그 소식'))}</h3><p class="world-news-summary">${escape(worldStoryText(event.summary))}</p><div class="world-news-impact"><span>${escape(scopeText(event))}</span><strong>${escape(changeText(event.statChanges) || '상태 변화')}</strong><small>${number(event.durationDays)}일간 · ${event.expiresDate ? `${escape(String(event.expiresDate).replaceAll('-', '.'))} 종료` : `턴 ${number(event.expiresTurn)} 종료`}</small></div>${renderTargets(event)}</article>`;
+    return `<article class="world-news-item ${tone}${active ? '' : ' is-ended'}" data-world-event="${escape(event.id)}"><div class="world-news-meta"><time>${escape(String(event.date || '').replaceAll('-', '.'))}</time><span class="world-news-kind">${escape(types[event.type] || '시즌 사건')}</span>${affectsUs(room, event) ? '<span class="world-news-ours">우리 팀 영향</span>' : '<span class="world-news-league">다른 팀 소식</span>'}<span class="world-news-duration">${active ? `${days}일 남음` : '효과 종료'}</span></div><h3>${escape(worldStoryText(event.title||'리그 소식'))}</h3><p class="world-news-summary">${escape(worldStoryText(event.summary))}</p><div class="world-news-impact"><span>${escape(scopeText(event))}</span><strong>${escape(event.gradedNerf?'시그니처 라인전 -2 · 주력 풀 라인전 -1':changeText(event.statChanges) || '상태 변화')}</strong><small>${number(event.durationDays)}일간 · ${event.expiresDate ? `${escape(String(event.expiresDate).replaceAll('-', '.'))} 종료` : `턴 ${number(event.expiresTurn)} 종료`}</small></div>${renderTargets(event)}${affectsUs(room,event)?`<button class="button small ghost" data-action="world-event-open" data-id="${escape(event.id)}">우리 팀 영향 보기</button>`:''}</article>`;
   }).join('')}</div>` : '<div class="world-news-empty"><span aria-hidden="true">◇</span><strong>아직 기록된 리그 소식이 없습니다.</strong><p>하루를 정산하면 패치와 선수단 사건이 무작위로 발생합니다.<br>챔피언 너프는 같은 시그니처를 쓰는 상대 선수에게도 적용됩니다.</p></div>';
   const footer = `<div class="panel-footer world-news-footer">${shown.length ? `최근 ${shown.length}건 · 누적 ${all.length}건. ` : ''}일시적 효과는 기본 성장 능력치와 별도로 적용되고 기간이 끝나면 해제됩니다.</div>`;
   return `<section class="panel world-news" data-world-events aria-label="리그 랜덤 이벤트">${header}${intro}${feed}${footer}</section>`;
@@ -81,4 +81,16 @@ export function renderEventEffects(character) {
     return `<span class="world-effective-stat ${diff < 0 ? 'negative' : diff > 0 ? 'positive' : ''}"><span>${stats[key]}</span><span><s>${formatted(base)}</s> → <strong>${formatted(value)}</strong><small>(${signed(diff)})</small></span></span>`;
   }).join('');
   return `<div class="world-player-effects" aria-label="경기 적용 이벤트"><div class="world-effect-heading">이벤트 적용 능력 <small>기본 능력치 보존</small></div><div class="world-effective-stats">${statLines}</div><ul>${effects.map(effect => `<li><span>${escape(effect.title || '시즌 사건')}</span><small>${escape(changeText(effect.statChanges))} · ${number(effect.remainingDays)}일</small></li>`).join('')}</ul></div>`;
+}
+
+export function currentWorldTargets(room,event){
+ const roster=room.roster||room.players?.map(p=>p.character)||[];
+ if(roster.some(c=>Array.isArray(c.eventEffects)))return roster.flatMap(c=>{const effect=c.eventEffects?.find(x=>eventId(x)===event.id&&number(x.remainingDays)>0);return effect?[{id:c.id,nickname:c.nickname,position:c.position,team:c.team,statChanges:effect.statChanges}]:[];});
+ return (event.targets||[]).filter(t=>t.team===room.season.team);
+}
+export function pendingWorldEvents(room){return (room?.season.worldEvents?.events||[]).filter(event=>remainingDays(event,number(room.season.turn))>0&&currentWorldTargets(room,event).length).sort((a,b)=>a.turn-b.turn);}
+export function renderWorldEventPopup(room,event){
+ if(!event)return '<p class="note">소식 기록을 찾을 수 없습니다.</p>';
+ const current=currentWorldTargets(room,event),targets=current.length?current:(event.targets||[]).filter(t=>t.team===room.season.team),days=remainingDays(event,number(room.season.turn));
+ return `<article data-world-event-popup="${escape(event.id)}"><div class="eyebrow accent">${escape(event.date)} · ${escape(types[event.type]||'리그 소식')}</div><h3>${escape(worldStoryText(event.title))}</h3><p class="life-event-text">${escape(worldStoryText(event.summary))}</p><div class="notice section-gap"><strong>${escape(room.season.team)} 영향 선수</strong>${targets.map(t=>`<p><b>${escape(t.nickname)}</b> · ${escape(positions[t.position]||t.position)}<br>${escape(changeText(t.statChanges))}</p>`).join('')}<p class="note">${days?`${days}일 남음 · ${escape(event.expiresDate)} 종료`:'효과가 종료된 소식입니다.'}</p></div><p class="note section-gap">일시적 변화는 현재 경기 적용 능력치에 반영되며, 기간이 끝나면 해제됩니다.</p></article>`;
 }

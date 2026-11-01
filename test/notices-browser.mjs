@@ -12,7 +12,7 @@ try{
  const admin=await browser.newContext({baseURL,viewport:{width:1440,height:1000}});
  const registration=await admin.request.post('/api/auth/register',{data:{username:'notice_admin_'+Date.now(),password:'notice123',nickname:'공지운영자'+Date.now().toString().slice(-6),invitation:testInvitation(process.env.DATA_FILE,'admin')}});assert(registration.ok());
  const page=await admin.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto('/');await page.locator('[data-action="nav"][data-view="notices"]').first().click();
- await page.locator('.notice-card').first().waitFor();assert.equal(await page.locator('.notice-card').count(),3);
+ await page.locator('.notice-card').first().waitFor();assert.equal(await page.locator('.notice-card').count(),4);
  await page.locator('[data-action="notice-new"]').click();let form=page.locator('[data-form="notice"]');
  await form.locator('[name="title"]').fill('업데이트 공지 테스트');await form.locator('[name="category"]').selectOption('업데이트');await form.locator('[name="pinned"]').check();
  const body='첫 번째 줄\n두 번째 줄\n<script>window.noticeInjected=true</script>';
@@ -24,6 +24,6 @@ try{
  assert(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  await mkdir(new URL('../test-results/',import.meta.url),{recursive:true});await mobile.screenshot({path:new URL('../test-results/notices-mobile.png',import.meta.url).pathname,fullPage:true});await page.screenshot({path:new URL('../test-results/notices-desktop.png',import.meta.url).pathname,fullPage:true});
  const edited=page.locator('.notice-card').filter({hasText:'수정된 업데이트'});await edited.locator('[data-action="notice-delete"]').click();await edited.locator('[data-action="notice-cancel-delete"]').click();assert.equal(await edited.count(),1);await edited.locator('[data-action="notice-delete"]').click();await edited.locator('[data-action="notice-confirm-delete"]').click();await edited.waitFor({state:'detached'});
- await page.reload();await page.locator('[data-view="notices"]').first().click();await page.locator('.notice-card').first().waitFor();assert.equal(await page.locator('.notice-card').count(),3);assert.deepEqual(errors,[]);
+ await page.reload();await page.locator('[data-view="notices"]').first().click();await page.locator('.notice-card').first().waitFor();assert.equal(await page.locator('.notice-card').count(),4);assert.deepEqual(errors,[]);
  console.log('Notices browser passed: admin create/edit/delete, escaped multiline text, member read-only, mobile navigation/width, refresh persistence.');
 }finally{await browser.close();}

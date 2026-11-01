@@ -47,7 +47,9 @@ test('saved international strategy breaks survive alias updates after three reve
  for(let i=0;i<20;i++){
   const candidate=make('saved-overseas-'+i);completeCupDraft(candidate.season);
   Object.assign(candidate.season.schedule.find(m=>m.id==='fst-final'),{date:candidate.season.date,teamA:'JDG',teamB:'T1',bestOf:5,status:'scheduled'});
+  candidate.season.matchObjectiveVersions={'fst-final':0};candidate.season.worldPatchPolicyVersions={[candidate.season.turn]:1};
   const next=structuredClone(candidate),settled=settleDay(next);
+  delete candidate.season.matchObjectiveVersions;delete candidate.season.worldPatchPolicyVersions;delete next.season.matchObjectiveVersions;delete next.season.worldPatchPolicyVersions;
   if(next.season.results[0].result.sets.length>=4){room=candidate;pending=next;summary=settled;break;}
  }
  assert(room,'fixture reaches a fourth set');
