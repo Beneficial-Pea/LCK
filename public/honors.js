@@ -106,8 +106,8 @@ export function renderLckStandings(room,regularTable){
  return `<section class="panel" data-lck-stage="regular"><div class="panel-header"><h2>LCK 순위</h2><span class="eyebrow">REGULAR SEASON</span></div>${regularTable}</section>`;
 }
 
-export function renderReadiness(c){
+export function renderReadiness(c,{open=false}={}){
  const r=c.readiness;if(!r)return '';
  const lost=Math.max(0,(1-r.conditionFactor)*100),growth=Math.round((1-r.growthFactor)*100);
- return `<div class="player-readiness ${r.tier==='양호'?'':'debuff'}" data-player-readiness><span class="tag ${r.tier==='양호'?'green':'red'}">${e(r.tier)}</span><strong>경기력 보정</strong><p>컨디션 ${Math.round(c.condition)} · 능력 반영 −${lost.toFixed(1)}%<br>피로 ${Math.round(c.fatigue)} · 경기력 −${r.fatiguePenalty.toFixed(1)} / 스트레스 ${Math.round(c.stress)} · 경기력 −${r.stressPenalty.toFixed(1)}</p><small>${growth?`피로 누적으로 훈련 성장량 ${growth}% 감소. `:'훈련 성장량 100%. '}휴식·산책으로 회복할 수 있습니다. 기본 능력치는 유지됩니다.</small></div>`;
+ return `<details ${open?'open':''} class="player-readiness ${r.tier==='양호'?'':'debuff'}" data-player-readiness><summary><span class="tag ${r.tier==='양호'?'green':'red'}">${e(r.tier)}</span><strong>경기력 보정</strong><span class="readiness-toggle" aria-hidden="true"></span></summary><div class="readiness-body"><p>컨디션 ${Math.round(c.condition)} · 능력 반영 −${lost.toFixed(1)}%<br>피로 ${Math.round(c.fatigue)} · 경기력 −${r.fatiguePenalty.toFixed(1)} / 스트레스 ${Math.round(c.stress)} · 경기력 −${r.stressPenalty.toFixed(1)}</p><small>${growth?`피로 누적으로 훈련 성장량 ${growth}% 감소. `:'훈련 성장량 100%. '}휴식·산책으로 회복할 수 있습니다. 기본 능력치는 유지됩니다.</small></div></details>`;
 }

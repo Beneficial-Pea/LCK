@@ -8,7 +8,7 @@ import { Accounts } from './lib/accounts.mjs';
 import { CHAMPION_RECOMMENDATIONS, recommendChampions } from './lib/champion-recommendations.mjs';
 import { choosePreparation, rememberPreparation } from './lib/auto-preparation.mjs';
 import { readinessFor } from './lib/readiness.mjs';
-import { CHARACTER_BACKGROUNDS, normalizeBackground, startingStats, backgroundIntro } from './lib/backgrounds.mjs';
+import { CHARACTER_BACKGROUNDS, normalizeBackground, startingStats } from './lib/backgrounds.mjs';
 import { vacationFor, vacationWindows } from './lib/vacations.mjs';
 import { ensureEwc, updateEwc } from './lib/ewc.mjs';
 import { ensureDemacia, updateDemacia, declineDemacia } from './lib/demacia.mjs';
@@ -83,7 +83,6 @@ function roomFor(code, userId) {
 function progressRoom(room) {
   const progress = advanceLiveMatch(room);
   if (!progress.changed) return;
-  if (progress.completed) systemMessage(room, `${progress.date} 경기 중계와 일정 정산 완료. ${room.season.finished ? '시즌이 종료되었습니다.' : `다음 일정 ${room.season.date}.`}`);
   store.saveRoom(room);
 }
 
@@ -114,8 +113,8 @@ function roomView(room, userId) {
   return view;
 }
 
-function systemMessage(room, text, senderName = '매니저') {
-  store.addMessage(room.code, { channel: 'team', senderId: 'system', senderName, text, at: new Date().toISOString() });
+function staffReply(room, text, senderName) {
+  store.addMessage(room.code, { channel: 'team', senderId: 'system', kind:'staff-reply', senderName, text, at: new Date().toISOString() });
 }
 function ensureHost(room, user) { if (room.hostId !== user.id) fail(403, '방장만 정산하거나 방을 관리할 수 있습니다.'); }
 function ensureStarted(room) {
@@ -229,7 +228,7 @@ async function api(req, res, url) {
       lobby: { status: waitingRoom ? 'waiting' : 'started', ready: {}, startedAt: waitingRoom ? null : new Date().toISOString(), requireTeamSelection: chooseTeam, selectedTeam: character.team, ...(chooseTeam ? { settings } : {}) },
       season
     };
-    store.transaction(() => { store.saveRoom(room); systemMessage(room, `${backgroundIntro(character)} 오늘부터 1군 일정에 합류합니다. 비어 있는 포지션은 NPC가 맡습니다.`); });
+    store.transaction(() => { store.saveRoom(room); });
     return { room: roomView(room, user.id) };
   }
   if (route === '/api/rooms/join' && method === 'POST') {
@@ -251,7 +250,7 @@ async function api(req, res, url) {
       room.players.push({ userId: user.id, ownerName: user.name, character, duoId: null, location: '연습실', joinedAt: new Date().toISOString() });
       if (!room.hostId) room.hostId = user.id;
       if (room.lobby?.status === 'waiting') room.lobby.ready[user.id] = false;
-      room.revision++; store.saveRoom(room); systemMessage(room, `${backgroundIntro(character)} ${character.position}의 NPC가 자리를 비웠습니다.`);
+      room.revision++; store.saveRoom(room);
       return { room: roomView(room, user.id) };
     });
   }
@@ -287,7 +286,6 @@ async function api(req, res, url) {
         if (!room.lobby.requireTeamSelection) fail(409, '이 방은 기존 시작 방식을 사용합니다. 시즌 시작을 눌러 주세요.');
         ensureAllReady(room);
         room.lobby.status = 'selecting';
-        systemMessage(room, '전원 준비 완료. 방장이 팀 소개를 확인하고 이번 시즌의 소속 팀을 선택합니다.');
         break;
       }
       case 'team': {
@@ -311,7 +309,6 @@ async function api(req, res, url) {
         room.lobby.status = 'started';
         room.lobby.startedAt = new Date().toISOString();
         if (room.season.draft) room.season.draft = false;
-        systemMessage(room, room.season.year===2026&&['scheduled','drafting'].includes(room.season.cupDraft?.status)?'전원 준비 완료. 시즌 전 미디어데이에서 바론·장로 그룹을 먼저 편성합니다. 지명이 끝나면 첫 준비 일정으로 넘어갑니다.':'전원 준비 완료. 시즌을 시작합니다. 빈 포지션은 NPC가 맡으며 게임 날짜는 그대로 유지됩니다.');
         break;
       }
       case 'demacia-decline': {
@@ -364,9 +361,9 @@ async function api(req, res, url) {
       case 'vacation': {
         ensureStarted(room);ensureNoBroadcast(room);ensureHost(room,user);ensureTurn(room,body);
         const holiday=vacationFor(room.season);if(!holiday)fail(409,'현재는 휴가 기간이 아닙니다.');
-        const start=room.season.date;let days=0;
+        let days=0;
         do{extra.summary=settleDay(room);days++;}while(body.untilEnd===true&&days<32&&vacationFor(room.season)?.id===holiday.id&&!room.season.finished);
-        extra.days=days;systemMessage(room,`${start}부터 휴가 ${days}일을 보냈습니다. 현재 일정 ${room.season.date}.`);break;
+        extra.days=days;break;
       }
       case 'settle': {
         ensureStarted(room);
@@ -376,7 +373,6 @@ async function api(req, res, url) {
         if(todayScrim(room))fail(409,'오늘의 상세 스크림을 먼저 진행해 주세요.');
         const missing = vacationFor(room.season)||dayActivity(room)?[]:room.players.filter(p => room.submissions[p.userId]?.turn !== room.season.turn);
         if (missing.length && body.npcTakeover !== true) fail(409, '아직 행동을 제출하지 않은 선수가 있습니다. 기다리거나 NPC 대행을 명시적으로 선택하세요.');
-        const playedDate = room.season.date;
         if (body.live === true) {
           const pending = clone(room);
           const summary = settleDay(pending, { npcTakeover: body.npcTakeover === true });summary.npcTakeover=body.npcTakeover===true;
@@ -389,8 +385,6 @@ async function api(req, res, url) {
             extra.summary = summary;
           }
         } else extra.summary = settleDay(room, { npcTakeover: body.npcTakeover === true });
-        if (missing.length) systemMessage(room, `${playedDate} 미제출 ${missing.map(p => p.character.nickname).join(', ')}: 방장이 NPC 대행(휴식)을 선택했습니다.`);
-        systemMessage(room, room.liveMatch ? `${playedDate} 경기 중계를 시작합니다. 현재까지 진행된 장면과 점수만 공개됩니다.` : `${playedDate} 일정 정산 완료. ${room.season.finished ? '시즌이 종료되었습니다.' : `다음 일정 ${room.season.date}.`}`);
         break;
       }
       case 'auto': {
@@ -410,7 +404,6 @@ async function api(req, res, url) {
         }
         if (!days) fail(409, '오늘은 우리 팀 경기 또는 상세 스크림이 있습니다. 오늘 일정에서 직접 진행해 주세요.');
         extra.days = days;extra.decisions=decisions;
-        systemMessage(room, `자동 준비 ${days}일. 매일 선수 상태와 다음 경기를 보고 훈련·회복을 선택했습니다. 구단 행사와 휴가는 자동으로 넘기며, 우리 팀 경기·상세 스크림 전에는 멈춥니다.`);
         break;
       }
       case 'location': {
@@ -442,21 +435,21 @@ async function api(req, res, url) {
         store.addMessage(room.code, { channel, senderId: user.id, senderName: channel === 'owner' ? user.name : me.character.nickname, text, to, at: new Date().toISOString() });
         if (channel === 'team' && /@(?:코치|매니저|분석관)/.test(text)) {
           const name = text.includes('@코치') ? '코치' : text.includes('@분석관') ? '분석관' : '매니저';
-          systemMessage(room, name === '코치' ? '모니터에 다음 상대의 리플레이를 띄웠다. “오늘 행동을 분석으로 제출하면 준비에 반영할게.”' : name === '분석관' ? '“상대 전력과 성향은 로스터에서 확인해. 초반 주도권 팀은 첫 동선을 조심하고.”' : '“캘린더 확인해. 준비 행동은 정산 전까지 수정할 수 있어.”', name);
+          staffReply(room, name === '코치' ? '모니터에 다음 상대의 리플레이를 띄웠다. “오늘 행동을 분석으로 제출하면 준비에 반영할게.”' : name === '분석관' ? '“상대 전력과 성향은 로스터에서 확인해. 초반 주도권 팀은 첫 동선을 조심하고.”' : '“캘린더 확인해. 준비 행동은 정산 전까지 수정할 수 있어.”', name);
         }
         break;
       }
       case 'transfer': {
         ensureHost(room, user);
         if (!room.players.some(p => p.userId === body.userId)) fail(400, '참가한 선수를 선택하세요.');
-        room.hostId = body.userId; systemMessage(room, '방장 권한이 이전되었습니다.');
+        room.hostId = body.userId;
         break;
       }
       case 'reset': {
         ensureHost(room,user);ensureNoBroadcast(room);
         if(body.seasonId!==room.season.id||Number(body.turn)!==room.season.turn)fail(409,'방의 시즌이나 날짜가 변경됐습니다. 다시 확인해 주세요.');
         if(body.confirmation!=='초기화')fail(400,'초기화하려면 확인란에 초기화를 입력해 주세요.');
-        resetRoomSeason(room);systemMessage(room,'방장이 이 방의 시즌 진행과 선수 성장을 초기화했습니다. 참가자와 채팅은 유지되며, 준비 완료 후 팀 선택과 시즌 전 미디어데이부터 다시 시작합니다.');break;
+        resetRoomSeason(room);break;
       }
       case 'leave': {
         room.players = room.players.filter(p => p.userId !== user.id);
@@ -466,7 +459,6 @@ async function api(req, res, url) {
         if (room.hostId === user.id) room.hostId = room.players[0]?.userId || null;
         room.revision++;
         if(!room.players.length){store.saveRoom(room);store.deleteEmptyRoom(room.code);return {left:true,deleted:true};}
-        systemMessage(room, `${me.character.nickname} 퇴장. 빈 포지션은 NPC가 맡습니다. 방장은 남은 참가자에게 이전됩니다.`);
         store.saveRoom(room);return {left:true,deleted:false};
       }
       default: fail(404, '지원하지 않는 방 동작입니다.');

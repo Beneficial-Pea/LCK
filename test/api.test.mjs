@@ -298,7 +298,8 @@ test('persistent multiplayer HTTP workflow enforces turn ownership and message p
       room = settled.data.room;
       assert.equal(room.season.turn, turn + 1);
       assert.equal(room.season.date, '2025-01-14');
-      assert.ok(room.messages.some(m => m.text.includes('NPC 대행')));
+      assert.ok(room.season.history.some(m => m.text.includes('NPC 대행')));
+      assert.ok(!room.messages.some(m=>m.senderId==='system'&&m.kind!=='staff-reply'));
       assert.deepEqual(room.submissions, {});
       assert.equal((await users[1].request(`${route}/action`, 'POST', { turn, action: 'rest' })).status, 409);
       assert.equal((await users[0].request(`${route}/auto`, 'POST', { turn: room.season.turn, action: 'rest' })).status, 409);
