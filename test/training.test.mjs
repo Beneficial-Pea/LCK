@@ -41,3 +41,28 @@ test('match and scrim days settle without generic preparation actions or hidden 
  let summary=settleDay(room);assert.deepEqual(summary.actions,[]);assert.equal(room.players[0].character.stats.mechanics,before);
  const game=room.season.schedule.find(m=>m.status==='scheduled'&&[m.teamA,m.teamB].includes('T1'));room.season.date=game.date;room.submissions={};summary=settleDay(room);assert(summary.matches.includes(game.id));assert.deepEqual(summary.actions,[]);assert.equal(room.players[0].character.stats.mechanics,before);
 });
+
+test('saved international strategy breaks survive alias updates after three revealed sets without rewriting history',()=>{
+ let room,summary,pending;
+ for(let i=0;i<20;i++){
+  const candidate=make('saved-overseas-'+i);completeCupDraft(candidate.season);
+  Object.assign(candidate.season.schedule.find(m=>m.id==='fst-final'),{date:candidate.season.date,teamA:'JDG',teamB:'T1',bestOf:5,status:'scheduled'});
+  const next=structuredClone(candidate),settled=settleDay(next);
+  if(next.season.results[0].result.sets.length>=4){room=candidate;pending=next;summary=settled;break;}
+ }
+ assert(room,'fixture reaches a fourth set');
+ const game=pending.season.results[0],legacyRoles={TOP:'Top',JGL:'Jungle',MID:'Mid',ADC:'Carry',SUP:'Support'};
+ for(const row of game.result.sets[0].scoreboard.filter(p=>p.team==='JDG')){
+  const from=row.nickname,to=`JDG AsterJDG${legacyRoles[row.position]}`;
+  pending=JSON.parse(JSON.stringify(pending).replaceAll(from,to));
+ }
+ beginLiveMatch(room,pending,summary,{now:1000,stepMs:1,interactive:true});
+ const live=room.liveMatch;live.cursor=live.frames.findLastIndex(f=>f.setIndex===2);live.intermission={matchId:'fst-final',nextSet:4};live.handledBreaks=['fst-final:2','fst-final:3'];
+ const revealed=structuredClone(pending.season.results[0].result.sets.slice(0,3));
+ const broken=structuredClone(room);broken.liveMatch.pendingRoom.season.results[0].result.sets[1].scoreboard[0].k++;
+ assert.throws(()=>resumeLiveMatch(broken,{matchId:'fst-final',nextSet:4,strategy:'balanced'},r=>settleDay(r)),/공개된 세트/);
+ resumeLiveMatch(room,{matchId:'fst-final',nextSet:4,strategy:'balanced'},r=>settleDay(r),{now:2000});
+ assert.deepEqual(room.liveMatch.pendingRoom.season.results[0].result.sets.slice(0,3),revealed);
+ assert.equal(room.liveMatch.pendingRoom.season.results[0].result.sets[3].strategy.teamB,'균형 운영');
+ assert(!room.liveMatch.intermission);assert.equal(getLiveBroadcast(room).activeSet,4);
+});

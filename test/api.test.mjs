@@ -1,3 +1,4 @@
+import {beginLiveMatch} from '../lib/live-match.mjs';
 import { registerTestServer, ensureTestAccount } from './helpers/accounts.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -423,7 +424,7 @@ test('notices require login to read and admin permissions to publish, edit and d
   server=await launch(file);assert.equal((await fetch(server.base+'/api/notices')).status,401);
   const admin=actor(server),member=actor(server);await admin.request('/api/session');await member.request('/api/session');
   const adminId=(await admin.request('/api/session')).data.user.id,db=new Store(file);db.db.prepare("UPDATE accounts SET role='admin' WHERE user_id=?").run(adminId);db.close();
-  const original=(await member.request('/api/notices')).data.notices;assert.equal(original.length,2);
+  const original=(await member.request('/api/notices')).data.notices;assert.equal(original.length,3);
   const input={title:'점검 공지',body:'<script>alert(1)</script>\n안내 둘째 줄',category:'점검',pinned:true};
   assert.equal((await member.request('/api/notices','POST',input)).status,403);
   assert.equal((await admin.request('/api/notices','POST',{...input,title:' '})).status,400);
@@ -434,7 +435,7 @@ test('notices require login to read and admin permissions to publish, edit and d
   result=await admin.request(route,'PUT',edit);assert.equal(result.status,200);assert.equal(result.data.notice.revision,2);
   assert.equal((await admin.request(route,'PUT',edit)).status,409);assert.equal((await admin.request(route,'DELETE',{revision:1})).status,409);
   assert.equal((await admin.request(route,'DELETE',{revision:2})).status,200);
-  assert.equal((await member.request('/api/notices')).data.notices.length,2);
+  assert.equal((await member.request('/api/notices')).data.notices.length,3);
   for(const asset of ['/notices.js','/notices.css'])assert.equal((await fetch(server.base+asset)).status,200);
  }finally{await server?.stop();await rm(temp,{recursive:true,force:true});}
 });
@@ -530,5 +531,37 @@ test('life choice previews match actual player changes and reject other players,
   for(const key of ['condition','fatigue','stress'])assert.equal(Number((after[key]-before[key]).toFixed(3)),choice.effects[key]||0);
   assert.equal((await host.request(route+'/life','POST',body)).status,409);
   await running.stop();running=await launch(file);server.base=running.base;const restored=(await host.request(route)).data.room;assert.deepEqual(restored.players.find(p=>p.userId===room.hostId).character.stats,after.stats);assert.deepEqual(restored.season.dailyLife.entries.find(e=>e.id===own.id).effects,choice.effects);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});
+
+test('an international strategy pause saved with former NPC aliases resumes through the API after restart',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'legacy-strategy-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
+ try{
+  running=await launch(file);server.base=running.base;const host=actor(server);
+  await host.request('/api/slots/0','PUT',{character:character('MID','LegacyStrategyHost')});
+  const room=(await host.request('/api/rooms','POST',{slot:0,year:2026})).data.room,route='/api/rooms/'+room.code;
+  await host.request(route+'/cup-draft','POST',{turn:1,pickNumber:1,remaining:true});await running.stop();
+  const db=new Store(file);let prepared,pending,summary;
+  try{
+   const original=db.room(room.code);
+   for(let i=0;i<30;i++){
+    const r=structuredClone(original);r.season.seed+=':legacy-fixture:'+i;
+    Object.assign(r.season.schedule.find(m=>m.id==='fst-final'),{date:r.season.date,teamA:'JDG',teamB:r.season.team,status:'scheduled',bestOf:5});
+    const next=structuredClone(r),done=settleDay(next);
+    if(next.season.results.find(m=>m.id==='fst-final').result.sets.length>=4){prepared=r;pending=next;summary=done;break;}
+   }
+   assert(prepared);
+   const roles={TOP:'Top',JGL:'Jungle',MID:'Mid',ADC:'Carry',SUP:'Support'};
+   for(const p of pending.season.results.find(m=>m.id==='fst-final').result.sets[0].scoreboard.filter(p=>p.team==='JDG'))pending=JSON.parse(JSON.stringify(pending).replaceAll(p.nickname,'JDG AsterJDG'+roles[p.position]));
+   beginLiveMatch(prepared,pending,summary,{interactive:true,stepMs:100000});
+   const live=prepared.liveMatch;live.cursor=live.frames.findLastIndex(f=>f.matchId==='fst-final'&&f.setIndex===2);live.intermission={matchId:'fst-final',nextSet:4};live.handledBreaks=['fst-final:2','fst-final:3'];db.saveRoom(prepared);
+  }finally{db.close();}
+  running=await launch(file);server.base=running.base;
+  const prior=(await host.request(route)).data.room;assert.equal(prior.broadcast.activeSet,3);assert.equal(prior.broadcast.sets.length,3);
+  const resumed=await host.request(route+'/set-strategy','POST',{turn:prior.season.turn,seasonId:prior.season.id,...prior.broadcast.intermission,strategy:'balanced'});
+  assert.equal(resumed.status,200,JSON.stringify(resumed.data));assert.equal(resumed.data.room.broadcast.activeSet,4);assert(!resumed.data.room.broadcast.intermission);
+  assert.deepEqual(resumed.data.room.broadcast.sets.slice(0,3),prior.broadcast.sets);
+  assert.equal(resumed.data.room.season.date,prior.season.date);
+  assert.equal((await host.request(route+'/set-strategy','POST',{turn:prior.season.turn,matchId:'fst-final',nextSet:4,strategy:'balanced'})).status,409);
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
