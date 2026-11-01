@@ -1,3 +1,4 @@
+import {normalizeTeamDisplay,teamDisplayText} from './team-display.js';
 import {renderObjectiveBoard} from './objective-board.js';
 import {renderTournamentReward,tournamentMoments,tournamentMomentLabel} from './tournament-rewards.js';
 import {renderLifeEvent,renderLifePending,dailyEffectsText} from './life-events.js';
@@ -15,7 +16,7 @@ import { renderWorldEvents, renderEventEffects, effectiveStat, pendingWorldEvent
 
 const $ = (s, p = document) => p.querySelector(s);
 const e = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function playerLabel(c) { const n=c?.nickname||'';const t=c?.team;if(!t||n.startsWith(t+' '))return n;return `${t} ${n}`; }
+function playerLabel(c) { const n=c?.nickname||'';const t=c?.team;if(!t||n.startsWith(t+' '))return n;return `${displayTeam(t)} ${n}`; }
 const roundLabel=m=>m?.id?.startsWith('cup-group')?`그룹 배틀 · ${m.round||''}${m.bestOf===5?' · 슈퍼위크':''}`:m?.round||'';
 const posName = {TOP:'탑',JGL:'정글',MID:'미드',ADC:'원딜',SUP:'서포터'};
 const statName = {mechanics:'피지컬',laning:'라인전',macro:'운영',communication:'소통',mental:'멘탈',mastery:'챔피언 숙련'};
@@ -74,7 +75,7 @@ async function api(path, options = {}) {
  return data;
 }
 function toast(text, error=false) {
- const el=$('#toast'); el.textContent=text; el.className=`show${error?' error':''}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className='',5000);
+ const el=$('#toast'); el.textContent=teamDisplayText(text,gameYear()); el.className=`show${error?' error':''}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className='',5000);
 }
 function safePortrait(value) {
  return typeof value==='string' && value.length<90000 && /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value) ? value : null;
@@ -104,6 +105,7 @@ function refreshOwnerDock(force=false){
  const list=$('.owner-dock-log',dock),follow=list.scrollHeight-list.scrollTop-list.clientHeight<50;
  const signature=messages.map(m=>m.id).join(',');
  if(list.dataset.messages!==signature){list.dataset.messages=signature;list.innerHTML=messages.length?messages.map(m=>`<article class="${m.senderId===state.session.user.id?'own':''}"><div><strong>${e(dockChannel==='team'&&state.room.players.find(p=>p.userId===m.senderId)?playerLabel(state.room.players.find(p=>p.userId===m.senderId).character):m.senderName)}</strong><time>${new Date(m.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</time></div><p>${e(m.text)}</p></article>`).join(''):'<p class="owner-dock-empty">일정과 잡담을 편하게 나눠보세요.<br>선수 관계나 경기 판정에는 반영되지 않습니다.</p>';if(follow||force)list.scrollTop=list.scrollHeight;}
+ normalizeTeamUI(dock);
 }
 document.addEventListener('click',event=>{const tab=event.target.closest('[data-dock-channel]');if(tab){dockChannel=tab.dataset.dockChannel;localStorage.setItem('first-team.dock-channel',dockChannel);refreshOwnerDock(true);return;}if(event.target.closest('[data-owner-toggle]')){ownerDockOpen=!ownerDockOpen;localStorage.setItem('first-team.owner-dock',ownerDockOpen?'1':'0');refreshOwnerDock(true);}});
 document.addEventListener('input',event=>{if(event.target.id==='owner-dock-text'&&state.room)ownerDrafts.set(state.room.code+":"+dockChannel,event.target.value);});
@@ -205,6 +207,7 @@ const ownMatch = m => m.teamA===state.room?.season.team || m.teamB===state.room?
 const readyCount = () => state.room?.players.filter(p=>state.room.submissions[p.userId]?.turn===state.room.season.turn).length || 0;
 const host = () => state.room?.hostId===state.session?.user.id;
 const gameYear = () => Number(state.room?.season.year||state.room?.season.date?.slice(0,4)||2026);
+function normalizeTeamUI(root){normalizeTeamDisplay(root,gameYear(),state.room?.players||[]);}
 const displayTeam = name => gameYear()===2026?(state.meta.teamProfiles?.find(t=>t.name===name)?.displayName||name):name;
 const waitingRoom = (room=state.room) => ['waiting','selecting'].includes(room?.lobby?.status);
 const liveBroadcast = (room=state.room) => room?.broadcast?.status==='live'?room.broadcast:null;
@@ -291,6 +294,7 @@ function render() {
  refreshOwnerDock();
  if(!maybeOpenTournamentReward()&&!maybeOpenWorldEvent())maybeOpenLifeEvent();
  renderModal();
+ normalizeTeamUI($('#app'));
  if(['chat','owner'].includes(state.view)){const list=$('.chat-messages');if(list)list.scrollTop=list.scrollHeight;}if(state.view==='lobby'&&waitingRoom()){const list=$('.assembly-messages');if(list)list.scrollTop=list.scrollHeight;}
 }
 function renderView() {
@@ -414,7 +418,7 @@ function renderCalendar() {
  return pageHead(`${gameYear()} SEASON CALENDAR`,'시즌 캘린더','게임 날짜 기준: 한국시간(KST). 초기 대회 날짜를 바탕으로, 성적에 따라 진출팀과 후속 대진이 정해집니다.',`<button class="button" data-action="calendar-today">오늘로 이동</button>`)+`<div class="calendar-layout"><section class="panel"><div class="calendar-header"><h2>${year}<span class="muted" style="font-size:14px;margin:0 6px">/</span>${String(month).padStart(2,'0')} <span class="tiny-label" style="margin-left:8px">${['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][month-1]}</span></h2><div class="row"><button class="icon-btn" data-action="calendar-prev" aria-label="이전 달">‹</button><button class="icon-btn" data-action="calendar-next" aria-label="다음 달">›</button></div></div><div class="calendar-week">${['SUN','MON','TUE','WED','THU','FRI','SAT'].map(x=>`<div>${x}</div>`).join('')}</div><div class="calendar-grid">${cells.join('')}</div><div class="calendar-legend"><span><i class="legend-dot"></i>우리 팀 경기</span><span><i class="legend-dot blue"></i>다른 팀 경기</span><span><i class="legend-dot club"></i>팀 고정 활동</span><span>흐리게 표시: 정산 완료</span></div></section><aside class="panel day-detail"><div class="panel-header"><h2>일정 상세</h2>${selected===s.date?'<span class="tag green">TODAY</span>':''}</div><div class="panel-body"><h3>${formatDate(selected,true)}</h3><p class="note">${selected<s.date?'지나간 날짜':selected===s.date?'현재 게임 날짜':'예정된 날짜'} · KST</p>${(state.room.scrimSchedule||[]).filter(x=>x.date===selected).map(x=>`<div class="notice section-gap">상세 스크림 · ${e(x.opponent)} · BO3 · ${x.status==='completed'?'완료':'전략 선택 필요'}</div>`).join('')}${selectedHoliday?'<div class="notice section-gap">선수단 휴가 · 훈련 선택 없이 개인 일상을 보내는 날입니다.</div>':''}${selected===s.cupDraft?.date&&s.cupDraft.previous?`<div class="notice section-gap">LCK 컵 미디어데이 · 바론 대표 ${e(s.cupDraft.previous.champion)} / 장로 대표 ${e(s.cupDraft.previous.runnerUp)} · ${s.cupDraft.status==='completed'?'그룹 지명 완료':'그룹 지명 예정'}</div>`:''}${dailyClub.map(clubActivityHTML).join('')}${details.length?details.map(m=>`<div class="day-match"><div class="eyebrow">${e(m.stage)} · ${e(roundLabel(m))}</div><div class="teams">${e(m.teamA||'진출팀 미정')} <span class="muted">vs</span> ${e(m.teamB||'진출팀 미정')}</div><div class="row between"><span class="tag ${ownMatch(m)?'green':''}">BO${m.bestOf}${ownMatch(m)?' · 우리 경기':''}</span><span class="tiny-label">${m.status==='completed'?'정산 완료':m.status==='pending'?'대진 미정':'대진 확정'}</span></div>${m.result?`<p class="result" style="margin-top:12px">${m.result.scoreA} : ${m.result.scoreB} · ${e(m.result.winner)} 승리</p><button class="text-link" data-action="watch-match" data-id="${e(m.id)}">중계 기록 읽기 →</button>`:''}</div>`).join(''):dailyClub.length||dailyPractice.length||selectedHoliday?'':`<div class="empty" style="padding:32px 0">${selected>=(s.startDate||'2025-01-13')&&selected<=(s.endDate||'2025-11-09')?'확정 경기가 없는 날입니다.<br>훈련·분석·휴식으로 준비할 수 있습니다.':`${gameYear()} 게임 시즌 외의 날짜입니다.`}</div>`}</div><div class="panel-footer">예선 통과 전에는 후속 대진이 표시되지 않을 수 있습니다. 세부 진행 규칙은 게임 안내를 확인하세요.</div></aside></div>${renderQualifications()}${renderLckStandings(state.room,renderStandings([...(s.standings||[])].sort((a,b)=>b.wins-a.wins||(b.setWins-b.setLosses)-(a.setWins-a.setLosses))))}${renderEwcTournament(state.room,displayTeam)}${renderDemaciaTournament(state.room,displayTeam)}<div class="notice section-gap">대회 기간을 기준으로 만든 시뮬레이션 대진입니다. ${gameYear()===2026?'2026년 API 기반 보조 캘린더의 경기 날짜를 사용하되 진출팀은 게임 결과로 바뀝니다.':'2025년은 대회 기간 안에서 경기 날짜와 대진을 재구성한 기존 간소화 모델입니다.'} 동률 판정·상대 지명·세부 규정 일부는 간소화했습니다. <button class="text-link" data-action="nav" data-view="rules">자세한 규칙 →</button></div>`;
 }
 function renderPlayerDetails(c) {
- return `<div class="player-head">${portrait(c,'medium')}<span class="position-badge">${e(c.position)}</span><div><h2>${e(playerLabel(c))}</h2><p>${e(c.name)} · ${e(c.age)}세 · ${e(c.team||'소속 미정')} · 1군</p></div></div><div class="detail-list"><span>주력 <strong>${e(c.mainChampion)}</strong></span><span>배경 <strong>${e(state.meta.characterBackgrounds?.find(b=>b.id===c.background)?.name||'기본 선수')}</strong></span><span>성향 <strong>${e(c.style||'균형 운영')}</strong></span></div><div class="mini-stats">${Object.entries(statName).map(([key,label])=>`<div class="mini-stat"><strong>${Math.round(effectiveStat(c,key))}</strong>${label}</div>`).join('')}</div>${c.appearance||c.personality||c.memo?`<div class="detail-list">${c.appearance?`<span>외관 · ${e(c.appearance)}</span>`:''}${c.personality?`<span>성격 · ${e(c.personality)}</span>`:''}</div>${c.memo?`<p class="note" style="margin-top:10px">${e(c.memo)}</p>`:''}`:''}` + renderReadiness(c,{open:readinessOpen}) + renderEventEffects(c);
+ return `<div class="player-head">${portrait(c,'medium')}<span class="position-badge">${e(c.position)}</span><div><h2>${e(playerLabel(c))}</h2><p>${e(c.name)} · ${e(c.age)}세 · ${e(c.team||'소속 미정')} · 1군</p></div></div><div class="detail-list"><span>주력 <strong>${e(c.mainChampion)}</strong></span><span>배경 <strong>${e(state.meta.characterBackgrounds?.find(b=>b.id===c.background)?.name||'기본 선수')}</strong></span><span>성향 <strong>${e(c.style||'균형 운영')}</strong></span></div><div class="mini-stats">${Object.entries(statName).map(([key,label])=>`<div class="mini-stat"><strong>${Math.round(effectiveStat(c,key))}</strong>${label}</div>`).join('')}</div>${c.appearance||c.personality||c.memo?`<div class="detail-list">${c.appearance?`<span data-authored-text>외관 · ${e(c.appearance)}</span>`:''}${c.personality?`<span data-authored-text>성격 · ${e(c.personality)}</span>`:''}</div>${c.memo?`<p class="note" data-authored-text style="margin-top:10px">${e(c.memo)}</p>`:''}`:''}` + renderReadiness(c,{open:readinessOpen}) + renderEventEffects(c);
 }
 function renderOpponentEventEffects(team) {
  const affected=(team.players||[]).filter(c=>c.eventEffects?.length);
@@ -428,7 +432,7 @@ function locationSceneHTML(){const p=me();return renderLocationScene({location:p
 function refreshLocationScene() {
  const target=$('#location-scene');if(!target||state.view!=='dorm')return;
  const focused=document.activeElement?.matches('[data-scene-floor]');
- target.innerHTML=locationSceneHTML();if(focused)$('[data-scene-floor]',target)?.focus({preventScroll:true});
+ target.innerHTML=locationSceneHTML();normalizeTeamUI(target);if(focused)$('[data-scene-floor]',target)?.focus({preventScroll:true});
 }
 function moveInsideScene(x,y) {
  const player=me();if(!player||state.view!=='dorm'||state.busy||state.modal)return;
@@ -552,6 +556,7 @@ function renderModal() {
   body=`<div class="stack" style="gap:9px">${[['lobby','시즌 방 관리'],['slots','캐릭터 슬롯'],['notices','공지사항'],['rules','게임 안내']].map(([key,label])=>`<button class="button full" data-action="nav" data-view="${key}">${label} →</button>`).join('')}<button class="button full" data-action="profile">오너 닉네임 설정</button>${state.room?'<button class="button full" data-action="room-controls">현재 방 관리 · 나가기 / 초기화</button>':''}</div>`;
  }
  $('#modal-root').innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal ${wide?'wide':''}" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><header class="modal-head"><div><h2 id="dialog-title">${title}</h2><p>${description}</p></div><button class="icon-btn" data-action="close-modal" aria-label="창 닫기">×</button></header>${form?`<form data-form="${form}">`:''}<div class="modal-body">${body}</div>${footer?`<footer class="modal-footer">${footer}</footer>`:''}${form?'</form>':''}</section></div>`;
+ normalizeTeamUI($('#modal-root'));
  if(modal.kind==='slot'||modal.kind==='portrait')hydratePortraitSource(modal);
  if(modal.kind==='slot')refreshChampionRecommendation($('[data-form="slot"]'));
 }

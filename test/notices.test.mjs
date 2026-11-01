@@ -23,12 +23,21 @@ test('notices persist edits and deletions across restarts and backups without re
 
 test('an existing deployment receives the release notice once while later admin edits and deletion survive restarts',()=>{
  const store=new Store(':memory:');try{
-  const id='update-drx-display',key='notice_release_drx_display_v1';
+  const id='update-krx-display',key='notice_release_krx_display_v1';
   // Model the database before this release while retaining an edited older notice.
   store.db.prepare('DELETE FROM notices WHERE id=?').run(id);store.db.prepare('DELETE FROM app_settings WHERE key=?').run(key);
   const welcome=listNotices(store).find(n=>n.id==='welcome');saveNotice(store,{...welcome,title:'보존할 운영 공지'},'관리자',welcome.id);
-  initializeNotices(store);const release=listNotices(store).find(n=>n.id===id);assert(release);assert.equal(release.category,'업데이트');assert(release.body.includes('DRX로 통일'));assert.equal(listNotices(store).find(n=>n.id==='welcome').title,'보존할 운영 공지');
+  initializeNotices(store);const release=listNotices(store).find(n=>n.id===id);assert(release);assert.equal(release.category,'업데이트');assert(release.body.includes('KRX로 통일'));assert.equal(listNotices(store).find(n=>n.id==='welcome').title,'보존할 운영 공지');
   saveNotice(store,{...release,body:'관리자가 수정한 내용'},'관리자',id);initializeNotices(store);assert.equal(listNotices(store).find(n=>n.id===id).body,'관리자가 수정한 내용');
   const edited=listNotices(store).find(n=>n.id===id);deleteNotice(store,id,edited.revision);initializeNotices(store);assert(!listNotices(store).some(n=>n.id===id));
  }finally{store.close();}
+});
+
+test('the KRX correction removes only the untouched mistaken automatic notice',()=>{
+ for(const revision of [1,2]){const store=new Store(':memory:');try{
+  store.db.prepare('DELETE FROM notices WHERE id=?').run('update-krx-display');store.db.prepare('DELETE FROM app_settings WHERE key=?').run('notice_release_krx_display_v1');
+  store.db.prepare('INSERT INTO notices VALUES(?,?,?,?,?,?,?,?,?)').run('update-drx-display','업데이트 · DRX 팀 이름 표기 통일',revision===1?'이전 자동 안내':'관리자가 수정한 내용','업데이트',0,1,1,'운영팀',revision);
+  initializeNotices(store);assert(listNotices(store).some(n=>n.id==='update-krx-display'));assert.equal(listNotices(store).some(n=>n.id==='update-drx-display'),revision===2);
+  initializeNotices(store);assert.equal(listNotices(store).filter(n=>n.id==='update-krx-display').length,1);
+ }finally{store.close();}}
 });
