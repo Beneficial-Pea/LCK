@@ -1,0 +1,27 @@
+// Local browser check with a disposable DATA_FILE under /tmp/.
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {mkdir} from 'node:fs/promises';
+import {Store} from '../lib/store.mjs';
+import {ensureAwards} from '../lib/player-awards.mjs';
+import {authenticatedBrowserContext} from './helpers/accounts.mjs';
+assert(process.env.DATA_FILE?.startsWith('/tmp/'));
+const {chromium}=createRequire(import.meta.url)('playwright'),baseURL=process.env.BASE_URL||'http://127.0.0.1:3214';
+const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+try{
+ const context=await authenticatedBrowserContext(browser,{baseURL,viewport:{width:1440,height:1000}}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const post=async(path,data)=>{const res=await context.request.post(path,{data});assert(res.ok(),await res.text());return res.json();};
+ assert((await context.request.put('/api/slots/0',{data:{character:{name:'선수',nickname:'QuickPlayer',team:'T1',position:'MID',age:22,mainChampion:'아리',pool:['아리','아지르'],style:'균형 운영'}}})).ok());
+ const room=(await post('/api/rooms',{slot:0,year:2026})).room,route='/api/rooms/'+room.code;await post(route+'/cup-draft',{turn:1,pickNumber:1,remaining:true});
+ const db=new Store(process.env.DATA_FILE);try{const r=db.room(room.code),regular={matches:5,pom:3,sets:12,ratingTotal:100};ensureAwards(r.season).ledger={fixture:{playerId:r.players[0].character.id,nickname:'QuickPlayer',team:'T1',position:'MID',regular,total:{...regular}}};r.revision++;db.saveRoom(r);}finally{db.close();}
+ const get=async()=>(await(await context.request.get(route)).json()).room,before=(await get()).season.awards;
+ await context.addInitScript(code=>localStorage.setItem('first-team.room',code),room.code);await page.goto('/');await page.locator('.home-quick-access').waitFor();const box=await page.locator('.home-quick-access').boundingBox();assert(box.y+box.height<1000);assert.equal(await page.locator('.home-secondary .roster-list').count(),0);
+ await page.locator('[data-action="standings-modal"]').click();await page.locator('#modal-root [data-cup-progress]').waitFor();assert((await page.locator('#modal-root').textContent()).includes('바론 그룹'));
+ await page.locator('[data-action="standings-tab"][data-tab="pom"]').click();const table=page.locator('#modal-root .awards-table-wrap');await table.waitFor();assert((await table.textContent()).includes('POM 횟수'));assert((await table.textContent()).includes('POM 포인트'));assert((await table.textContent()).includes('3회'));assert((await table.textContent()).includes('300점'));assert(!(await table.textContent()).includes('출전'));
+ await mkdir(new URL('../test-results/',import.meta.url),{recursive:true});await page.locator('.modal').screenshot({path:new URL('../test-results/pom-points-desktop.png',import.meta.url).pathname});await page.locator('#modal-root [data-action="close-modal"]').first().click();
+ await page.locator('[data-action="team-roster-modal"]').click();await page.locator('#modal-root .roster-list').waitFor();assert.equal(await page.locator('#modal-root .roster-row').count(),5);assert((await page.locator('#modal-root .roster-list').textContent()).includes('QuickPlayer'));await page.locator('#modal-root [data-action="close-modal"]').first().click();
+ await page.setViewportSize({width:390,height:844});await page.evaluate(()=>window.scrollTo(0,0));const mobileBox=await page.locator('.home-quick-access').boundingBox();assert(mobileBox.y+mobileBox.height<844);
+ await page.locator('[data-action="standings-modal"]').click();await page.locator('[data-action="standings-tab"][data-tab="pom"]').click();await table.waitFor();const pointsBox=await table.locator('tbody td:last-child').boundingBox();assert(pointsBox.x+pointsBox.width<=390);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.locator('.modal').screenshot({path:new URL('../test-results/pom-points-mobile.png',import.meta.url).pathname});await page.locator('#modal-root [data-action="close-modal"]').first().click();
+ await page.locator('[data-action="team-roster-modal"]').click();assert.equal(await page.locator('#modal-root .roster-row').count(),5);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.locator('.modal').screenshot({path:new URL('../test-results/quick-roster-mobile.png',import.meta.url).pathname});assert.deepEqual((await get()).season.awards,before);assert.deepEqual(errors,[]);
+ console.log('Quick panels browser passed: top access, team/POM tabs, 3 POM = 300 points, five-player roster, mobile fit and unchanged saved awards.');
+}finally{await browser.close();}

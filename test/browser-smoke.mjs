@@ -109,8 +109,10 @@ try {
   assert.equal(await page.locator('[data-my-stat=macro] strong').textContent(),Number(room.players[0].character.effectiveStats?.macro??myStatsBefore.macro).toFixed(1));
   assert(room.season.ewc.qualifierTeams.includes('T1'));assert.notEqual(room.season.ewc.previousChampion.team,'T1');
   checks.push('own six abilities are visible above actions and selected team always enters Road to EWC');
+  await action('standings-modal').click();
   assert((await page.locator('[data-cup-progress]').textContent()).includes('바론 그룹'));
   assert((await page.locator('[data-cup-progress]').textContent()).includes('장로 그룹'));
+  await page.locator('#modal-root [data-action="close-modal"]').first().click();
   assert((await page.locator('[data-player-readiness]').textContent()).includes('경기력 보정'));
   await action('awards').click();await page.locator('#dialog-title').getByText('POM · 시즌 시상식').waitFor();await action('close-modal').click();
 
