@@ -29,3 +29,11 @@ test('all 120 scenes have concrete action labels and both study alternatives can
  const before={condition:r.players[0].character.condition,fatigue:r.players[0].character.fatigue};answerDailyLife(r,'u',pending.id,'join');assert.equal(r.players[0].character.condition,before.condition);assert.equal(r.players[0].character.fatigue,before.fatigue);
  assert(dailyChoiceEffects({title:'모의 밴픽'},'later').macro>0);assert(dailyChoiceEffects({title:'연습 종료 시간'},'join').mechanics>0);assert(dailyChoiceEffects({title:'연습 종료 시간'},'later').fatigue<0);
 });
+
+test('saved scene-title references explain the actual situation without changing choice effects',async()=>{
+ const {decorateDailyLife,explainDailyReferences,DAILY_SCENE_TITLES}=await import('../lib/daily-life.mjs');
+ const r=room(),text='훈련을 마쳤다. Neven이 지난번 「간식의 주인」 이야기를 꺼냈다. "그 뒤에는 어떻게 됐어?"';
+ r.season.dailyLife={entries:[{id:'old',title:'다른 일',text,answer:'join',reply:'선택했던 답변',effects:{mental:.1}}],bonds:{}};r.season.history=[{type:'daily-life',text}];
+ decorateDailyLife(r);assert(!r.season.dailyLife.entries[0].text.includes('「'));assert(r.season.dailyLife.entries[0].text.includes('이름 없는 과자를 먹어도 되는지'));assert.equal(r.season.dailyLife.entries[0].reply,'선택했던 답변');assert.deepEqual(r.season.dailyLife.entries[0].effects,{mental:.1});assert.equal(r.season.history[0].text,r.season.dailyLife.entries[0].text);
+ for(const title of DAILY_SCENE_TITLES){const expanded=explainDailyReferences(`코치가 지난번 「${title}」 이야기를 꺼냈다.`);assert(!expanded.includes('「'),title);assert(expanded.includes('코치가'),title);}
+});

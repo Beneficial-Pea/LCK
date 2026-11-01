@@ -134,3 +134,12 @@ test('international and Road-to boards follow current routing, leave unmade draw
  const future={season:createSeason({year:2026,team:'T1'})};for(const m of future.season.schedule){m.sourceTeams=['DO-NOT-LEAK'];m.sourceRound='DO-NOT-LEAK';}
  assert(!renderBracketBoard(future,tournamentBoards(future).find(b=>b.key==='worldsKnockout')).includes('DO-NOT-LEAK'));
 });
+
+test('regular POM standings hide zero awards and include a player after their first regular award',()=>{
+ const player=(nickname,pom,total=0)=>({playerId:nickname,nickname,team:'T1',position:'MID',regular:{matches:2,sets:4,pom,ratingTotal:10},total:{pom:total}});
+ const room={season:{year:2026,team:'T1',awards:{ledger:{a:player('NoRegularPOM',0,5),b:player('OneRegularPOM',1)},processedIds:[]}}};
+ let html=renderSeasonAwards(room);assert(!html.includes('NoRegularPOM'));assert(html.includes('OneRegularPOM'));assert(html.includes('1회'));assert(html.includes('100점'));
+ room.season.awards.ledger.a.regular.pom=1;html=renderSeasonAwards(room);assert(html.includes('NoRegularPOM'));
+ room.season.awards.ledger.a.regular.pom=0;room.season.awards.ledger.b.regular.pom=0;assert(renderSeasonAwards(room).includes('정규시즌 POM을 1회 이상 수상한 선수가 아직 없습니다.'));
+ room.season.awards.ledger=Object.fromEntries(Array.from({length:25},(_,i)=>{const name='Award'+String(i).padStart(2,'0');return [name,player(name,1)];}));assert(renderSeasonAwards(room).includes('Award24'),'Every awarded player appears even beyond the former twenty-row limit');
+});
