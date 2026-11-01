@@ -12,9 +12,20 @@ test('expanded stories keep sixty recent situations distinct, preserve earlier r
 });
 
 test('dialogue applies server-owned ability and recovery changes once and respects state caps',async()=>{
- const {previewDailyEffects,decorateDailyLife}=await import('../lib/daily-life.mjs');const r=room();settleDay(r);const entry=r.season.dailyLife.entries[0];entry.title='리플레이 분석';entry.choices[0].effects={mechanics:999};
+ const {previewDailyEffects,decorateDailyLife}=await import('../lib/daily-life.mjs');const r=room();settleDay(r);const entry=r.season.dailyLife.entries[0];entry.title='리플레이 내기';entry.choices[0].effects={mechanics:999};
  const before=structuredClone(r.players[0].character),preview=previewDailyEffects(r,entry,'join');assert.equal(preview.macro,.2);assert.equal(preview.communication,.1);
  const result=answerDailyLife(r,'u',entry.id,'join');assert.deepEqual(result.effects,preview);assert.equal(r.players[0].character.stats.macro,Number((before.stats.macro+.2).toFixed(3)));assert.equal(r.players[0].character.stats.mechanics,before.stats.mechanics);const after=structuredClone(r.players[0].character);assert.throws(()=>answerDailyLife(r,'u',entry.id,'join'));assert.deepEqual(r.players[0].character,after);
- const capped=room();settleDay(capped);const e=capped.season.dailyLife.entries[0];Object.assign(capped.players[0].character,{condition:100,fatigue:0,stress:0});capped.players[0].character.stats.mental=99;capped.season.dailyLife.bonds['u:'+e.partnerId].affinity=100;
- decorateDailyLife(capped);assert.deepEqual(e.choices.find(c=>c.id==='later').effects,{mental:0,condition:0,fatigue:0,affinity:0});answerDailyLife(capped,'u',e.id,'later');assert.equal(capped.players[0].character.stats.mental,99);assert.equal(capped.players[0].character.condition,100);assert.equal(capped.players[0].character.fatigue,0);
+ const capped=room();settleDay(capped);const e=capped.season.dailyLife.entries[0];Object.assign(capped.players[0].character,{condition:100,fatigue:0,stress:0});for(const key of Object.keys(capped.players[0].character.stats))capped.players[0].character.stats[key]=99;capped.season.dailyLife.bonds['u:'+e.partnerId].affinity=100;
+ decorateDailyLife(capped);assert(Object.values(e.choices.find(c=>c.id==='later').effects).every(value=>value===0));answerDailyLife(capped,'u',e.id,'later');assert.equal(capped.players[0].character.stats.mental,99);assert.equal(capped.players[0].character.condition,100);assert.equal(capped.players[0].character.fatigue,0);
+});
+
+test('all 120 scenes have concrete action labels and both study alternatives can use relevant abilities',async()=>{
+ const {DAILY_SCENE_TITLES,decorateDailyLife,dailyChoiceEffects}=await import('../lib/daily-life.mjs');const {DAILY_CHOICE_TITLES,dailyChoiceDefinition}=await import('../lib/daily-choices.mjs');
+ assert.equal(DAILY_SCENE_TITLES.length,120);assert.deepEqual([...DAILY_SCENE_TITLES].sort(),[...DAILY_CHOICE_TITLES].sort());
+ const labels=[];for(const title of DAILY_SCENE_TITLES){const a=dailyChoiceDefinition(title,'join'),b=dailyChoiceDefinition(title,'later');assert.notEqual(a.label,b.label,title);for(const option of [a,b]){assert(option.label.length>=8);assert(!['함께 이야기한다','내 방식으로 답한다'].includes(option.label));assert(Object.keys(option.effects).length>0);labels.push(option.label);}}
+ assert.equal(new Set(labels).size,240);
+ const r=room();settleDay(r);const pending=r.season.dailyLife.entries[0];pending.title='짧은 낮잠';pending.choices[0].label='함께 이야기한다';pending.choices[1].label='내 방식으로 답한다';
+ decorateDailyLife(r);assert.equal(pending.choices[0].label,'10분 뒤에 깨워주기로 한다');assert(pending.choices[1].label.includes('알람을 두 개'));assert(!('condition' in pending.choices[0].effects));assert(!('fatigue' in pending.choices[0].effects));assert(!('condition' in pending.choices[1].effects));
+ const before={condition:r.players[0].character.condition,fatigue:r.players[0].character.fatigue};answerDailyLife(r,'u',pending.id,'join');assert.equal(r.players[0].character.condition,before.condition);assert.equal(r.players[0].character.fatigue,before.fatigue);
+ assert(dailyChoiceEffects({title:'모의 밴픽'},'later').macro>0);assert(dailyChoiceEffects({title:'연습 종료 시간'},'join').mechanics>0);assert(dailyChoiceEffects({title:'연습 종료 시간'},'later').fatigue<0);
 });
