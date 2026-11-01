@@ -12,7 +12,7 @@ import { CHARACTER_BACKGROUNDS, normalizeBackground, startingStats, backgroundIn
 import { vacationFor, vacationWindows } from './lib/vacations.mjs';
 import { ensureEwc, updateEwc } from './lib/ewc.mjs';
 import { ensureDemacia, updateDemacia, declineDemacia } from './lib/demacia.mjs';
-import { answerDailyLife } from './lib/daily-life.mjs';
+import { answerDailyLife,decorateDailyLife } from './lib/daily-life.mjs';
 import { clubSchedule } from './lib/club-schedule.mjs';
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -31,6 +31,7 @@ import { ACTIONS, TEAMS, POSITIONS, RULES, RULES2026, createSeason, settleDay, g
 const root = path.dirname(fileURLToPath(import.meta.url));
 const storageMaintenance=process.env.STORAGE_MAINTENANCE==='1';
 const store = storageMaintenance?null:new Store(process.env.DATA_FILE || path.join(root, '.data', 'game.sqlite'));
+if(store){const removed=store.purgeEmptyRooms();console.log(`빈 방 정리: 방 ${removed.rooms}개, 관련 메시지 ${removed.messages}개 삭제.`);}
 const accounts=storageMaintenance?null:new Accounts(store,{adminInviteCode:process.env.FIRST_TEAM_ADMIN_INVITE||'',secure:process.env.COOKIE_SECURE==='1',trustProxy:process.env.TRUST_PROXY==='1'});
 const LIMIT = 256 * 1024;
 const locations = ['연습실', '거실', '주방', '분석실', '헬스장', '매니저실', '경기장', 'PC방', '편의점', '식당', '카페', '클리닉'];
@@ -89,6 +90,7 @@ function progressRoom(room) {
 function roomView(room, userId) {
   const view = clone(Object.fromEntries(Object.entries(room).filter(([key])=>key!=='liveMatch')));
   if(Array.isArray(view.season.rules))view.season.rules=view.season.rules.map(rule=>typeof rule==='string'?rule.replace('밴은 팀당 3개로 간소화했습니다.','매 세트 양 팀이 각각 챔피언 5개를 밴합니다.'):rule);
+  decorateDailyLife(view);
   view.broadcast = getLiveBroadcast(room);
   view.clubSchedule = clubSchedule(room);
   view.dayActivity=dayActivity(room);
@@ -318,6 +320,8 @@ async function api(req, res, url) {
       }
       case 'life': {
         ensureStarted(room);ensureNoBroadcast(room);if(vacationFor(room.season))fail(409,'휴가 중에는 대화 선택 없이 일상을 보냅니다.');
+        if(body.seasonId&&body.seasonId!==room.season.id)fail(409,'시즌이 변경됐습니다. 현재 사건을 다시 확인해 주세요.');
+        if(body.turn!==undefined)ensureTurn(room,body);
         extra.interaction=answerDailyLife(room,user.id,body.entryId,body.choice);break;
       }
       case 'portrait': {
@@ -460,11 +464,10 @@ async function api(req, res, url) {
         if (room.lobby?.ready) delete room.lobby.ready[user.id];
         for (const p of room.players) if (p.duoId === user.id) p.duoId = null;
         if (room.hostId === user.id) room.hostId = room.players[0]?.userId || null;
-        if (!room.players.length && room.lobby?.requireTeamSelection && room.lobby.status !== 'started') {
-          room.lobby.status = 'waiting'; room.lobby.selectedTeam = null; room.season.team = null; room.season.draft = true;
-        }
-        systemMessage(room, `${me.character.nickname} 퇴장. 빈 포지션은 NPC가 맡습니다.${room.players.length ? ' 방장은 남은 참가자에게 이전됩니다.' : ' 시즌 기록은 서버에 보관됩니다.'}`);
-        room.revision++; store.saveRoom(room); return { left: true };
+        room.revision++;
+        if(!room.players.length){store.saveRoom(room);store.deleteEmptyRoom(room.code);return {left:true,deleted:true};}
+        systemMessage(room, `${me.character.nickname} 퇴장. 빈 포지션은 NPC가 맡습니다. 방장은 남은 참가자에게 이전됩니다.`);
+        store.saveRoom(room);return {left:true,deleted:false};
       }
       default: fail(404, '지원하지 않는 방 동작입니다.');
     }
@@ -502,6 +505,7 @@ const server = http.createServer(async (req, res) => {
     files['/world-events.css'] = ['world-events.css', 'text/css'];
     files['/auth.js']=['auth.js','text/javascript'];
     files['/auth.css']=['auth.css','text/css'];
+    files['/life-events.js']=['life-events.js','text/javascript'];
     files['/training.js']=['training.js','text/javascript'];
     files['/training.css']=['training.css','text/css'];
     files['/notices.js']=['notices.js','text/javascript'];

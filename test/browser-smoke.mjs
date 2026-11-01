@@ -17,7 +17,8 @@ const context = await authenticatedBrowserContext(browser,{ viewport: { width: 1
 const page = await context.newPage();
 page.on('pageerror', error => errors.push(error.message));
 const action = (name, extra = '') => page.locator(`[data-action="${name}"]${extra}`).filter({ visible: true }).first();
-const nav = async view => { await action('nav', `[data-view="${view}"]`).click(); await page.waitForTimeout(120); };
+const dismissLife=async()=>{if(await page.locator('#modal-root [data-life-event]').count())await page.locator('#modal-root [data-action="close-modal"]').first().click();};
+const nav = async view => { await dismissLife();await action('nav', `[data-view="${view}"]`).click(); await page.waitForTimeout(120); };
 const request = async (path, data, method = 'POST') => {
   const response = await context.request.fetch(path, { method, data });
   const body = await response.json();
@@ -156,6 +157,7 @@ try {
   assert(room.season.schedule.some(m => m.date === room.season.date && m.status === 'scheduled' && own(m)), 'first own game reached');
   await page.reload();
   await page.locator('.season-strip').waitFor();
+  await dismissLife();
   assert.equal(await page.locator('[data-action="submit-action"],[data-action="choose-action"]').count(),0);
   await page.waitForFunction(() => !document.querySelector('[data-action="settle"]')?.disabled);
   const settled = page.waitForResponse(response => response.url().endsWith('/settle') && response.status() === 200);

@@ -162,7 +162,7 @@ test('character selection, shared readiness, host team selection and cosmetic sc
       assert.equal((await host.request(`${route}/move`, 'POST', { x: 30, y: 80, location: '카페' })).status, 200);
     });
 
-    await t.test('selection and movements survive reconnection and an emptied draft room can reopen', async () => {
+    await t.test('selection and movements survive reconnection and empty draft rooms are removed', async () => {
       const before = (await host.request(route)).data.room;
       await running.stop(); running = await launch(path.join(temp, 'game.sqlite')); server.base = running.base;
       assert.deepEqual((await host.request(route)).data.room, before);
@@ -173,9 +173,8 @@ test('character selection, shared readiness, host team selection and cosmetic sc
       await host.request(`${draftRoute}/team`, 'POST', { team: 'DK' });
       await host.request(`${draftRoute}/leave`, 'POST', {});
       const reopened = await friend.request('/api/rooms/join', 'POST', { code: draft.code, slot: 0 });
-      assert.equal(reopened.status, 200); assert.equal(reopened.data.room.hostId, friendId);
-      assert.equal(reopened.data.room.lobby.status, 'waiting'); assert.equal(reopened.data.room.lobby.selectedTeam, null);
-      assert.equal(reopened.data.room.season.team, null); assert.equal(reopened.data.room.players[0].character.team, null);
+      assert.equal(reopened.status,404);
+      assert.equal((await host.request(draftRoute)).status,404);
     });
   } finally {
     if (running) await running.stop();

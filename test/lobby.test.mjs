@@ -138,15 +138,13 @@ test('shared waiting rooms enforce personal readiness and a single host launch',
       assert.equal((await friend.request(`${waitingRoute}/start`, 'POST', {})).status, 200);
     });
 
-    await t.test('the first participant returning to an empty waiting room becomes host', async () => {
+    await t.test('the last departure removes an empty waiting room instead of reopening it', async () => {
       const empty = (await host.request('/api/rooms', 'POST', { slot: 0, waitingRoom: true })).data.room;
       const emptyRoute = `/api/rooms/${empty.code}`;
       await host.request(`${emptyRoute}/leave`, 'POST', {});
       const joined = await friend.request('/api/rooms/join', 'POST', { code: empty.code, slot: 0 });
-      assert.equal(joined.status, 200); assert.equal(joined.data.room.hostId, friendId);
-      assert.equal(joined.data.room.lobby.ready[friendId], false);
-      await friend.request(`${emptyRoute}/ready`, 'POST', { ready: true });
-      assert.equal((await friend.request(`${emptyRoute}/start`, 'POST', {})).status, 200);
+      assert.equal(joined.status,404);
+      assert.equal((await host.request(emptyRoute)).status,404);
     });
   } finally {
     if (running) await running.stop();

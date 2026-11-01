@@ -10,3 +10,11 @@ test('expanded stories keep sixty recent situations distinct, preserve earlier r
  assert.equal(r.season.dailyLife.entries.length,450);assert.equal(r.season.dailyLife.entries.filter(e=>e.answer==='join').length,5);
  assert(r.season.dailyLife.entries.every(e=>e.partnerId.startsWith('staff:')),'Never writes dialogue for another human participant');
 });
+
+test('dialogue applies server-owned ability and recovery changes once and respects state caps',async()=>{
+ const {previewDailyEffects,decorateDailyLife}=await import('../lib/daily-life.mjs');const r=room();settleDay(r);const entry=r.season.dailyLife.entries[0];entry.title='리플레이 분석';entry.choices[0].effects={mechanics:999};
+ const before=structuredClone(r.players[0].character),preview=previewDailyEffects(r,entry,'join');assert.equal(preview.macro,.2);assert.equal(preview.communication,.1);
+ const result=answerDailyLife(r,'u',entry.id,'join');assert.deepEqual(result.effects,preview);assert.equal(r.players[0].character.stats.macro,Number((before.stats.macro+.2).toFixed(3)));assert.equal(r.players[0].character.stats.mechanics,before.stats.mechanics);const after=structuredClone(r.players[0].character);assert.throws(()=>answerDailyLife(r,'u',entry.id,'join'));assert.deepEqual(r.players[0].character,after);
+ const capped=room();settleDay(capped);const e=capped.season.dailyLife.entries[0];Object.assign(capped.players[0].character,{condition:100,fatigue:0,stress:0});capped.players[0].character.stats.mental=99;capped.season.dailyLife.bonds['u:'+e.partnerId].affinity=100;
+ decorateDailyLife(capped);assert.deepEqual(e.choices.find(c=>c.id==='later').effects,{mental:0,condition:0,fatigue:0,affinity:0});answerDailyLife(capped,'u',e.id,'later');assert.equal(capped.players[0].character.stats.mental,99);assert.equal(capped.players[0].character.condition,100);assert.equal(capped.players[0].character.fatigue,0);
+});

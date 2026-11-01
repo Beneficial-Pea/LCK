@@ -502,3 +502,33 @@ test('host reset restarts only its room, keeps accounts, slots, party and chat, 
   const left=await host.request(route+'/leave','POST',{});assert.equal(left.status,200);assert.equal((await host.request(route)).status,403);const remains=(await peer.request(route)).data.room;assert.equal(remains.hostId,remains.players[0].userId);assert.equal(remains.players.length,1);assert.equal(remains.season.id,reset.season.id);assert.deepEqual((await host.request('/api/session')).data.slots,slotBefore);
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
+
+test('startup purges old empty rooms and last-member departure deletes new ones without touching accounts or occupied rooms',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'empty-room-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
+ try{
+  running=await launch(file);server.base=running.base;const host=actor(server),peer=actor(server);await host.request('/api/slots/0','PUT',{character:character('MID','CleanupHost')});await peer.request('/api/slots/0','PUT',{character:character('JGL','CleanupPeer')});
+  const original=(await host.request('/api/session')).data,peerSlots=(await peer.request('/api/session')).data.slots,room=(await host.request('/api/rooms','POST',{slot:0,year:2026})).data.room,route='/api/rooms/'+room.code;
+  await host.request(route+'/chat','POST',{channel:'owner',text:'남길 방의 채팅'});
+  await running.stop();let db=new Store(file);const empty={...structuredClone(db.room(room.code)),code:'EMPTYOLD',players:[]};db.saveRoom(empty);db.addMessage(empty.code,{channel:'dm',senderId:original.user.id,to:'other',text:'빈 방의 개인 대화'});db.close();
+  running=await launch(file);server.base=running.base;assert.equal((await host.request('/api/rooms/EMPTYOLD')).status,404);let kept=(await host.request(route)).data.room;assert.equal(kept.season.id,room.season.id);assert(kept.messages.some(m=>m.text==='남길 방의 채팅'));assert.deepEqual((await host.request('/api/session')).data.slots,original.slots);
+  db=new Store(file);assert.equal(db.room('EMPTYOLD'),null);assert.equal(db.db.prepare('SELECT count(*) AS n FROM messages WHERE room_code=?').get('EMPTYOLD').n,0);db.close();
+  await peer.request('/api/rooms/join','POST',{slot:0,code:room.code});const left=await host.request(route+'/leave','POST',{});assert.equal(left.status,200);assert.equal(left.data.deleted,false);kept=(await peer.request(route)).data.room;assert.equal(kept.players.length,1);assert(kept.messages.some(m=>m.text==='남길 방의 채팅'));
+  const last=await peer.request(route+'/leave','POST',{});assert.equal(last.status,200);assert.equal(last.data.deleted,true);assert.equal((await peer.request(route)).status,404);assert.equal((await host.request('/api/rooms/join','POST',{slot:0,code:room.code})).status,404);
+  db=new Store(file);assert.equal(db.room(room.code),null);assert.equal(db.db.prepare('SELECT count(*) AS n FROM messages WHERE room_code=?').get(room.code).n,0);db.close();assert.deepEqual((await peer.request('/api/session')).data.slots,peerSlots);assert.deepEqual((await host.request('/api/session')).data.slots,original.slots);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});
+
+test('life choice previews match actual player changes and reject other players, forged rewards and duplicate answers',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'life-effects-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
+ try{
+  running=await launch(file);server.base=running.base;const host=actor(server),peer=actor(server);await host.request('/api/slots/0','PUT',{character:character('MID','LifeHost')});await peer.request('/api/slots/0','PUT',{character:character('JGL','LifePeer')});let room=(await host.request('/api/rooms','POST',{slot:0,year:2026})).data.room;const route='/api/rooms/'+room.code;
+  await peer.request('/api/rooms/join','POST',{slot:0,code:room.code});room=(await host.request(route+'/settle','POST',{turn:1,npcTakeover:true})).data.room;
+  const own=room.season.dailyLife.entries.find(e=>e.userId===room.hostId),choice=own.choices[0],before=room.players.find(p=>p.userId===room.hostId).character,body={turn:room.season.turn,seasonId:room.season.id,entryId:own.id,choice:choice.id};assert(choice.effects);assert(Object.keys(choice.effects).some(k=>['macro','mental','communication'].includes(k)));
+  assert.equal((await peer.request(route+'/life','POST',body)).status,409);assert.equal((await host.request(route+'/life','POST',{...body,seasonId:'previous-season'})).status,409);assert.equal((await host.request(route+'/life','POST',{...body,choice:'unknown'})).status,400);
+  const result=await host.request(route+'/life','POST',{...body,effects:{mechanics:999},stats:{mechanics:999}});assert.equal(result.status,200);assert.deepEqual(result.data.interaction.effects,choice.effects);const after=result.data.room.players.find(p=>p.userId===room.hostId).character;
+  for(const key of Object.keys(before.stats))assert.equal(Number((after.stats[key]-before.stats[key]).toFixed(3)),choice.effects[key]||0);
+  for(const key of ['condition','fatigue','stress'])assert.equal(Number((after[key]-before[key]).toFixed(3)),choice.effects[key]||0);
+  assert.equal((await host.request(route+'/life','POST',body)).status,409);
+  await running.stop();running=await launch(file);server.base=running.base;const restored=(await host.request(route)).data.room;assert.deepEqual(restored.players.find(p=>p.userId===room.hostId).character.stats,after.stats);assert.deepEqual(restored.season.dailyLife.entries.find(e=>e.id===own.id).effects,choice.effects);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});

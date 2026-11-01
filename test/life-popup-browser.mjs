@@ -1,0 +1,23 @@
+// DATA_FILE=/tmp/... BASE_URL=... node test/life-popup-browser.mjs
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {mkdir} from 'node:fs/promises';
+import {authenticatedBrowserContext} from './helpers/accounts.mjs';
+const {chromium}=createRequire(import.meta.url)('playwright'),baseURL=process.env.BASE_URL||'http://127.0.0.1:3204';assert(process.env.DATA_FILE?.startsWith('/tmp/'));
+const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+try{
+ const context=await authenticatedBrowserContext(browser,{baseURL,viewport:{width:1440,height:1000}}),page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
+ const post=async(path,data)=>{const response=await context.request.post(path,{data}),json=await response.json();assert(response.ok(),JSON.stringify(json));return json;};
+ assert((await context.request.put('/api/slots/0',{data:{character:{name:'김선수',nickname:'PopupPlayer',team:'T1',position:'MID',age:22,mainChampion:'아리',pool:['아리','아지르','오리아나'],style:'균형 운영'}}})).ok());
+ let room=(await post('/api/rooms',{slot:0,year:2026})).room;const route='/api/rooms/'+room.code,get=async()=>(await(await context.request.get(route)).json()).room;
+ await post(route+'/cup-draft',{turn:1,pickNumber:1,remaining:true});await context.addInitScript(code=>localStorage.setItem('first-team.room',code),room.code);await page.goto('/');await page.locator('.season-strip').waitFor();
+ await page.locator('[data-action="choose-action"][data-id="analysis"]').click();await page.locator('[data-action="submit-action"]').click();await page.waitForFunction(()=>!document.querySelector('[data-action="settle"]').disabled);await page.locator('[data-action="settle"]').click();await page.locator('#modal-root [data-life-event]').waitFor();assert.equal(await page.locator('#modal-root .life-choice').count(),2);
+ room=await get();const entry=room.season.dailyLife.entries.find(e=>e.userId===room.me),before=structuredClone(room.players.find(p=>p.userId===room.me).character),expected=entry.choices.find(c=>c.id==='join').effects;assert(expected);assert((await page.locator('#modal-root .life-choice').first().textContent()).includes('+'));
+ await mkdir(new URL('../test-results/',import.meta.url),{recursive:true});await page.screenshot({path:new URL('../test-results/life-popup-desktop.png',import.meta.url).pathname,fullPage:true,animations:'disabled'});await page.locator('#modal-root [data-action="life-answer"][data-choice="join"]').click();await page.locator('[data-life-effects]').waitFor();assert.equal(await page.locator('#modal-root [data-action="life-answer"]').count(),0);
+ room=await get();const after=room.players.find(p=>p.userId===room.me).character;for(const key of Object.keys(before.stats))assert.equal(Number((after.stats[key]-before.stats[key]).toFixed(3)),expected[key]||0);assert.deepEqual(room.season.dailyLife.entries.find(e=>e.id===entry.id).effects,expected);
+ await page.locator('#modal-root [data-action="close-modal"]').first().click();await page.reload();await page.locator('.season-strip').waitFor();assert.equal(await page.locator('#modal-root [data-life-event]').count(),0);
+ await page.locator('[data-action="choose-action"][data-id="rest"]').click();await page.locator('[data-action="submit-action"]').click();await page.waitForFunction(()=>!document.querySelector('[data-action="settle"]').disabled);await page.locator('[data-action="settle"]').click();await page.locator('#modal-root [data-life-event]').waitFor();
+ await page.locator('#modal-root [data-action="close-modal"]').first().click();await page.reload();await page.locator('.season-strip').waitFor();assert.equal(await page.locator('#modal-root [data-life-event]').count(),0);
+ await page.locator('.life-pending-bar [data-action="life-open"]').click();await page.locator('#modal-root [data-life-event]').waitFor();await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));const box=await page.locator('.modal').boundingBox();assert(box.x>=0&&box.x+box.width<=390);await page.screenshot({path:new URL('../test-results/life-popup-mobile.png',import.meta.url).pathname,fullPage:true,animations:'disabled'});await page.locator('#modal-root [data-action="life-answer"][data-choice="later"]').click();await page.locator('[data-life-effects]').waitFor();assert.deepEqual(errors,[]);
+ console.log('Life popup browser passed: automatic personal popup, actual ability/state changes, once-only answer, dismissal persistence, reopen and mobile fit.');
+}finally{await browser.close();}
