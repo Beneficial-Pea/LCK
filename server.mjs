@@ -23,7 +23,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { Store } from './lib/store.mjs';
 import { normalizePortrait } from './lib/portrait.mjs';
 import { applyWorldEffects } from './lib/world-events.mjs';
-import { beginLiveMatch, advanceLiveMatch, getLiveBroadcast, resumeLiveMatch } from './lib/live-match.mjs';
+import { beginLiveMatch, advanceLiveMatch, getLiveBroadcast, resumeLiveMatch, retimeLiveMatch } from './lib/live-match.mjs';
 import { hasNicknameCollision, ensureRosterNicknames, normalizeNickname } from './lib/nicknames.mjs';
 import { getTeamNpcPower, getBalanceReport, applyTeamNpcPreset } from './lib/balance.mjs';
 import { TEAM_PROFILES, TEAM_PROFILE_BASIS, defaultOpponentSettings } from './lib/team-profiles.mjs';
@@ -82,8 +82,10 @@ function roomFor(code, userId) {
 }
 
 function progressRoom(room) {
-  const progress = advanceLiveMatch(room,Date.now(),{maxFrames:1});
-  if (!progress.changed) return;
+  const now=Date.now();
+  const retimed=!process.env.LIVE_STEP_MS&&room.liveMatch?.stepMs===1400&&retimeLiveMatch(room,1000,now);
+  const progress = advanceLiveMatch(room,now,{maxFrames:1});
+  if (!progress.changed&&!retimed) return;
   store.saveRoom(room);
 }
 
@@ -272,6 +274,16 @@ async function api(req, res, url) {
   if (!match) fail(404, 'API 경로를 찾을 수 없습니다.');
   const [, code, operation] = match;
   if (method === 'GET') {
+    if (operation === 'messages') {
+      const membership=store.roomMembership(code.toUpperCase(),user.id);
+      if(!membership)fail(404,'방을 찾을 수 없습니다.');
+      if(!membership.member)fail(403,'이 방의 참가자만 조회할 수 있습니다.');
+      const after=Number(url.searchParams.get('after')||0);
+      if(!Number.isSafeInteger(after)||after<0)fail(400,'메시지 기준이 올바르지 않습니다.');
+      const messages=store.messages(code.toUpperCase(),user.id,after);
+      if(!messages.length){res.statusCode=304;return null;}
+      return {code:code.toUpperCase(),messages};
+    }
     const room = roomFor(code, user.id);
     if (operation === 'export') {
       const saved = clone(Object.fromEntries(Object.entries(room).filter(([key])=>key!=='liveMatch')));
@@ -398,7 +410,7 @@ async function api(req, res, url) {
         if (body.live === true) {
           const pending = clone(room);
           const summary = settleDay(pending, { npcTakeover: body.npcTakeover === true });summary.npcTakeover=body.npcTakeover===true;
-          const live = beginLiveMatch(room, pending, summary, { interactive:room.season.year===2026, stepMs: Number(process.env.LIVE_STEP_MS) || 1400 });
+          const live = beginLiveMatch(room, pending, summary, { interactive:room.season.year===2026, stepMs: Number(process.env.LIVE_STEP_MS) || 1000 });
           if (live) {
             extra.summary = { date: summary.date, turn: summary.turn, live: true, matches: [...room.liveMatch.gameIds] };
           } else {
@@ -521,6 +533,7 @@ const server = http.createServer(async (req, res) => {
     files['/auth.js']=['auth.js','text/javascript'];
     files['/auth.css']=['auth.css','text/css'];
     files['/team-display.js']=['team-display.js','text/javascript'];
+    files['/chat-updates.js']=['chat-updates.js','text/javascript'];
     files['/live-updates.js']=['live-updates.js','text/javascript'];
     files['/set-records.js']=['set-records.js','text/javascript'];
     files['/objective-board.js']=['objective-board.js','text/javascript'];

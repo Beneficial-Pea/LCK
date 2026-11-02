@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { beginLiveMatch, getLiveBroadcast, advanceLiveMatch } from '../lib/live-match.mjs';
+import { beginLiveMatch, getLiveBroadcast, advanceLiveMatch, retimeLiveMatch } from '../lib/live-match.mjs';
 
 const stat = value => ({ mechanics: value, laning: value, macro: value, communication: value, mental: value, mastery: value });
 const positions = ['TOP', 'JGL', 'MID', 'ADC', 'SUP'];
@@ -156,4 +156,12 @@ test('paced public polling reveals one scene after a long gap instead of finishi
  const {room,pending,summary}=fixture();assert(beginLiveMatch(room,pending,summary,{now:1000,stepMs:100}));
  const first=room.liveMatch.cursor;advanceLiveMatch(room,100000,{maxFrames:1});assert.equal(room.liveMatch.cursor,first+1);assert(room.liveMatch);const after=room.liveMatch.cursor;
  advanceLiveMatch(room,100000,{maxFrames:1});assert.equal(room.liveMatch.cursor,after);advanceLiveMatch(room,100050,{maxFrames:1});assert.equal(room.liveMatch.cursor,after);advanceLiveMatch(room,100100,{maxFrames:1});assert.equal(room.liveMatch.cursor,after+1);assert(room.liveMatch);
+});
+
+test('faster live pacing preserves the current scene and fractional progress without catch-up skips',()=>{
+ const {room,pending,summary}=fixture();beginLiveMatch(room,pending,summary,{now:1000,stepMs:1400});
+ const cursor=room.liveMatch.cursor;assert(retimeLiveMatch(room,1000,1700));assert.equal(room.liveMatch.cursor,cursor);
+ assert.equal(advanceLiveMatch(room,2199,{maxFrames:1}).changed,false);
+ assert.equal(advanceLiveMatch(room,2200,{maxFrames:1}).changed,true);assert.equal(room.liveMatch.cursor,cursor+1);
+ assert(retimeLiveMatch(room,800,1e9));advanceLiveMatch(room,1e9,{maxFrames:1});assert.equal(room.liveMatch.cursor,cursor+2);
 });

@@ -1,3 +1,4 @@
+import {mergeMessages} from './chat-updates.js';
 import {mergeLiveRoom} from './live-updates.js';
 import {renderSetScoreboard,renderSetDraft,renderSeriesScore,setSides} from './set-records.js';
 import {normalizeTeamDisplay,teamDisplayText} from './team-display.js';
@@ -70,7 +71,7 @@ try{readinessOpen=localStorage.getItem('first-team.readiness-open')==='1';}catch
 document.addEventListener('toggle',event=>{const panel=event.target;if(!panel.matches?.('details[data-player-readiness]'))return;readinessOpen=panel.open;try{localStorage.setItem('first-team.readiness-open',readinessOpen?'1':'0');}catch{}for(const other of document.querySelectorAll('details[data-player-readiness]'))if(other!==panel&&other.open!==readinessOpen)other.open=readinessOpen;},true);
 let lastPublicRoomsPoll=0,publicRoomsInFlight=false;
 const lobbyDrafts=new Map();state.lobbyChat='owner';
-let roomPollTimer;
+let roomPollTimer,chatPollTimer,chatPollInFlight=false;
 let toastTimer, playbackTimer, sceneMoveTimer, sceneMoveVersion=0, pendingSceneMove=null, portraitDrag=null, lastRoomPoll=0, roomPollInFlight=false;
 
 async function api(path, options = {}) {
@@ -230,6 +231,7 @@ function getMatches() {
 function selectedMatch() { const matches=getMatches();return matches.find(m=>m.id===state.matchId)||matches.find(ownMatch)||matches[0]; }
 function setRoom(room, renderNow=true) {
  if(state.room?.code===room.code&&state.room.season.id===room.season.id&&room.revision<state.room.revision)return;
+ if(state.room?.code===room.code&&state.room.me===room.me)room.messages=mergeMessages(state.room.messages,room.messages,true);
  const wasWaiting=waitingRoom();
  const previousBroadcast=liveBroadcast();
  const first=!state.room||state.room.code!==room.code;
@@ -827,16 +829,35 @@ document.addEventListener('keydown',ev=>{
 });
 function editing() {return !!state.modal||(document.activeElement?.id!=='owner-dock-text'&&!!document.activeElement?.matches('input,textarea,select,[data-scene-floor]'));}
 document.addEventListener('focusout',()=>{setTimeout(()=>{if(state.pendingRender&&!editing()){state.pendingRender=false;render();}},30);});
+async function pollChat() {
+ if(!state.room||!state.session||state.busy||document.hidden||chatPollInFlight||(!ownerDockOpen&&!$('.assembly-chat')&&!$('.chat-messages')))return;
+ const code=state.room.code,userId=state.session.user.id,after=Math.max(0,...state.room.messages.map(message=>message.id));
+ chatPollInFlight=true;
+ try{
+  const data=await api(`/api/rooms/${encodeURIComponent(code)}/messages?after=${after}`);
+  if(!data||state.room?.code!==code||state.session?.user.id!==userId)return;
+  state.room.messages=mergeMessages(state.room.messages,data.messages);
+  refreshOwnerDock();refreshLobbyChat();
+  const log=$('.chat-messages');
+  if(log){const follow=log.scrollHeight-log.scrollTop-log.clientHeight<50,template=document.createElement('template');template.innerHTML=renderChat();log.innerHTML=template.content.querySelector('.chat-messages').innerHTML;if(follow)log.scrollTop=log.scrollHeight;}
+ }catch{/* The regular room poll reports connection errors. */}
+ finally{chatPollInFlight=false;}
+}
 async function pollRoom() {
  if(!document.hidden&&!state.busy&&!state.modal&&$('.public-room-panel')&&Date.now()-lastPublicRoomsPoll>15000)void refreshPublicRooms();
- if(!state.room||state.busy||document.hidden||roomPollInFlight)return;
- const minimum=liveBroadcast()?650:2200;if(Date.now()-lastRoomPoll<minimum)return;
+ if(!state.room||state.busy||(document.hidden&&!liveBroadcast())||roomPollInFlight)return;
+ const minimum=liveBroadcast()?(document.hidden?1400:650):2200;if(Date.now()-lastRoomPoll<minimum)return;
  lastRoomPoll=Date.now();roomPollInFlight=true;
  const code=state.room.code,revision=state.room.revision;
- try {const live=liveBroadcast(),scope=live?`&liveUpdate=1&liveId=${encodeURIComponent(live.id)}&seasonId=${encodeURIComponent(state.room.season.id)}&turn=${state.room.season.turn}`:'';const data=await api(`/api/rooms/${encodeURIComponent(code)}?since=${revision}${scope}`);if(state.room?.code!==code||state.busy)return;if(data?.room||data?.roomPatch){await receiveRoomData(data,false);refreshLiveStatus();if(editing()){if(document.activeElement?.matches('[data-scene-floor]'))refreshLocationScene();state.pendingRender=true;}else render();}state.pollError=false;}
+ try {const live=liveBroadcast(),scope=live?`&liveUpdate=1&liveId=${encodeURIComponent(live.id)}&seasonId=${encodeURIComponent(state.room.season.id)}&turn=${state.room.season.turn}`:'';const data=await api(`/api/rooms/${encodeURIComponent(code)}?since=${revision}${scope}`);if(state.room?.code!==code||state.busy)return;if(data?.room||data?.roomPatch){await receiveRoomData(data,false);if(document.hidden)state.pendingRender=true;else{refreshLiveStatus();if(editing()){if(document.activeElement?.matches('[data-scene-floor]'))refreshLocationScene();state.pendingRender=true;}else render();}}state.pollError=false;}
  catch(err){if(!state.pollError){toast(`동기화 대기 중: ${err.message}`,true);state.pollError=true;}}
  finally{roomPollInFlight=false;}
 }
+document.addEventListener('visibilitychange',()=>{
+ if(!state.room)return;
+ if(!document.hidden){if(liveBroadcast()){state.liveSetNumber=null;state.pendingRender=true;}if(state.pendingRender&&!editing()){state.pendingRender=false;render();}}
+ lastRoomPoll=0;void pollRoom();
+});
 function resetLoginState(){
  stopPlayback();state.pendingRender=false;state.auth.mode='login';state.session=null;state.room=null;state.modal=null;state.view='home';state.slot=0;state.dmTo='';state.invitations=[];state.invitationIssued=null;ownerDrafts.clear();lobbyDrafts.clear();state.publicRooms=[];state.publicRoomsLoaded=false;
  $('#owner-dock')?.remove();$('#modal-root').innerHTML='';
@@ -850,7 +871,7 @@ async function enterAccount(session){
  state.session=session;state.meta=await api('/api/meta');await refreshPublicRooms();state.notices=[];state.noticeEditor=null;state.noticeDelete=null;state.view='home';state.room=null;state.modal=null;
  const saved=localStorage.getItem('first-team.room');
  if(saved&&session.rooms?.some(r=>r.code===saved))try{setRoom((await api(`/api/rooms/${encodeURIComponent(saved)}`)).room,false);}catch{localStorage.removeItem('first-team.room');}
- render();if(!roomPollTimer)roomPollTimer=setInterval(pollRoom,650);
+ render();if(!roomPollTimer)roomPollTimer=setInterval(pollRoom,650);if(!chatPollTimer)chatPollTimer=setInterval(pollChat,500);
 }
 document.addEventListener('click',event=>{
  const tab=event.target.closest('[data-auth-mode]');if(!tab||state.busy)return;
