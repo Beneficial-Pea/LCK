@@ -366,6 +366,7 @@ async function api(req, res, url) {
         extra.scrim=playScrim(room,body.id,body.focus,seasonShared.teamProfile);break;
       }
       case 'action': {
+        if(body.seasonId&&body.seasonId!==room.season.id)fail(409,'시즌이 변경됐습니다. 오늘의 행동을 다시 확인해 주세요.');
         if(room.lobby?.requireTeamSelection&&['scheduled','drafting'].includes(room.season.cupDraft?.status))fail(409,'시즌 전 미디어데이에서 그룹 지명을 먼저 완료해 주세요.');
         ensureStarted(room);if(vacationFor(room.season))fail(409,'선수단 휴가 중입니다. 행동 선택 없이 휴가를 넘겨주세요.');
         ensureNoBroadcast(room);
@@ -381,6 +382,7 @@ async function api(req, res, url) {
         extra.days=days;break;
       }
       case 'settle': {
+        if(body.seasonId&&body.seasonId!==room.season.id)fail(409,'시즌이 변경됐습니다. 오늘 일정을 다시 확인해 주세요.');
         ensureStarted(room);
         ensureNoBroadcast(room);
         ensureHost(room, user); ensureTurn(room, body);

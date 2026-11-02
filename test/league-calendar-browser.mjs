@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {Store} from '../lib/store.mjs';
+import {authenticatedBrowserContext} from './helpers/accounts.mjs';
+assert(process.env.DATA_FILE?.startsWith('/tmp/'));
+const {chromium}=createRequire(import.meta.url)('playwright'),baseURL=process.env.BASE_URL,browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox','--disable-dev-shm-usage']});
+try{
+ const context=await authenticatedBrowserContext(browser,{baseURL,viewport:{width:1440,height:1000}}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const post=async(path,data)=>{const r=await context.request.post(path,{data});assert(r.ok(),await r.text());return r.json();};
+ assert((await context.request.put('/api/slots/0',{data:{character:{name:'선수',nickname:'GroupPlayer',team:'T1',position:'MID',age:22,mainChampion:'아리',pool:['아리','아지르'],style:'균형 운영',background:'former_all_pro'}}})).ok());
+ const room=(await post('/api/rooms',{slot:0,year:2026})).room,route='/api/rooms/'+room.code;await post(route+'/cup-draft',{turn:1,pickNumber:1,remaining:true});
+ const mutate=fn=>{const db=new Store(process.env.DATA_FILE);try{const r=db.room(room.code);fn(r);r.revision++;db.saveRoom(r);}finally{db.close();}};
+ mutate(r=>{const c=r.players[0].character;c.stats.mental=99;c.condition=25;c.fatigue=90;r.season.date='2026-06-30';r.season.turn=170;r.season.groups={legend:['Gen.G','T1','DK','HLE','KT'],rise:['BNK','DRX','NS','DNF','BRO']};r.season.standings.forEach((row,i)=>{row.group=r.season.groups.legend.includes(row.team)?'레전드':'라이즈';row.wins=12+i;row.losses=i;row.setWins=30+i;row.setLosses=10;});r.season.awards={version:1,processedIds:[],ledger:{fixture:{playerId:c.id,team:'T1',nickname:c.nickname,position:'MID',regular:{matches:4,pom:2,sets:9,ratingTotal:70},total:{matches:20,pom:13,sets:50,ratingTotal:400}}}};});
+ await context.addInitScript(code=>localStorage.setItem('first-team.room',code),room.code);await page.goto('/');await page.locator('[data-profile-pom]').waitFor();const personal=await page.locator('[data-profile-pom]').textContent();assert(personal.includes('POM 2회'));assert(personal.includes('200점'));assert(!personal.includes('13회'));assert(!personal.includes('1300점'));
+ assert((await page.locator('[data-mental-mitigation]').textContent()).includes('30% 완화'));
+ await page.locator('[data-action="standings-modal"]').click();const groups=page.locator('#modal-root [data-league-group]');assert.equal(await groups.count(),2);for(const name of ['레전드','라이즈']){const group=page.locator(`#modal-root [data-league-group="${name}"]`);assert.equal(await group.locator('tbody tr').count(),5);assert.deepEqual(await group.locator('.rank').allTextContents(),['01','02','03','04','05']);}await page.locator('#modal-root [data-action="close-modal"]').first().click();
+ await page.locator('[data-action="nav"][data-view="calendar"]').first().click();await page.locator('[data-action="calendar-next"]').click();await page.locator('[data-action="select-date"][data-date="2026-07-15"]').click();assert.equal(await page.locator('.calendar-cell.selected').getAttribute('data-date'),'2026-07-15');
+ mutate(r=>{r.season.date='2026-07-01';r.season.turn++;});await page.locator('.calendar-cell.today.selected[data-date="2026-07-01"]').waitFor();assert((await page.locator('.calendar-header h2').textContent()).includes('07'));
+ await page.locator('[data-action="calendar-next"]').click();await page.locator('[data-action="select-date"][data-date="2026-08-03"]').click();await page.locator('[data-action="calendar-today"]').click();assert.equal(await page.locator('.calendar-cell.selected').getAttribute('data-date'),'2026-07-01');
+ await page.locator('[data-action="calendar-next"]').click();await page.locator('[data-action="nav"][data-view="home"]').first().click();await page.locator('[data-action="nav"][data-view="calendar"]').first().click();assert.equal(await page.locator('.calendar-cell.selected').getAttribute('data-date'),'2026-07-01');
+ await page.locator('[data-action="nav"][data-view="home"]').first().click();await page.setViewportSize({width:390,height:844});await page.locator('[data-action="standings-modal"]').click();assert.equal(await groups.count(),2);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.locator('.modal').screenshot({path:'/tmp/lck-league-groups-mobile.png'});assert.deepEqual(errors,[]);
+ console.log('League/calendar browser passed: split groups, local ranks, profile 2 regular POM/200 points excluding total 13, mental mitigation, automatic month/day follow, Today button and mobile fit.');
+}finally{await browser.close();}

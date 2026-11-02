@@ -52,7 +52,7 @@ try {
   await host.goto('/');await host.locator('.season-strip').waitFor();
   await host.locator('[data-world-events]').waitFor();
   assert((await host.locator('[data-world-events]').textContent()).includes('아직 기록된 리그 소식이 없습니다'));
-  await action(host, 'choose-action', '[data-id="rest"]').click();await action(host, 'submit-action').click();
+  await action(host, 'choose-action', '[data-id="rest"]').click();
   await host.waitForFunction(() => !document.querySelector('[data-action="settle"]')?.disabled);
   const settled = host.waitForResponse(response => response.url().endsWith('/settle') && response.status() === 200);
   await action(host, 'settle').click();await settled;

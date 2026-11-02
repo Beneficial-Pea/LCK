@@ -11,9 +11,12 @@ export function backgroundPreview(backgrounds,id){
  const b=backgrounds?.find(b=>b.id===id)||backgrounds?.[0];if(!b)return '';
  return `<p>${e(b.description)}</p><div class="background-stat-preview">${Object.entries(statNames).map(([k,label])=>`<span>${e(label)} <strong>${65+(b.bonuses[k]||0)}</strong>${b.bonuses[k]?` <small>+${b.bonuses[k]}</small>`:''}</span>`).join('')}</div><small>기본 65에 배경 보너스를 한 번 적용한 시작 능력치입니다.</small>`;
 }
-export function renderPomCard(pom){
+export function renderPomCard(pom,match={}){
  if(!pom)return '';
- return `<section class="panel pom-card" data-match-pom><span class="eyebrow accent">PLAYER OF THE MATCH</span><h3>${e(pom.nickname)} <span class="tag purple">POM</span></h3><p>${e(positions[pom.position]||pom.position)} · ${e(pom.team)} · 시리즈 ${pom.kills}/${pom.deaths}/${pom.assists}</p><p class="note">${(pom.reasons||[]).map(e).join(' · ')}</p></section>`;
+ const stage=match.stage||'',international=!/^Road to /i.test(stage)&&/퍼스트\s*스탠드|FIRST\s*STAND|^MSI|월즈|WORLDS|^EWC|데마시아|DEMACIA/i.test(stage);
+ const mvp=/^EWC|데마시아|DEMACIA/i.test(stage),single=Number(match.bestOf)===1;
+ const label=international?(mvp?'MATCH MVP':single?'PLAYER OF THE GAME':'PLAYER OF THE SERIES'):'PLAYER OF THE MATCH',badge=international?(mvp?'MVP':single?'POG':'POS'):'POM';
+ return `<section class="panel pom-card" data-match-pom><span class="eyebrow accent">${label}</span><h3>${e(pom.nickname)} <span class="tag purple">${badge}</span></h3><p>${e(positions[pom.position]||pom.position)} · ${e(pom.team)} · 시리즈 ${pom.kills}/${pom.deaths}/${pom.assists}</p><p class="note">${(pom.reasons||[]).map(e).join(' · ')}</p></section>`;
 }
 export function renderSeasonAwards(room){
  const awards=room.season.awards,ceremony=awards?.ceremony;
@@ -112,7 +115,10 @@ export function renderTournamentStandings(room,{currentOnly=false}={}){
  return currentOnly?offseason:'';
 }
 export function renderLeagueStandings(room,regularTable){
- return `<section class="panel" data-lck-stage="regular"><div class="panel-header"><h2>LCK 정규시즌 순위</h2><span class="eyebrow">REGULAR SEASON</span></div>${regularTable}</section>`;
+ const s=room.season,names=['레전드','라이즈'],rows=(s.standings||[]).map(row=>({...row,group:row.group||(s.groups?.legend?.includes(row.team)?'레전드':s.groups?.rise?.includes(row.team)?'라이즈':null)}));
+ const grouped=names.every(name=>rows.some(row=>row.group===name))&&rows.every(row=>names.includes(row.group));
+ const content=grouped?`<div class="league-group-tables">${names.map((name,index)=>{const teams=rows.filter(row=>row.group===name).sort((a,b)=>b.wins-a.wins||(b.setWins-b.setLosses)-(a.setWins-a.setLosses));return `<section class="league-group-section" data-league-group="${name}"><header><h3>${name} 그룹</h3><span class="eyebrow">${index?'RISE':'LEGEND'} GROUP</span></header><table class="standings"><thead><tr><th>#</th><th>TEAM</th><th>W</th><th>L</th><th>세트득실</th></tr></thead><tbody>${teams.map((row,i)=>`<tr class="${row.team===s.team?'ours':''}"><td class="rank">${String(i+1).padStart(2,'0')}</td><td class="stand-team">${e(row.team)}</td><td>${row.wins}</td><td>${row.losses}</td><td>${row.setWins-row.setLosses>0?'+':''}${row.setWins-row.setLosses}</td></tr>`).join('')}</tbody></table></section>`;}).join('')}</div>`:regularTable;
+ return `<section class="panel" data-lck-stage="regular"><div class="panel-header"><h2>LCK 정규시즌 순위</h2><span class="eyebrow">REGULAR SEASON</span></div>${content}</section>`;
 }
 export function renderLckStandings(room,regularTable){
  return renderTournamentStandings(room)||renderLeagueStandings(room,regularTable);
@@ -121,5 +127,5 @@ export function renderLckStandings(room,regularTable){
 export function renderReadiness(c,{open=false}={}){
  const r=c.readiness;if(!r)return '';
  const lost=Math.max(0,(1-r.conditionFactor)*100),growth=Math.round((1-r.growthFactor)*100);
- return `<details ${open?'open':''} class="player-readiness ${r.tier==='양호'?'':'debuff'}" data-player-readiness><summary><span class="tag ${r.tier==='양호'?'green':'red'}">${e(r.tier)}</span><strong>경기력 보정</strong><span class="readiness-toggle" aria-hidden="true"></span></summary><div class="readiness-body"><p>컨디션 ${Math.round(c.condition)} · 능력 반영 −${lost.toFixed(1)}%<br>피로 ${Math.round(c.fatigue)} · 경기력 −${r.fatiguePenalty.toFixed(1)} / 스트레스 ${Math.round(c.stress)} · 경기력 −${r.stressPenalty.toFixed(1)}</p><small>${growth?`피로 누적으로 훈련 성장량 ${growth}% 감소. `:'훈련 성장량 100%. '}휴식·산책으로 회복할 수 있습니다. 기본 능력치는 유지됩니다.</small></div></details>`;
+ return `<details ${open?'open':''} class="player-readiness ${r.tier==='양호'?'':'debuff'}" data-player-readiness><summary><span class="tag ${r.tier==='양호'?'green':'red'}">${e(r.tier)}</span><strong>경기력 보정</strong><span class="readiness-toggle" aria-hidden="true"></span></summary><div class="readiness-body"><p>컨디션 ${Math.round(c.condition)} · 능력 반영 −${lost.toFixed(1)}%<br>피로 ${Math.round(c.fatigue)} · 경기력 −${r.fatiguePenalty.toFixed(1)} / 스트레스 ${Math.round(c.stress)} · 경기력 −${r.stressPenalty.toFixed(1)}</p>${r.mentalMitigation?`<p class="note" data-mental-mitigation>높은 멘탈로 컨디션·피로의 경기력 불이익 ${Math.round(r.mentalMitigation*100)}% 완화</p>`:''}<small>${growth?`피로 누적으로 훈련 성장량 ${growth}% 감소. `:'훈련 성장량 100%. '}휴식·산책으로 회복할 수 있습니다. 기본 능력치는 유지됩니다.</small></div></details>`;
 }

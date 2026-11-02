@@ -153,3 +153,17 @@ test('league tables remain accessible during EWC; tournament tabs distinguish of
  const html=renderTournamentStandings(room,{currentOnly:true});assert(html.includes('data-active-tournament="ewc"'));assert(!html.includes('data-tournament-board="ewcGroup1"'));assert(!html.includes('LEAGUE-TABLE'));assert(!html.includes('아직 대진이 확정되지 않았습니다'));
  room.season.date='2026-07-20';assert(renderTournamentStandings(room,{currentOnly:true}).includes('data-tournament-offseason'));
 });
+
+test('split standings show two real groups with local ranks, retained totals and no premature grouping',()=>{
+ const s=createSeason({year:2026,team:'T1',seed:'group-display'}),room={season:s},before=structuredClone(s);assert(renderLeagueStandings(room,'UNSPLIT').includes('UNSPLIT'));assert.deepEqual(s,before);
+ s.groups={legend:['T1','Gen.G','HLE','DK','KT'],rise:['BNK','DRX','NS','DNF','BRO']};for(const [i,row] of s.standings.entries()){row.group=s.groups.legend.includes(row.team)?'레전드':'라이즈';row.wins=10+i;row.losses=i;row.setWins=30+i;row.setLosses=10;}
+ const saved=structuredClone(s),html=renderLeagueStandings(room,'UNSPLIT');assert(!html.includes('UNSPLIT'));assert.equal((html.match(/<table /g)||[]).length,2);assert.equal((html.match(/class="rank">01</g)||[]).length,2);assert.equal((html.match(/class="rank">05</g)||[]).length,2);assert(html.includes('레전드 그룹'));assert(html.includes('라이즈 그룹'));assert.equal((html.match(/<tr class="ours"/g)||[]).length,1);assert.deepEqual(s,saved);
+ const halves=html.split('data-league-group="라이즈"');assert(!halves[0].includes('>BNK</td>'));assert(!halves[1].includes('>T1</td>'));
+});
+
+test('international match awards use format-specific labels while domestic matches retain POM',()=>{
+ const pom={nickname:'Player',team:'T1',position:'MID',kills:5,deaths:1,assists:8};
+ assert(renderPomCard(pom,{stage:'LCK R1~2',bestOf:3}).includes('>POM</span>'));assert(renderPomCard(pom,{stage:'Road to MSI',bestOf:5}).includes('>POM</span>'));
+ for(const stage of ['MSI','월즈','퍼스트 스탠드']){assert(renderPomCard(pom,{stage,bestOf:5}).includes('>POS</span>'));assert(renderPomCard(pom,{stage,bestOf:1}).includes('>POG</span>'));}
+ for(const stage of ['EWC','데마시아컵'])assert(renderPomCard(pom,{stage,bestOf:5}).includes('>MVP</span>'));
+});
