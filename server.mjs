@@ -513,6 +513,7 @@ const server = http.createServer(async (req, res) => {
     files['/auth.js']=['auth.js','text/javascript'];
     files['/auth.css']=['auth.css','text/css'];
     files['/team-display.js']=['team-display.js','text/javascript'];
+    files['/set-records.js']=['set-records.js','text/javascript'];
     files['/objective-board.js']=['objective-board.js','text/javascript'];
     files['/tournament-rewards.js']=['tournament-rewards.js','text/javascript'];
     files['/life-events.js']=['life-events.js','text/javascript'];

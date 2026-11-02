@@ -546,7 +546,7 @@ test('an international strategy pause saved with former NPC aliases resumes thro
   try{
    const original=db.room(room.code);
    for(let i=0;i<30;i++){
-    const r=structuredClone(original);r.season.seed+=':legacy-fixture:'+i;
+    const r=structuredClone(original);r.season.seed+=':legacy-fixture:'+i;r.season.matchDraftVersions={'fst-final':0};
     Object.assign(r.season.schedule.find(m=>m.id==='fst-final'),{date:r.season.date,teamA:'JDG',teamB:r.season.team,status:'scheduled',bestOf:5});
     const next=structuredClone(r),done=settleDay(next);
     if(next.season.results.find(m=>m.id==='fst-final').result.sets.length>=4){prepared=r;pending=next;summary=done;break;}
