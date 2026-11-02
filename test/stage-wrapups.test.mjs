@@ -35,3 +35,12 @@ test('live settlement hides stage closures until its pending season is committed
  const r=make(),s=r.season;s.cupDraft.status='completed';const m=s.schedule.find(m=>m.id==='fst-final');Object.assign(m,{date:s.date,teamA:'T1',teamB:'JDG',status:'scheduled',bestOf:1});
  const pending=structuredClone(r),summary=settleDay(pending);pending.season.stageWrapUps=[{id:'fixture',date:s.date,players:[{userId:'u'}]}];beginLiveMatch(r,pending,summary,{stepMs:1,now:0});assert.equal(r.season.stageWrapUps,undefined);advanceLiveMatch(r,1e9);assert.equal(r.season.stageWrapUps.length,1);
 });
+
+test('Road to MSI popups show the actual first or second qualification seed for both years and old saves',()=>{
+ for(const year of [2025,2026])for(const seed of [1,2]){
+  const r=make();r.season=createSeason({year,team:'T1',seed:'road-seed-label'});const ids=year===2026?[r.season.tournaments.fixtureIds.road[2],r.season.tournaments.fixtureIds.road[4]]:['road-upper','road-lower-final'];
+  const reward={id:'stage-road',stageKey:'road',kind:'stage-wrap',placement:'qualified',date:r.season.date,team:'T1',tournament:'Road to MSI',matchId:ids[seed-1],dialogue:[],players:[{userId:'u'}]};r.season.stageWrapUps=[reward];r.season.qualifications.msi.teams=[];
+  const before=structuredClone(r),view=tournamentMoments(r)[0];assert.equal(view.qualificationSeed,seed);const html=renderTournamentReward(view,'u');assert(html.includes(`Road to MSI ${seed}시드`));assert(!html.includes('Road to MSI 통과'));assert.deepEqual(r,before);
+  reward.matchId=null;r.season.qualifications.msi.teams=seed===1?['T1','Gen.G']:['Gen.G','T1'];assert.equal(tournamentMoments(r)[0].qualificationSeed,seed);
+ }
+});
