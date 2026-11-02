@@ -56,7 +56,7 @@ function maybeOpenTournamentReward(){
  const reward=tournamentMoments(state.room).find(r=>r.players.some(p=>p.userId===state.session.user.id)&&!seenTournamentRewards.has(tournamentRewardKey(r)));
  if(!reward)return false;state.modal={kind:'tournament-reward',rewardId:reward.id,key:tournamentRewardKey(reward)};return true;
 }
-function renderTournamentResults(){return tournamentMoments(state.room).filter(r=>r.players.some(p=>p.userId===state.session.user.id)).slice(-3).reverse().map(r=>`<div class="notice section-gap"><div class="row between"><strong>${e(r.tournament)} · ${e(tournamentMomentLabel(r))}</strong><button class="button small" data-action="tournament-reward" data-id="${e(r.id)}">${r.kind==='stage-wrap'?'선수단 대화 보기':'성적 보상 보기'}</button></div></div>`).join('');}
+function renderTournamentResults(){return tournamentMoments(state.room).filter(r=>r.kind!=='stage-wrap'&&r.players.some(p=>p.userId===state.session.user.id)).slice(-3).reverse().map(r=>`<div class="notice section-gap"><div class="row between"><strong>${e(r.tournament)} · ${e(tournamentMomentLabel(r))}</strong><button class="button small" data-action="tournament-reward" data-id="${e(r.id)}">${r.kind==='stage-wrap'?'선수단 대화 보기':'성적 보상 보기'}</button></div></div>`).join('');}
 const seenWorldEvents=new Set();
 try{const saved=JSON.parse(localStorage.getItem('first-team.world-seen')||'[]');if(Array.isArray(saved))for(const key of saved.slice(-200))if(typeof key==='string')seenWorldEvents.add(key);}catch{}
 function worldEventKey(event){return `${state.room.code}:${state.room.season.id}:${state.session.user.id}:${event.id}`;}
