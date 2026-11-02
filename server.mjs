@@ -67,7 +67,7 @@ function sessionView(user) {
   for(const c of user.slots||[])if(c)c.tier='1군';
   return { authenticated:true,
     user: { id: user.id, name: user.name, username:account.username, role:account.role }, slots: user.slots,
-    rooms: store.roomsFor(user.id).map(r => { progressRoom(r); return { code: r.code, name: r.name, team: r.season.team, date: r.season.date, turn: r.season.turn, memberCount: r.players.length, lobbyStatus: r.lobby?.status || 'started' }; })
+    rooms: store.roomsFor(user.id).map(r => { progressRoom(r); return { code: r.code, name: r.name, team: r.season.team, date: r.season.date, turn: r.season.turn, memberCount: r.players.length, visibility:r.visibility||'private', lobbyStatus: r.lobby?.status || 'started' }; })
   };
 }
 
@@ -194,6 +194,7 @@ async function api(req, res, url) {
   if (route === '/api/profile' && method === 'POST') {
     accounts.rename(user,body.name);return sessionView(user);
   }
+  if(route==='/api/rooms/public'&&method==='GET')return {rooms:store.publicRooms(user.id)};
   const slotMatch = route.match(/^\/api\/slots\/([0-4])$/);
   if (slotMatch && method === 'DELETE') {
     user.slots[Number(slotMatch[1])] = null;
@@ -207,6 +208,9 @@ async function api(req, res, url) {
     const character = slotCharacter(user, body.slot);
     const chooseTeam = body.chooseTeam === true;
     const waitingRoom = chooseTeam || body.waitingRoom === true;
+    const visibility=body.visibility??'private';
+    if(!['private','public'].includes(visibility))fail(400,'공개 모집 또는 비공개를 선택하세요.');
+    if(visibility==='public'&&!chooseTeam)fail(400,'공개 모집방은 팀 선택 전 대기실로 만들어 주세요.');
     const year = Number(body.year ?? (chooseTeam ? 2026 : 2025));
     if (![2025, 2026].includes(year)) fail(400, '지원하는 시즌은 2025년과 2026년입니다.');
     character.team = chooseTeam ? null : character.team || 'T1';
@@ -222,7 +226,7 @@ async function api(req, res, url) {
     const season = createSeason({ ...settings, team: character.team || 'T1' });
     if (chooseTeam) { season.team = null; season.draft = true; }
     const room = {
-      id: randomUUID(), code, name: clean(body.name, 50) || (chooseTeam ? '우리의 시즌 대기실' : `${character.team} 선수단`), hostId: user.id,
+      id: randomUUID(), code, visibility, name: clean(body.name, 50) || (chooseTeam ? '우리의 시즌 대기실' : `${character.team} 선수단`), hostId: user.id,
       players: [{ userId: user.id, ownerName: user.name, character, duoId: null, location: '연습실', joinedAt: new Date().toISOString() }],
       submissions: {}, revision: 1, createdAt: new Date().toISOString(),
       lobby: { status: waitingRoom ? 'waiting' : 'started', ready: {}, startedAt: waitingRoom ? null : new Date().toISOString(), requireTeamSelection: chooseTeam, selectedTeam: character.team, ...(chooseTeam ? { settings } : {}) },
@@ -237,6 +241,12 @@ async function api(req, res, url) {
       if (!room) fail(404, '초대코드를 확인하세요.');
       progressRoom(room);
       if (room.players.some(p => p.userId === user.id)) return { room: roomView(room, user.id) };
+      if(body.public!==undefined&&typeof body.public!=='boolean')fail(400,'참가 방식을 확인하세요.');
+      if(body.public===true&&room.visibility!=='public')fail(409,'이 방은 공개 모집 중이 아닙니다. 목록을 새로고침해 주세요.');
+      if(room.visibility==='public'){
+        if(room.lobby?.status!=='waiting')fail(409,'이 방의 공개 모집이 종료됐습니다.');
+        if(store.roomsFor(user.id).length>=20)fail(400,'참가 중인 시즌 방은 최대 20개입니다.');
+      }
       if (room.liveMatch) fail(409, '경기 중계가 진행 중입니다. 경기가 끝난 뒤 참가하세요.');
       if (room.lobby?.status === 'selecting') fail(409, '팀 선택이 진행 중입니다. 방장이 시즌을 시작한 뒤 다시 참가하세요.');
       if (room.players.length >= 5) fail(409, '이 방은 정원 5명이 모두 참가했습니다.');
@@ -310,6 +320,11 @@ async function api(req, res, url) {
         room.lobby.startedAt = new Date().toISOString();
         if (room.season.draft) room.season.draft = false;
         break;
+      }
+      case 'visibility': {
+        ensureHost(room,user);if(room.lobby?.status!=='waiting'||!room.lobby.requireTeamSelection)fail(409,'팀 선택 전 대기실에서만 모집 방식을 바꿀 수 있습니다.');
+        if(!['private','public'].includes(body.visibility))fail(400,'공개 모집 또는 비공개를 선택하세요.');
+        room.visibility=body.visibility;break;
       }
       case 'demacia-decline': {
         ensureStarted(room);ensureNoBroadcast(room);ensureHost(room,user);

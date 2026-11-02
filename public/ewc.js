@@ -3,7 +3,7 @@ const statuses={pending:'진출권 경쟁 중',qualified:'진출 확정','not-qu
 const qualifierStatus={pending:'1라운드 시드 결정 대기',playing:'한국 예선 진행 중',exempt:'디펜딩 챔피언 · 예선 면제',qualified:'한국 예선 통과',eliminated:'예선 탈락 · 스플릿 출전권 별도','passdown-candidate':'예선 3위 · 승계 대기','passed-down':'예선 3위 · 출전권 승계 확정'};
 export function renderEwcCard(room){
  const s=room.season;if(s.year!==2026)return '';const q=s.qualifications.ewc||{status:'pending'},c=s.ewc;
- return `<section class="panel qual-card"><h3>ROAD TO EWC</h3><div class="status ${['qualified','champion'].includes(q.status)?'accent':''}">${e(statuses[q.status]||q.status)}</div><p>한국 예선 5/4~26 · 본선 7/15~19<br>${e(q.reason||'전년도 우승 · 스플릿 우승 · 한국 예선 2팀')}${c&&!q.legacy?`<br>${e(qualifierStatus[c.qualifierStatus]||(s.team===c.previousChampion?.team?qualifierStatus.exempt:qualifierStatus.pending))}`:''}${q.teams?.length?`<br>확정된 LCK 팀: ${q.teams.map(e).join(', ')}`:''}</p></section>`;
+ return `<section class="panel qual-card"><h3>EWC</h3><div class="status ${['qualified','champion'].includes(q.status)?'accent':''}">${e(statuses[q.status]||q.status)}</div><p>한국 예선 5/4~26 · 본선 7/15~19<br>${e(q.reason||'전년도 우승 · 스플릿 우승 · 한국 예선 2팀')}${c&&!q.legacy?`<br>${e(qualifierStatus[c.qualifierStatus]||(s.team===c.previousChampion?.team?qualifierStatus.exempt:qualifierStatus.pending))}`:''}${q.teams?.length?`<br>확정된 LCK 팀: ${q.teams.map(e).join(', ')}`:''}</p></section>`;
 }
 export function renderEwcTournament(room,displayTeam=x=>x){
  const s=room.season,c=s.ewc;if(!c)return '';const label=x=>e(displayTeam(x)),q=s.qualifications.ewc;

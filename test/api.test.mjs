@@ -566,3 +566,37 @@ test('an international strategy pause saved with former NPC aliases resumes thro
   assert.equal((await host.request(route+'/set-strategy','POST',{turn:prior.season.turn,matchId:'fst-final',nextSet:4,strategy:'balanced'})).status,409);
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
+
+test('public recruiting directory restricts metadata, positions, membership and recruiting phase',async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'public-api-'));let running;
+ try{
+  running=await launch(path.join(temp,'game.sqlite'));const server={base:running.base},host=actor(server),peer=actor(server),outsider=actor(server);
+  assert.equal((await fetch(server.base+'/api/rooms/public')).status,401);
+  for(const [user,pos,name] of [[host,'MID','PublicHost'],[peer,'JGL','PublicPeer'],[outsider,'MID','PublicOutsider']])assert.equal((await user.request('/api/slots/0','PUT',{character:character(pos,name)})).status,200);
+  assert.equal((await host.request('/api/rooms','POST',{slot:0,visibility:'invalid'})).status,400);
+  assert.equal((await host.request('/api/rooms','POST',{slot:0,visibility:'public'})).status,400);
+  const old=(await host.request('/api/rooms','POST',{slot:0})).data.room;
+  let result=await host.request('/api/rooms','POST',{slot:0,chooseTeam:true,waitingRoom:true,visibility:'public',name:'공개 <모집>'});assert.equal(result.status,200);
+  const code=result.data.room.code,route='/api/rooms/'+code;
+  let list=(await outsider.request('/api/rooms/public')).data.rooms;assert.equal(list.length,1);assert.equal(list[0].code,code);assert(!list.some(r=>r.code===old.code));assert.equal(list[0].isMember,false);
+  assert.deepEqual(list[0].openPositions,['TOP','JGL','ADC','SUP']);assert.equal(JSON.stringify(list).includes('PublicHost'),false);assert(!('players' in list[0]));assert(!('seed' in list[0]));
+  assert.equal((await outsider.request(route)).status,403);assert.equal((await outsider.request(route+'/export')).status,403);
+  assert.equal((await outsider.request('/api/rooms/join','POST',{slot:0,code,public:true})).status,409);
+  assert.equal((await peer.request('/api/rooms/join','POST',{slot:0,code,public:true})).status,200);
+  assert.equal((await peer.request(route+'/visibility','POST',{visibility:'private'})).status,403);
+  assert.equal((await host.request(route+'/visibility','POST',{visibility:'private'})).status,200);
+  assert.equal((await outsider.request('/api/rooms/public')).data.rooms.length,0);
+  assert.equal((await outsider.request('/api/rooms/join','POST',{slot:0,code,public:true})).status,409);
+  assert.equal((await host.request(route+'/visibility','POST',{visibility:'public'})).status,200);
+  list=(await peer.request('/api/rooms/public')).data.rooms;assert.equal(list[0].memberCount,2);assert.equal(list[0].isMember,true);assert(!list[0].openPositions.includes('JGL'));
+  for(const user of [host,peer])assert.equal((await user.request(route+'/ready','POST',{ready:true})).status,200);
+  assert.equal((await host.request(route+'/prepare','POST',{})).status,200);
+  assert.equal((await outsider.request('/api/rooms/public')).data.rooms.length,0);
+  for(const body of [{slot:0,code,public:true},{slot:0,code}])assert.equal((await outsider.request('/api/rooms/join','POST',body)).status,409);
+  assert.equal((await peer.request('/api/rooms/join','POST',{slot:0,code,public:true})).status,200);
+  assert.equal((await host.request(route+'/team','POST',{team:'T1'})).status,200);
+  assert.equal((await host.request(route+'/start','POST',{})).status,200);
+  assert.equal((await outsider.request('/api/rooms/join','POST',{slot:0,code})).status,409);
+  assert.equal((await host.request(route+'/visibility','POST',{visibility:'private'})).status,409);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});
