@@ -1,3 +1,4 @@
+import {sendJson} from './lib/http-json.mjs';
 import {resetRoomSeason} from './lib/room-reset.mjs';
 import {dayActivity} from './lib/day-schedule.mjs';
 import {scrimSchedule,todayScrim,playScrim} from './lib/scrims.mjs';
@@ -81,15 +82,15 @@ function roomFor(code, userId) {
 }
 
 function progressRoom(room) {
-  const progress = advanceLiveMatch(room);
+  const progress = advanceLiveMatch(room,Date.now(),{maxFrames:1});
   if (!progress.changed) return;
   store.saveRoom(room);
 }
 
-function roomView(room, userId) {
-  const view = clone(Object.fromEntries(Object.entries(room).filter(([key])=>key!=='liveMatch')));
-  if(Array.isArray(view.season.rules))view.season.rules=view.season.rules.map(rule=>typeof rule==='string'?rule.replace('밴은 팀당 3개로 간소화했습니다.','매 세트 양 팀이 각각 챔피언 5개를 밴합니다.'):rule);
-  decorateDailyLife(view);
+function roomView(room, userId,{omitSeason=false}={}) {
+  const view = clone(Object.fromEntries(Object.entries(room).filter(([key])=>key!=='liveMatch'&&(!omitSeason||key!=='season'))));
+  if(Array.isArray(view.season?.rules))view.season.rules=view.season.rules.map(rule=>typeof rule==='string'?rule.replace('밴은 팀당 3개로 간소화했습니다.','매 세트 양 팀이 각각 챔피언 5개를 밴합니다.'):rule);
+  if(!omitSeason)decorateDailyLife(view);
   view.broadcast = getLiveBroadcast(room);
   view.clubSchedule = clubSchedule(room);
   view.dayActivity=dayActivity(room);
@@ -99,7 +100,7 @@ function roomView(room, userId) {
   view.balance = getBalanceReport(room);
   view.messages = store.messages(room.code, userId);
   view.roster = getRoster(room.season.team ? room : { ...room, season: { ...room.season, team: '대기실' } });
-  for (const profile of view.season.opponents || []) profile.players = applyWorldEffects(room, ensureRosterNicknames(room, profile.players || [], profile.name));
+  for (const profile of view.season?.opponents || []) profile.players = applyWorldEffects(room, ensureRosterNicknames(room, profile.players || [], profile.name));
   for (const p of view.players) {
     p.character = applyWorldEffects(room, [p.character])[0];
     p.character.tier = '1군';p.character.readiness=readinessFor(p.character);
@@ -112,6 +113,9 @@ function roomView(room, userId) {
   }
   return view;
 }
+
+function canLiveUpdate(room,context){return !!room.liveMatch&&context.liveId===room.liveMatch.id&&context.seasonId===room.season.id&&Number(context.turn)===room.season.turn;}
+function liveRoomPatch(room,userId){return {code:room.code,seasonId:room.season.id,turn:room.season.turn,liveId:room.liveMatch.id,view:roomView(room,userId,{omitSeason:true})};}
 
 function staffReply(room, text, senderName) {
   store.addMessage(room.code, { channel: 'team', senderId: 'system', kind:'staff-reply', senderName, text, at: new Date().toISOString() });
@@ -277,6 +281,7 @@ async function api(req, res, url) {
     }
     if (operation) fail(404, '조회 경로를 찾을 수 없습니다.');
     if (url.searchParams.get('since') === String(room.revision)) { res.statusCode = 304; return null; }
+    if(url.searchParams.get('liveUpdate')==='1'&&canLiveUpdate(room,Object.fromEntries(url.searchParams)))return {roomPatch:liveRoomPatch(room,user.id)};
     return { room: roomView(room, user.id) };
   }
   if (method !== 'POST') fail(405, '지원하지 않는 요청 방식입니다.');
@@ -481,6 +486,7 @@ async function api(req, res, url) {
       default: fail(404, '지원하지 않는 방 동작입니다.');
     }
     room.revision++; store.saveRoom(room);
+    if(operation==='set-strategy'&&body.liveUpdate===true&&canLiveUpdate(room,body))return {roomPatch:liveRoomPatch(room,user.id),...extra};
     return { room: roomView(room, user.id), ...extra };
   });
 }
@@ -506,7 +512,7 @@ const server = http.createServer(async (req, res) => {
       const result = await api(req, res, url);
       if (res.statusCode === 304) return res.end();
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      return res.end(JSON.stringify(result));
+      return await sendJson(req,res,result);
     }
     if (!['GET', 'HEAD'].includes(req.method)) fail(405, '지원하지 않는 요청 방식입니다.');
     const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/scenes.js': ['scenes.js', 'text/javascript'], '/scenes.css': ['scenes.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
@@ -515,6 +521,7 @@ const server = http.createServer(async (req, res) => {
     files['/auth.js']=['auth.js','text/javascript'];
     files['/auth.css']=['auth.css','text/css'];
     files['/team-display.js']=['team-display.js','text/javascript'];
+    files['/live-updates.js']=['live-updates.js','text/javascript'];
     files['/set-records.js']=['set-records.js','text/javascript'];
     files['/objective-board.js']=['objective-board.js','text/javascript'];
     files['/tournament-rewards.js']=['tournament-rewards.js','text/javascript'];

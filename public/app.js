@@ -1,3 +1,4 @@
+import {mergeLiveRoom} from './live-updates.js';
 import {renderSetScoreboard,renderSetDraft,renderSeriesScore,setSides} from './set-records.js';
 import {normalizeTeamDisplay,teamDisplayText} from './team-display.js';
 import {renderObjectiveBoard} from './objective-board.js';
@@ -228,6 +229,7 @@ function getMatches() {
 }
 function selectedMatch() { const matches=getMatches();return matches.find(m=>m.id===state.matchId)||matches.find(ownMatch)||matches[0]; }
 function setRoom(room, renderNow=true) {
+ if(state.room?.code===room.code&&state.room.season.id===room.season.id&&room.revision<state.room.revision)return;
  const wasWaiting=waitingRoom();
  const previousBroadcast=liveBroadcast();
  const first=!state.room||state.room.code!==room.code;
@@ -601,6 +603,11 @@ function refreshChampionRecommendation(form,{force=false}={}){
  if(hint)hint.textContent=`${posName[position]} · ${style} 추천: ${rec.reason} 직접 입력하면 자동 추천이 꺼집니다.`;
 }
 function validateSlot() {if(!state.session.slots.some(Boolean)){toast('먼저 나의 선수를 만들어 주세요.');openModal('slot',{index:state.slot});return false;}return true;}
+async function receiveRoomData(data,renderNow=true){
+ let room=data?.room;
+ if(data?.roomPatch){const code=state.room?.code;room=mergeLiveRoom(state.room,data.roomPatch);if(!room&&code===data.roomPatch.code){const full=await api(`/api/rooms/${encodeURIComponent(code)}`);if(state.room?.code!==code)return;room=full.room;}}
+ if(room&&room!==state.room)setRoom(room,renderNow);
+}
 async function roomCommand(command,body={}) {body={seasonId:state.room.season.id,...body};const data=await api(`/api/rooms/${encodeURIComponent(state.room.code)}/${command}`,{method:'POST',body});if(data.room)setRoom(data.room);return data;}
 async function settle(npcTakeover=false,expected={}) {
  if(liveBroadcast()){navigate('match');return;}
@@ -636,7 +643,14 @@ document.addEventListener('click', async ev=>{
  const action=button.dataset.action;
  try {
   if(action==='nav'){if(button.dataset.view==='invites')await refreshInvitations();if(button.dataset.view==='notices')await refreshNotices();navigate(button.dataset.view);return;}
-  if(action==='set-strategy'){const p=liveBroadcast()?.intermission;if(!p)return;await roomCommand('set-strategy',{turn:state.room.season.turn,matchId:p.matchId,nextSet:p.nextSet,strategy:button.dataset.plan});state.liveSetNumber=null;render();return;}
+  if(action==='set-strategy'){
+   const broadcast=liveBroadcast(),p=broadcast?.intermission;if(!p)return;
+   state.busy=true;const code=state.room.code,turn=state.room.season.turn,seasonId=state.room.season.id;
+   for(const option of document.querySelectorAll('[data-action="set-strategy"]'))option.disabled=true;
+   const status=$('[data-strategy-status]');if(status)status.textContent='다음 세트 준비 중…';const progress=$('[data-strategy-progress]');if(progress)progress.hidden=false;
+   try{const data=await api(`/api/rooms/${encodeURIComponent(code)}/set-strategy`,{method:'POST',body:{turn,seasonId,liveId:broadcast.id,liveUpdate:true,matchId:p.matchId,nextSet:p.nextSet,strategy:button.dataset.plan}});if(state.room?.code===code){await receiveRoomData(data,false);state.liveSetNumber=null;}}
+   finally{state.busy=false;render();}return;
+  }
   if(action==='play-scrim'){await roomCommand('scrim',{turn:state.room.season.turn,id:button.dataset.id,focus:button.dataset.plan});toast('스크림을 마쳤습니다. 결과와 복기를 확인하세요.');return;}
   if(action==='notice-refresh'){await refreshNotices();render();return;}
   if(action==='notice-new'){state.noticeEditor={title:'',body:'',category:'안내',pinned:false};state.noticeDelete=null;render();return;}
@@ -819,7 +833,7 @@ async function pollRoom() {
  const minimum=liveBroadcast()?650:2200;if(Date.now()-lastRoomPoll<minimum)return;
  lastRoomPoll=Date.now();roomPollInFlight=true;
  const code=state.room.code,revision=state.room.revision;
- try {const data=await api(`/api/rooms/${encodeURIComponent(code)}?since=${revision}`);if(state.room?.code!==code)return;if(data?.room){setRoom(data.room,false);refreshLiveStatus();if(editing()){if(document.activeElement?.matches('[data-scene-floor]'))refreshLocationScene();state.pendingRender=true;}else render();}state.pollError=false;}
+ try {const live=liveBroadcast(),scope=live?`&liveUpdate=1&liveId=${encodeURIComponent(live.id)}&seasonId=${encodeURIComponent(state.room.season.id)}&turn=${state.room.season.turn}`:'';const data=await api(`/api/rooms/${encodeURIComponent(code)}?since=${revision}${scope}`);if(state.room?.code!==code||state.busy)return;if(data?.room||data?.roomPatch){await receiveRoomData(data,false);refreshLiveStatus();if(editing()){if(document.activeElement?.matches('[data-scene-floor]'))refreshLocationScene();state.pendingRender=true;}else render();}state.pollError=false;}
  catch(err){if(!state.pollError){toast(`동기화 대기 중: ${err.message}`,true);state.pollError=true;}}
  finally{roomPollInFlight=false;}
 }

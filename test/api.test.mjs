@@ -1,4 +1,5 @@
-import {beginLiveMatch} from '../lib/live-match.mjs';
+import {beginLiveMatch,advanceLiveMatch} from '../lib/live-match.mjs';
+import {mergeLiveRoom} from '../public/live-updates.js';
 import { registerTestServer, ensureTestAccount } from './helpers/accounts.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -598,5 +599,31 @@ test('public recruiting directory restricts metadata, positions, membership and 
   assert.equal((await host.request(route+'/start','POST',{})).status,200);
   assert.equal((await outsider.request('/api/rooms/join','POST',{slot:0,code})).status,409);
   assert.equal((await host.request(route+'/visibility','POST',{visibility:'private'})).status,409);
+ }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
+});
+
+test('late-season live updates omit history, compress full loads and pace slow viewers without exposing future results',async t=>{
+ const temp=await mkdtemp(path.join(tmpdir(),'live-speed-api-')),file=path.join(temp,'game.sqlite'),server={base:''};let running;
+ try{
+  running=await launch(file);server.base=running.base;const host=actor(server),outsider=actor(server);
+  await host.request('/api/slots/0','PUT',{character:character('MID','SpeedHost')});const original=(await host.request('/api/rooms','POST',{slot:0,year:2026})).data.room,route='/api/rooms/'+original.code;
+  await host.request(route+'/cup-draft','POST',{turn:1,pickNumber:1,remaining:true});await running.stop();
+  let db=new Store(file);try{
+   const r=db.room(original.code),m={id:'speed-live-fixture',date:r.season.date,teamA:r.season.team,teamB:'JDG',stage:'LCK',round:'테스트',bestOf:3,status:'scheduled'};r.season.schedule.push(m);
+   const sample=structuredClone(r);settleDay(sample,{npcTakeover:true});const archived=sample.season.results.find(g=>g.id===m.id);
+   for(let i=0;i<32;i++)r.season.results.push({...structuredClone(archived),id:'archived-'+i,date:'2026-01-01'});
+   const pending=structuredClone(r),summary=settleDay(pending,{npcTakeover:true});summary.npcTakeover=true;beginLiveMatch(r,pending,summary,{interactive:true,stepMs:1e9});advanceLiveMatch(r,Date.now()+1e12);assert(r.liveMatch.intermission);db.saveRoom(r);
+  }finally{db.close();}
+  running=await launch(file);server.base=running.base;const first=(await host.request(route)).data.room,scope=`liveUpdate=1&liveId=${first.broadcast.id}&seasonId=${first.season.id}&turn=${first.season.turn}`;
+  assert.equal((await outsider.request(route+'?'+scope)).status,403);
+  const plain=await fetch(server.base+route,{headers:{Cookie:host.cookie,'Accept-Encoding':'identity'}}),plainText=await plain.text();assert(!plain.headers.get('content-encoding'));
+  const zipped=await fetch(server.base+route,{headers:{Cookie:host.cookie,'Accept-Encoding':'gzip'}});assert.equal(zipped.headers.get('content-encoding'),'gzip');assert(Number(zipped.headers.get('content-length'))<Buffer.byteLength(plainText)/4);assert.deepEqual(await zipped.json(),JSON.parse(plainText));
+  const rejected=await fetch(server.base+route,{headers:{Cookie:host.cookie,'Accept-Encoding':'gzip;q=0'}});assert(!rejected.headers.get('content-encoding'));await rejected.arrayBuffer();
+  const update=(await host.request(route+'?'+scope)).data;assert(update.roomPatch);assert(!update.room);assert(!update.roomPatch.view.season);assert(!update.roomPatch.view.liveMatch);assert(!update.roomPatch.view.pendingRoom);assert.deepEqual(mergeLiveRoom(first,update.roomPatch),first);
+  const mismatch=(await host.request(route+'?'+scope.replace(first.broadcast.id,'wrong-live'))).data;assert(mismatch.room);assert(!mismatch.roomPatch);
+  const resumed=await host.request(route+'/set-strategy','POST',{turn:first.season.turn,seasonId:first.season.id,liveId:first.broadcast.id,liveUpdate:true,...first.broadcast.intermission,strategy:'side'});assert.equal(resumed.status,200,JSON.stringify(resumed.data));assert(resumed.data.roomPatch);const next=mergeLiveRoom(first,resumed.data.roomPatch);assert(next);assert.equal(next.season,first.season);assert.equal(next.broadcast.activeSet,2);assert.equal(next.broadcast.sets[1].events.length,1);assert(!('winner'in next.broadcast.sets[1]));assert(!next.season.results.some(m=>m.id==='speed-live-fixture'));assert.deepEqual(next.broadcast.sets[0],first.broadcast.sets[0]);
+  const fullBytes=Buffer.byteLength(JSON.stringify(first)),patchBytes=Buffer.byteLength(JSON.stringify(resumed.data));assert(patchBytes<fullBytes/5);t.diagnostic(`Public state ${fullBytes} bytes → live update ${patchBytes} bytes (${(100*(1-patchBytes/fullBytes)).toFixed(1)}% less before gzip).`);
+  await running.stop();db=new Store(file);try{const r=db.room(original.code);r.liveMatch.stepMs=1400;r.liveMatch.startedAt=Date.now()-1e9;db.saveRoom(r);}finally{db.close();}
+  running=await launch(file);server.base=running.base;const paced=(await host.request(route+'?'+scope)).data.roomPatch;assert(paced);assert.equal(paced.view.broadcast.sets[1].events.length,2);assert(!paced.view.broadcast.sets[1].completed);assert.equal(paced.view.broadcast.activeSet,2);
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });

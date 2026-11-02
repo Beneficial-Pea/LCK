@@ -151,3 +151,9 @@ test('days without an actual own-team result do not create a fake live series', 
   assert.equal(beginLiveMatch(room, pending, summary, { now: 1000, stepMs: 100 }), false);
   assert.equal(getLiveBroadcast(room), null);assert.equal(room.season.turn, 3);
 });
+
+test('paced public polling reveals one scene after a long gap instead of finishing unseen games',()=>{
+ const {room,pending,summary}=fixture();assert(beginLiveMatch(room,pending,summary,{now:1000,stepMs:100}));
+ const first=room.liveMatch.cursor;advanceLiveMatch(room,100000,{maxFrames:1});assert.equal(room.liveMatch.cursor,first+1);assert(room.liveMatch);const after=room.liveMatch.cursor;
+ advanceLiveMatch(room,100000,{maxFrames:1});assert.equal(room.liveMatch.cursor,after);advanceLiveMatch(room,100050,{maxFrames:1});assert.equal(room.liveMatch.cursor,after);advanceLiveMatch(room,100100,{maxFrames:1});assert.equal(room.liveMatch.cursor,after+1);assert(room.liveMatch);
+});
