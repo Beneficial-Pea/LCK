@@ -21,3 +21,8 @@ test('the scoreboard follows only revealed events, and old unknown objectives re
 test('legacy objective rules can replay without adding grubs to an in-progress series',()=>{
  const a=simulateSeries({...input,objectiveVersion:0}),b=simulateSeries({...input,objectiveVersion:0});assert.deepEqual(a,b);assert(a.sets.every(set=>!set.objectiveVersion&&!('grubs'in set.objectives)&&!set.events.some(e=>e.objective==='공허 유충 3마리')));
 });
+
+test('set side changes reorder teams, kill score and gold/objectives together without altering event indexes',()=>{
+ const html=renderObjectiveBoard({teamA:'A',teamB:'B',blueTeam:'B',events:[{time:'12:00',team:'A',score:[8,3],gold:[15000,12000],objectives:{towers:[2,1],dragons:[1,0],grubs:[0,3]}}]});
+ assert(html.indexOf('data-objective-side="1"')<html.indexOf('data-objective-side="0"'));assert(html.includes('data-live-kill-score>3 <span>:</span> 8'));assert(html.indexOf('12.0k')<html.indexOf('15.0k'));
+});

@@ -22,3 +22,9 @@ test('split scoreboard and draft escape labels, keep team rows separate and pres
  for(const html of [renderSetScoreboard(set,{teamA:'A',teamB:'B'}),renderSetDraft(set,{teamA:'A',teamB:'B'})]){assert(!html.includes('<script>'));assert(!html.includes('<img>'));assert(html.includes('&lt;script&gt;'));}
  const html=renderSetScoreboard(set,{teamA:'A',teamB:'B'});assert(html.indexOf('B-mid')<html.indexOf('&lt;script&gt;'));assert(html.includes('0 / 1 / 0'));
 });
+
+test('top series score follows selected set sides and carries each team score with it',async()=>{
+ const {renderSeriesScore}=await import('../public/set-records.js');const match={teamA:'Gen.G',teamB:'DNF'},set={draft:{assignment:{version:1,blueTeam:'DNF',redTeam:'Gen.G'}}};
+ const html=renderSeriesScore(set,match,{scoreA:2,scoreB:0});assert(html.indexOf('DNF')<html.indexOf('Gen.G'));assert(html.includes('data-series-blue-score>0'));assert(html.includes('data-series-red-score>2'));
+ const legacy=renderSeriesScore({},match,{scoreA:2,scoreB:0});assert(legacy.includes('data-series-blue-score>2'));assert(legacy.includes('data-series-red-score>0'));
+});

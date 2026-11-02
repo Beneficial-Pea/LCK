@@ -453,9 +453,9 @@ test('detailed practice blocks skip, uses host choices and persists separately f
   assert.equal((await host.request(route+'/settle','POST',{turn:r.season.turn,npcTakeover:true})).status,409);
   await peer.request('/api/rooms/join','POST',{slot:0,code:r.code});assert.equal((await peer.request(route+'/scrim','POST',{turn:r.season.turn,id:event.id,focus:'early'})).status,403);
   assert.equal((await host.request(route+'/scrim','POST',{turn:r.season.turn,id:event.id,focus:'bad'})).status,400);
-  const result=await host.request(route+'/scrim','POST',{turn:r.season.turn,id:event.id,focus:'teamfight'});assert.equal(result.status,200);assert.equal(result.data.room.season.results.length,r.season.results.length);assert.equal(result.data.room.season.scrimDiary.length,1);assert.equal(result.data.room.season.turn,r.season.turn);
+  const result=await host.request(route+'/scrim','POST',{turn:r.season.turn,id:event.id,focus:'teamfight'});assert.equal(result.status,200);assert.equal(result.data.room.season.results.length,r.season.results.length);assert.equal(result.data.room.season.scrimDiary.length,1);assert.equal(result.data.room.season.turn,r.season.turn);const npcGrown=result.data.room.roster.filter(p=>p.npc);assert.equal(npcGrown.length,3);for(const npc of npcGrown){const before=r.roster.find(p=>p.id===npc.id);assert(Math.abs(npc.stats.communication-before.stats.communication-.3)<1e-8);assert(Math.abs(npc.stats.mechanics-before.stats.mechanics-.2)<1e-8);}
   assert.equal((await host.request(route+'/scrim','POST',{turn:r.season.turn,id:event.id,focus:'side'})).status,409);
-  await running.stop();running=await launch(file);server.base=running.base;assert.deepEqual((await host.request(route)).data.room.season.scrimDiary,result.data.room.season.scrimDiary);
+  await running.stop();running=await launch(file);server.base=running.base;assert.deepEqual((await host.request(route)).data.room.season.scrimDiary,result.data.room.season.scrimDiary);assert.deepEqual((await host.request(route)).data.room.roster.filter(p=>p.npc).map(p=>p.stats),npcGrown.map(p=>p.stats));
  }finally{await running?.stop();await rm(temp,{recursive:true,force:true});}
 });
 
